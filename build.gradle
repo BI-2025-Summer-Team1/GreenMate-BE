@@ -29,7 +29,7 @@ jib {
         }
     }
     to {
-        image = "ghcr.io/bi_2025_summer_team1/greenmate_be:latest"
+        image = "ghcr.io/bi-2025-summer-team1/greenmate-be:latest"
         auth {
             username = System.getenv("DOCKER_USERNAME") ?: ""
             password = System.getenv("DOCKER_PASSWORD") ?: ""
@@ -45,6 +45,7 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
     implementation 'org.springframework.boot:spring-boot-starter-web'
     implementation 'org.springframework.boot:spring-boot-starter-validation'
+    implementation 'org.springframework.boot:spring-boot-starter-actuator'
 
     // Secret & Config
     implementation(platform 'io.awspring.cloud:spring-cloud-aws-dependencies:3.3.0')
