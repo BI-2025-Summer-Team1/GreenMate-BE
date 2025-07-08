@@ -6,8 +6,7 @@ import lombok.*;
 @Entity
 @Table(name = "community_post_image")
 @Getter
-@Setter
-@NoArgsConstructor
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor
 @Builder
 public class CommunityPostImage {

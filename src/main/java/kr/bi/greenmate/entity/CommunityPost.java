@@ -12,8 +12,7 @@ import java.time.LocalDateTime;
 @Table(name = "community_post")
 @EntityListeners(AuditingEntityListener.class)
 @Getter
-@Setter
-@NoArgsConstructor
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor
 @Builder
 public class CommunityPost {
