@@ -41,14 +41,17 @@ public class CommunityPost {
     @Column(length = 500, nullable = false)
     private String content;
 
+    @Builder.Default
     @Column(nullable = false)
-    private Long viewCount;
+    private Long viewCount = 0L;
 
+    @Builder.Default
     @Column(nullable = false)
-    private Long likeCount;
+    private Long likeCount = 0L;
 
+    @Builder.Default
     @Column(nullable = false)
-    private Long commentCount;
+    private Long commentCount = 0L;
 
     @CreatedDate
     @Column(nullable = false, updatable = false)
