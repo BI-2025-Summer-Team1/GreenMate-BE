@@ -31,9 +31,9 @@ public class CommunityPost {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_id", nullable = false)
-    private User user;
+     @ManyToOne(fetch = FetchType.LAZY)
+     @JoinColumn(name = "user_id", nullable = false)
+     private User user;
 
     @Column(length = 100, nullable = false)
     private String title;
@@ -41,21 +41,21 @@ public class CommunityPost {
     @Column(length = 500, nullable = false)
     private String content;
 
-    @Column(name = "view_count", precision = 10, scale = 0, nullable = false)
+    @Column(nullable = false)
     private Long viewCount;
 
-    @Column(name = "like_count", precision = 10, scale = 0, nullable = false)
+    @Column(nullable = false)
     private Long likeCount;
 
-    @Column(name = "comment_count", precision = 10, scale = 0, nullable = false)
+    @Column(nullable = false)
     private Long commentCount;
 
     @CreatedDate
-    @Column(name = "created_at", nullable = false, updatable = false)
+    @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
     @LastModifiedDate
-    @Column(name = "updated_at", nullable = false)
+    @Column(nullable = false)
     private LocalDateTime updatedAt;
 
 }
