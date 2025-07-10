@@ -28,6 +28,6 @@ public class CommunityPostImage {
     @JoinColumn(name = "post_id", nullable = false, updatable = false)
     private CommunityPost communityPost;
 
-    @Column(length = 50, nullable = false)
+    @Column(length = 50, nullable = false, updatable = false)
     private String imageUrl;
 }
