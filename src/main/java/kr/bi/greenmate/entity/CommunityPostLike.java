@@ -27,7 +27,7 @@ import java.time.LocalDateTime;
 @Table(
         uniqueConstraints = @UniqueConstraint(columnNames = {"post_id", "user_id"})
 )
-public class CommunityPostLike {
+public class CommunityPostLike extends BaseCreatedEntity{
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -39,8 +39,4 @@ public class CommunityPostLike {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "post_id", nullable = false, updatable = false)
     private CommunityPost communityPost;
-
-    @CreatedDate
-    @Column(nullable = false, updatable = false)
-    private LocalDateTime createdAt;
 }
