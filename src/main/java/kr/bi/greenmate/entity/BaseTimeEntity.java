@@ -10,11 +10,7 @@ import java.time.LocalDateTime;
 
 @Getter
 @MappedSuperclass
-public abstract class BaseTimeEntity {
-
-    @CreatedDate
-    @Column(nullable = false, updatable = false)
-    private LocalDateTime createdAt;
+public abstract class BaseTimeEntity extends BaseCreatedEntity{
 
     @LastModifiedDate
     @Column(nullable = false)

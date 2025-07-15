@@ -25,7 +25,7 @@ public class CommunityPostComment extends BaseTimeEntity{
     private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "comment_id", nullable = true, updatable = false)
+    @JoinColumn(name = "comment_id", updatable = false)
     private CommunityPostComment communityPostComment;
 
     @ManyToOne(fetch = FetchType.LAZY)
@@ -39,6 +39,6 @@ public class CommunityPostComment extends BaseTimeEntity{
     @Column(length = 100, nullable = false)
     private String content;
 
-    @Column(length = 50, nullable = true)
+    @Column(length = 50)
     private String imageUrl;
 }
