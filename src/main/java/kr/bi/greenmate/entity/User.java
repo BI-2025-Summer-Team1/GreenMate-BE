@@ -1,37 +1,49 @@
 package kr.bi.greenmate.entity;
 
-import jakarta.persistence.*;
-import lombok.*;
 import java.util.ArrayList;
-import java.util.List; 
+import java.util.List;
+
+import jakarta.persistence.CascadeType;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.OneToMany;
+import jakarta.persistence.Table;
+import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor; 
 
 @Entity
-@Table(name = "USERS") 
+@Table(name = "users") 
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor
 @Builder
-
 public class User extends BaseTimeEntity { 
 
     @Id 
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "ID", nullable = false, precision = 38, scale = 0) 
+    @Column(nullable = false, precision = 38, scale = 0) 
     private Long id;
 
-    @Column(name = "EMAIL", nullable = false, unique = true, length = 100) 
+    @Column(nullable = false, unique = true, length = 100) 
     private String email;
 
-    @Column(name = "NICKNAME", nullable = false, unique = true, length = 10) 
+    @Column(nullable = false, unique = true, length = 10) 
     private String nickname;
 
-    @Column(name = "PASSWORD", nullable = false, length = 60) 
+    @Column(nullable = false, length = 60) 
     private String password;
 
-    @Column(name = "PROFILE_IMAGE_URL", length = 50) 
+    @Column(length = 50) 
     private String profileImageUrl; 
 
-    @Column(name = "SELF_INTRODUCTION", nullable = false, length = 300) 
+    @Column(nullable = false, length = 300) 
     private String selfIntroduction; 
 
 
