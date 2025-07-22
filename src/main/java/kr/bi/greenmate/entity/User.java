@@ -22,7 +22,7 @@ public class User extends BaseTimeEntity {
 
     @Id 
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(nullable = false, precision = 38, scale = 0) 
+    @Column(nullable = false) 
     private Long id;
 
     @Column(nullable = false, unique = true, length = 100) 
