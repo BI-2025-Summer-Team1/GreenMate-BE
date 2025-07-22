@@ -27,7 +27,7 @@ public class RecruitmentPostImage extends BaseCreatedEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(nullable = false, updatable=false)
+    @Column(nullable = false, updatable = false)
     private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY)
