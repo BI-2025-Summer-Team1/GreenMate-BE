@@ -25,7 +25,7 @@ public class RecruitmentPost extends BaseTimeEntity {
 
     @Id 
     @GeneratedValue(strategy = GenerationType.IDENTITY) 
-    @Column(nullable = false)
+    @Column(nullable = false, updatable = false)
     private Long id;
     
     @ManyToOne(fetch = FetchType.LAZY)
