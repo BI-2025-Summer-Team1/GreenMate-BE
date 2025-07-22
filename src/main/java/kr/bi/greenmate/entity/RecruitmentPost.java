@@ -9,6 +9,7 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
+import jakarta.persistence.Lob;
 import jakarta.persistence.ManyToOne;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
@@ -35,7 +36,8 @@ public class RecruitmentPost extends BaseTimeEntity {
     @Column(nullable = false, length = 100) // 기존 50에서 communityPost와 유사하게 제목 길이를 통일
     private String title;
 
-    @Column(nullable = false, length = 4000)
+    @Lob
+    @Column(nullable = false)
     private String content;
 
     @Builder.Default
