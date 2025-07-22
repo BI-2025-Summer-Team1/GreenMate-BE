@@ -27,7 +27,7 @@ public class RecruitmentPostComment extends BaseTimeEntity {
     private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "comment_id", updatable = false) 
+    @JoinColumn(name = "parent_comment_id", updatable = false) 
     private RecruitmentPostComment parentComment;
 
     @ManyToOne(fetch = FetchType.LAZY)
