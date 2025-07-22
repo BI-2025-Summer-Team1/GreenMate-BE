@@ -56,6 +56,11 @@ public class RecruitmentPost extends BaseTimeEntity {
     @Column(nullable = false)
     private LocalDateTime recruitmentEndDate;
 
+    @Version 
+    @Column(nullable = false) 
+    private Long version;
+
     // oneToMany 관계 추가 예정
+    
     
 }
