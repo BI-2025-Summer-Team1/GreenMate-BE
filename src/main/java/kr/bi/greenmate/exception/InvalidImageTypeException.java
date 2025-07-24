@@ -1,0 +1,7 @@
+package kr.bi.greenmate.exception;
+
+public class InvalidImageTypeException extends RuntimeException {
+    public InvalidImageTypeException(){
+        super("잘못된 이미지 형식입니다.");
+    }
+}
