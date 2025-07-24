@@ -27,7 +27,7 @@ public class ImageUploadService {
         if (originalFilename != null && originalFilename.contains(".")) {
             extension = originalFilename.substring(originalFilename.lastIndexOf("."));
         }
-        if (!extension.matches("\\.(jpg|jpeg|png)")){
+        if (!extension.toLowerCase().matches("\\.(jpg|jpeg|png)")){
             throw new InvalidImageTypeException();
         }
         String savedFileName = UUID.randomUUID() + extension;
