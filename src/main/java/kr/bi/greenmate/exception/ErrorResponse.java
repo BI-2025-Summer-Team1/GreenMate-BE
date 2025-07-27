@@ -1,4 +1,4 @@
-package kr.bi.greenmate.exception;
+package kr.bi.greenmate.exception.past;
 
 import java.time.LocalDateTime;
 
@@ -19,4 +19,4 @@ public class ErrorResponse {
     public int getStatus() { return status; }
     public String getError() { return error; }
     public String getMessage() { return message; }
-} 
+}

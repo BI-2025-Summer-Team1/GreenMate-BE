@@ -1,4 +1,4 @@
-package kr.bi.greenmate.exception;
+package kr.bi.greenmate.exception.past;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;

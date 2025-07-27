@@ -1,4 +1,4 @@
-package kr.bi.greenmate.exception;
+package kr.bi.greenmate.exception.past;
 
 public class UserNotFoundException extends RuntimeException {
     public UserNotFoundException() {
