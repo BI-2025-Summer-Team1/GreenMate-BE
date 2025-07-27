@@ -36,7 +36,7 @@ public class JwtProvider {
                 .claim("nickname", nickname)
                 .setIssuedAt(now)
                 .setExpiration(expiry)
-                .signWith(key, SignatureAlgorithm.HS256)
+                .signWith(key)
                 .compact();
     }
 
