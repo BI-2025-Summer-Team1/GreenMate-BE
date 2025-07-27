@@ -4,7 +4,7 @@ import kr.bi.greenmate.config.JwtProvider;
 import kr.bi.greenmate.dto.LoginRequest;
 import kr.bi.greenmate.dto.LoginResponse;
 import kr.bi.greenmate.entity.User;
-import kr.bi.greenmate.exception.UserNotFoundException;
+import kr.bi.greenmate.exception.error.UserNotFoundException;
 import kr.bi.greenmate.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;

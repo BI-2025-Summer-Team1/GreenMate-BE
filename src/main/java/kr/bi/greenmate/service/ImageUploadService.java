@@ -1,17 +1,20 @@
 package kr.bi.greenmate.service;
 
-import kr.bi.greenmate.exception.FileEmptyException;
-import kr.bi.greenmate.exception.InvalidImageTypeException;
-import kr.bi.greenmate.exception.MissingImageTypeException;
+import kr.bi.greenmate.exception.error.FileEmptyException;
+import kr.bi.greenmate.exception.error.InvalidImageTypeException;
+import kr.bi.greenmate.exception.error.MissingImageTypeException;
+import kr.bi.greenmate.repository.ObjectStorageRepository;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
-import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.UUID;
 
 @Service
+@RequiredArgsConstructor
 public class ImageUploadService {
-    private String baseDirectory = "base/"; // 임의의 이미지 업로드 상위 폴더
+    private final ObjectStorageRepository objectStorageRepository;
 
     public String upload(MultipartFile file, String type) {
         if (file == null || file.isEmpty()) {
@@ -30,22 +33,15 @@ public class ImageUploadService {
         if (!extension.toLowerCase().matches("\\.(jpg|jpeg|png)")){
             throw new InvalidImageTypeException();
         }
+
         String savedFileName = UUID.randomUUID() + extension;
 
-        String uploadDir = baseDirectory + type + "/";
-
-        File directory = new File(uploadDir);
-        if (!directory.exists()) {
-            directory.mkdirs();
-        }
-
-        File dest = new File(directory, savedFileName);
-        try {
-            file.transferTo(dest);
+        try (InputStream inputStream = file.getInputStream()) {
+            objectStorageRepository.upload(type, savedFileName, inputStream);
         } catch (IOException e) {
-            throw new RuntimeException("파일 업로드가 실패했습니다.", e);
+            throw new RuntimeException("파일 업로드 중 오류 발생", e);
         }
 
-        return uploadDir + savedFileName;
+        return objectStorageRepository.getDownloadUrl(type + "/" + savedFileName);
     }
 }
