@@ -11,7 +11,8 @@ public enum ErrorCode {
     FILE_EMPTY("업로드할 파일이 없습니다.", HttpStatus.BAD_REQUEST),
     INVALID_IMAGE_TYPE("지원하지 않는 이미지 형식입니다.", HttpStatus.BAD_REQUEST),
     MISSING_IMAGE_TYPE("이미지 타입이 누락되었습니다.", HttpStatus.BAD_REQUEST),
-    FILE_UPLOAD_FAIL("파일 업로드에 실패했습니다.", HttpStatus.INTERNAL_SERVER_ERROR);
+    FILE_UPLOAD_FAIL("파일 업로드에 실패했습니다.", HttpStatus.INTERNAL_SERVER_ERROR),
+    SIGNUP_FAIL("회원가입 처리 중 오류가 발생했습니다.", HttpStatus.INTERNAL_SERVER_ERROR);
 
     private final String message;
     private final HttpStatus status;
