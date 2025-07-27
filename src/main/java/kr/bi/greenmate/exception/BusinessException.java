@@ -1,7 +1,9 @@
 package kr.bi.greenmate.exception;
 
+import lombok.Getter;
 import org.springframework.http.HttpStatus;
 
+@Getter
 public abstract class BusinessException extends RuntimeException {
     private final ErrorCode errorCode;
 
@@ -10,11 +12,5 @@ public abstract class BusinessException extends RuntimeException {
         this.errorCode = errorCode;
     }
 
-    public HttpStatus getStatus() {
-        return errorCode.getStatus();
-    }
 
-    public ErrorCode getErrorCode() {
-        return errorCode;
-    }
 } 

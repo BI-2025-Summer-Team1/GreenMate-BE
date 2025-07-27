@@ -2,14 +2,11 @@ package kr.bi.greenmate.exception;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
-
-import java.time.LocalDateTime;
+import org.springframework.http.HttpStatus;
 
 @Getter
 @AllArgsConstructor
 public class ErrorResponse {
-    private LocalDateTime timestamp;
-    private int status;
-    private String error;
+    private HttpStatus status;
     private String message;
 }

@@ -1,6 +1,6 @@
 package kr.bi.greenmate.service;
 
-import jakarta.transaction.Transactional;
+import org.springframework.transaction.annotation.Transactional;
 import kr.bi.greenmate.dto.SignUpRequest;
 import kr.bi.greenmate.dto.SignUpResponse;
 import kr.bi.greenmate.entity.User;
