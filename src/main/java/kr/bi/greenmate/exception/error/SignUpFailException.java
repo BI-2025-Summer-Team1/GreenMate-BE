@@ -7,4 +7,4 @@ public class SignUpFailException extends BusinessException {
     public SignUpFailException() {
         super(ErrorCode.SIGNUP_FAIL);
     }
-} 
+}

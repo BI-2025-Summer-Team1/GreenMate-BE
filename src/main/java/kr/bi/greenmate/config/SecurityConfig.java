@@ -31,6 +31,10 @@ public class SecurityConfig {
                 .cors(Customizer.withDefaults())
                 .csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(auth -> auth
+                        .requestMatchers(
+                                "/api/users/signup",
+                                "/api/users/login"
+                        ).permitAll()
                         .requestMatchers("/api/users/**").authenticated()
                         .anyRequest().authenticated()
                 );
@@ -49,9 +53,6 @@ public class SecurityConfig {
         );
     }
 
-    /**
-     * CORS 정책 설정
-     */
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();

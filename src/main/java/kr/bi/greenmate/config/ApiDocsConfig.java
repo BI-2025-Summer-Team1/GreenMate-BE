@@ -9,7 +9,9 @@ import org.springframework.context.annotation.Configuration;
 public class ApiDocsConfig {
     @Bean
     OpenAPI openAPI() {
-        return new OpenAPI().info(createApiInfo());
+        return new OpenAPI()
+            .info(createApiInfo())
+            .openapi("3.0.0");
     }
 
     private Info createApiInfo() {
