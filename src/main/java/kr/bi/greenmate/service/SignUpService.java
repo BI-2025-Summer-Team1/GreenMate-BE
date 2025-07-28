@@ -25,13 +25,6 @@ public class SignUpService {
 
     @Transactional
     public SignUpResponse signUp(SignUpRequest request) {
-        if (userRepository.findByEmail(request.getEmail()).isPresent()) {
-            throw new EmailDuplicateException();
-        }
-        if (userRepository.findByNickname(request.getNickname()).isPresent()) {
-            throw new NicknameDuplicateException();
-        }
-
         String profileImageUrl = null;
         MultipartFile profileImage = request.getProfileImage();
 
