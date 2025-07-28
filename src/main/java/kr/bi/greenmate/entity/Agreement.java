@@ -32,5 +32,5 @@ public class Agreement extends BaseTimeEntity {
     private String content;
 
     @Column(nullable = false)
-    private Integer isRequired;
+    private boolean isRequired;
 }
