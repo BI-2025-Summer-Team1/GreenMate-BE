@@ -7,6 +7,7 @@ import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 import org.springframework.web.multipart.MultipartFile;
 
 @Getter
@@ -26,9 +27,10 @@ public class SignUpRequest {
     @Size(min = 8, max = 60, message = "비밀번호는 8~60자여야 합니다.")
     private String password;
 
-    private MultipartFile profileImage;
-
     @NotBlank(message = "자기소개는 필수입니다.")
     @Size(max = 300, message = "자기소개는 300자 이하여야 합니다.")
     private String selfIntroduction;
+
+    @Setter
+    private MultipartFile profileImage;
 }

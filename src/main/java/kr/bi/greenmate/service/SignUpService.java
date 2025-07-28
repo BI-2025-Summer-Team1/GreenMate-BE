@@ -32,7 +32,7 @@ public class SignUpService {
             throw new NicknameDuplicateException();
         }
 
-        String profileImageUrl;
+        String profileImageUrl = null;
         MultipartFile profileImage = request.getProfileImage();
 
         if (profileImage != null && !profileImage.isEmpty()) {
@@ -41,8 +41,6 @@ public class SignUpService {
             } catch (Exception e) {
                 throw new FileUploadFailException();
             }
-        } else {
-            profileImageUrl = "default.png";
         }
 
         User user = User.builder()

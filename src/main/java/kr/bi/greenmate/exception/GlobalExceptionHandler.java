@@ -14,8 +14,8 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(BusinessException.class)
     public ResponseEntity<ErrorResponse> handleBusinessException(BusinessException e) {
         log.warn("예외 발생: {}", e.getMessage());
-        return ResponseEntity.status(e.getStatus())
-            .body(new ErrorResponse(e.getStatus(), e.getErrorCode().getMessage()));
+        return ResponseEntity.status(e.getErrorCode().getStatus())
+                .body(new ErrorResponse(e.getErrorCode().getStatus(), e.getErrorCode().getMessage()));
     }
 
     @ExceptionHandler(Exception.class)

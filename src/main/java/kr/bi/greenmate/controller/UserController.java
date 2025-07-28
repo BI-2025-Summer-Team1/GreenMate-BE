@@ -16,7 +16,9 @@ import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
 
 @RestController
 @RequestMapping("/api/users")
@@ -30,8 +32,10 @@ public class UserController {
     @PostMapping("/signup")
     @Operation(summary = "회원가입", description = "새로운 사용자를 등록합니다.")
     public ResponseEntity<SignUpResponse> signUp(
-            @Valid @ModelAttribute SignUpRequest request
+            @RequestPart("request") @Valid SignUpRequest request,
+            @RequestPart(value = "profileImage", required = false) MultipartFile profileImage
     ) {
+        request.setProfileImage(profileImage);
         SignUpResponse response = signUpService.signUp(request);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }

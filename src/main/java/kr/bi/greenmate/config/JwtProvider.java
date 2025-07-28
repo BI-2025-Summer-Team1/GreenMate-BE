@@ -2,33 +2,32 @@ package kr.bi.greenmate.config;
 
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.ExpiredJwtException;
+import io.jsonwebtoken.JwtException;
+import io.jsonwebtoken.JwtParser;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.MalformedJwtException;
-import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.UnsupportedJwtException;
 import io.jsonwebtoken.security.Keys;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
+
+import javax.crypto.SecretKey;
 import java.util.Date;
 import java.security.Key;
 
 @Component
 public class JwtProvider {
 
+    private final JwtProperties jwtProperties;
     private final Key key;
-    private final long accessTokenValidityInMs;
 
-    public JwtProvider(
-            @Value("${jwt.secret}") String secret,
-            @Value("${jwt.access-token-validity-in-ms}") long accessTokenValidityInMs
-    ) {
-        this.key = Keys.hmacShaKeyFor(secret.getBytes());
-        this.accessTokenValidityInMs = accessTokenValidityInMs;
+    public JwtProvider(JwtProperties jwtProperties) {
+        this.jwtProperties = jwtProperties;
+        this.key = Keys.hmacShaKeyFor(jwtProperties.getSecret().getBytes());
     }
 
     public String createToken(Long userId, String email, String nickname) {
         Date now = new Date();
-        Date expiry = new Date(now.getTime() + accessTokenValidityInMs);
+        Date expiry = new Date(now.getTime() + jwtProperties.getAccessTokenValidityInMs());
 
         return Jwts.builder()
                 .setSubject(String.valueOf(userId))
@@ -52,20 +51,28 @@ public class JwtProvider {
 
     public boolean validateToken(String token) {
         try {
-            Jwts.parserBuilder().setSigningKey(key).build().parseClaimsJws(token);
+            JwtParser parser = Jwts.parser()
+                    .verifyWith((SecretKey) key)
+                    .build();
+
+            parser.parseSignedClaims(token);
             return true;
-        } catch (SecurityException | MalformedJwtException | UnsupportedJwtException | IllegalArgumentException e) {
-            // JWT 서명 값이 일치하지 않을 경우
+        } catch (MalformedJwtException | UnsupportedJwtException | IllegalArgumentException e) {
             return false;
         } catch (ExpiredJwtException e) {
-            // 토큰이 만료되었을 경우
+            return false;
+        } catch (JwtException e) {
             return false;
         }
     }
 
     private Claims parseClaims(String token) {
         try {
-            return Jwts.parserBuilder().setSigningKey(key).build().parseClaimsJws(token).getBody();
+            JwtParser parser = Jwts.parser()
+                    .verifyWith((SecretKey) key)
+                    .build();
+
+            return parser.parseSignedClaims(token).getPayload();
         } catch (ExpiredJwtException e) {
             return e.getClaims();
         }
