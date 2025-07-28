@@ -31,7 +31,7 @@ public class UserAgreement implements Serializable {
     private Long agreementId;
 
     @Column(nullable = false)
-    private Integer isAccepted;
+    private boolean isAccepted;
 
     @Column
     private LocalDateTime acceptedAt;
