@@ -1,5 +1,8 @@
 package kr.bi.greenmate.service;
 
+import kr.bi.greenmate.exception.error.FileEmptyException;
+import kr.bi.greenmate.exception.error.InvalidImageTypeException;
+import kr.bi.greenmate.exception.error.MissingImageTypeException;
 import org.hibernate.exception.ConstraintViolationException;
 import org.springframework.transaction.annotation.Transactional;
 import kr.bi.greenmate.dto.SignUpRequest;
@@ -32,7 +35,10 @@ public class SignUpService {
         if (profileImage != null && !profileImage.isEmpty()) {
             try {
                 profileImageUrl = imageUploadService.upload(profileImage, "profile");
-            } catch (Exception e) {
+            }catch (FileEmptyException | MissingImageTypeException | InvalidImageTypeException e){
+                throw e;
+            }
+            catch (Exception e) {
                 throw new FileUploadFailException();
             }
         }
