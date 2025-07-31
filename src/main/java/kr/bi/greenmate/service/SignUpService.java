@@ -1,5 +1,6 @@
 package kr.bi.greenmate.service;
 
+import org.hibernate.exception.ConstraintViolationException;
 import org.springframework.transaction.annotation.Transactional;
 import kr.bi.greenmate.dto.SignUpRequest;
 import kr.bi.greenmate.dto.SignUpResponse;
@@ -51,11 +52,15 @@ public class SignUpService {
                     .message("회원가입이 완료되었습니다.")
                     .build();
         } catch (DataIntegrityViolationException e) {
-            if (userRepository.findByEmail(request.getEmail()).isPresent()) {
-                throw new EmailDuplicateException();
-            }
-            if (userRepository.findByNickname(request.getNickname()).isPresent()) {
-                throw new NicknameDuplicateException();
+            Throwable cause = e.getMostSpecificCause();
+            if(cause instanceof ConstraintViolationException violation){
+                String constraintName = violation.getConstraintName();
+                if("uk_user_email".equals(constraintName)){
+                    throw new EmailDuplicateException();
+                }
+                if("uk_user_nickname".equals(constraintName)){
+                    throw new NicknameDuplicateException();
+                }
             }
             throw new SignUpFailException();
         }

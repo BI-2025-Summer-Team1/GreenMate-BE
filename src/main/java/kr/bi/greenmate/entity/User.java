@@ -6,6 +6,7 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
+import jakarta.persistence.UniqueConstraint;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -13,7 +14,10 @@ import lombok.Getter;
 import lombok.NoArgsConstructor; 
 
 @Entity
-@Table(name = "users") 
+@Table(name = "users", uniqueConstraints = {
+        @UniqueConstraint(name = "uk_user_email", columnNames = "email"),
+        @UniqueConstraint(name = "uk_user_nickname", columnNames = "nickname")
+})
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor
@@ -25,10 +29,10 @@ public class User extends BaseTimeEntity {
     @Column(nullable = false) 
     private Long id;
 
-    @Column(nullable = false, unique = true, length = 100) 
+    @Column(nullable = false,length = 100)
     private String email;
 
-    @Column(nullable = false, unique = true, length = 10) 
+    @Column(nullable = false, length = 10)
     private String nickname;
 
     @Column(nullable = false, length = 60) 
