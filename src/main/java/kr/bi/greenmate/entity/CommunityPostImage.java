@@ -33,8 +33,4 @@ public class CommunityPostImage extends BaseCreatedEntity{
 
     @Column(length = 50, nullable = false, updatable = false)
     private String imageUrl;
-
-    @CreatedDate
-    @Column(nullable = false, updatable = false)
-    private LocalDateTime createdAt;
 }
