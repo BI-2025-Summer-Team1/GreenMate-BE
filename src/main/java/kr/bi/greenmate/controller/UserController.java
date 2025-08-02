@@ -7,12 +7,10 @@ import kr.bi.greenmate.dto.LoginRequest;
 import kr.bi.greenmate.dto.LoginResponse;
 import kr.bi.greenmate.dto.SignUpRequest;
 import kr.bi.greenmate.dto.SignUpResponse;
-import kr.bi.greenmate.service.LoginService;
-import kr.bi.greenmate.service.SignUpService;
+import kr.bi.greenmate.service.AuthService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -26,8 +24,7 @@ import org.springframework.web.multipart.MultipartFile;
 @Tag(name = "User API", description = "사용자 관련 API")
 public class UserController {
 
-    private final SignUpService signUpService;
-    private final LoginService loginService;
+    private final AuthService authService;
 
     @PostMapping("/signup")
     @Operation(summary = "회원가입", description = "새로운 사용자를 등록합니다.")
@@ -36,7 +33,7 @@ public class UserController {
             @RequestPart(value = "profileImage", required = false) MultipartFile profileImage
     ) {
         request.setProfileImage(profileImage);
-        SignUpResponse response = signUpService.signUp(request);
+        SignUpResponse response = authService.signUp(request);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
@@ -45,7 +42,7 @@ public class UserController {
     public ResponseEntity<LoginResponse> login(
             @Valid @RequestBody LoginRequest request
     ) {
-        LoginResponse response = loginService.login(request);
+        LoginResponse response = authService.login(request);
         return ResponseEntity.ok(response);
     }
 }

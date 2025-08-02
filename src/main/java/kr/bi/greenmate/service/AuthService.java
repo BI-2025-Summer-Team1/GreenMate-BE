@@ -1,28 +1,32 @@
 package kr.bi.greenmate.service;
 
-import kr.bi.greenmate.exception.error.FileEmptyException;
-import kr.bi.greenmate.exception.error.InvalidImageTypeException;
-import kr.bi.greenmate.exception.error.MissingImageTypeException;
-import org.hibernate.exception.ConstraintViolationException;
-import org.springframework.transaction.annotation.Transactional;
+import kr.bi.greenmate.config.JwtProvider;
+import kr.bi.greenmate.dto.LoginRequest;
+import kr.bi.greenmate.dto.LoginResponse;
 import kr.bi.greenmate.dto.SignUpRequest;
 import kr.bi.greenmate.dto.SignUpResponse;
 import kr.bi.greenmate.entity.User;
 import kr.bi.greenmate.exception.error.EmailDuplicateException;
-import kr.bi.greenmate.exception.error.NicknameDuplicateException;
+import kr.bi.greenmate.exception.error.FileEmptyException;
 import kr.bi.greenmate.exception.error.FileUploadFailException;
+import kr.bi.greenmate.exception.error.InvalidImageTypeException;
+import kr.bi.greenmate.exception.error.MissingImageTypeException;
+import kr.bi.greenmate.exception.error.NicknameDuplicateException;
 import kr.bi.greenmate.exception.error.SignUpFailException;
+import kr.bi.greenmate.exception.error.UserNotFoundException;
 import kr.bi.greenmate.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
+import org.hibernate.exception.ConstraintViolationException;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 @Service
 @RequiredArgsConstructor
-public class SignUpService {
-
+public class AuthService {
+    private final JwtProvider jwtProvider;
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final ImageUploadService imageUploadService;
@@ -70,5 +74,23 @@ public class SignUpService {
             }
             throw new SignUpFailException();
         }
+    }
+
+
+    @Transactional(readOnly = true)
+    public LoginResponse login(LoginRequest request) {
+        User user = userRepository.findByEmail(request.getEmail()).orElseThrow(UserNotFoundException::new);
+
+        if (!passwordEncoder.matches(request.getPassword(), user.getPassword())) {
+            throw new UserNotFoundException();
+        }
+
+        String accessToken = jwtProvider.createToken(user.getId(), user.getEmail(), user.getNickname());
+
+        return LoginResponse.builder()
+                .accessToken(accessToken)
+                .userId(user.getId())
+                .nickname(user.getNickname())
+                .build();
     }
 }
