@@ -87,10 +87,6 @@ public class AuthService {
 
         String accessToken = jwtProvider.createToken(user.getId(), user.getEmail(), user.getNickname());
 
-        return LoginResponse.builder()
-                .accessToken(accessToken)
-                .userId(user.getId())
-                .nickname(user.getNickname())
-                .build();
+        return new LoginResponse(accessToken);
     }
 }
