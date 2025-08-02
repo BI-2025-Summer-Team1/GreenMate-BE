@@ -19,7 +19,7 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
 @RestController
-@RequestMapping("/api/users")
+@RequestMapping("/api/v1/users")
 @RequiredArgsConstructor
 @Tag(name = "User API", description = "사용자 관련 API")
 public class UserController {
