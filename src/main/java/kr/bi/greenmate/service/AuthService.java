@@ -33,47 +33,17 @@ public class AuthService {
 
     @Transactional
     public SignUpResponse signUp(SignUpRequest request) {
-        String profileImageUrl = null;
-        MultipartFile profileImage = request.getProfileImage();
 
-        if (profileImage != null && !profileImage.isEmpty()) {
-            try {
-                profileImageUrl = imageUploadService.upload(profileImage, "profile");
-            }catch (FileEmptyException | MissingImageTypeException | InvalidImageTypeException e){
-                throw e;
-            }
-            catch (Exception e) {
-                throw new FileUploadFailException();
-            }
-        }
+        String profileImageUrl = uploadProfileImage(request.getProfileImage());
 
-        User user = User.builder()
-                .email(request.getEmail())
-                .nickname(request.getNickname())
-                .password(passwordEncoder.encode(request.getPassword()))
-                .profileImageUrl(profileImageUrl)
-                .selfIntroduction(request.getSelfIntroduction())
+        User user = createUser(request, profileImageUrl);
+
+        User savedUser = saveUser(user);
+
+        return SignUpResponse.builder()
+                .userId(savedUser.getId())
+                .message("회원가입이 완료되었습니다.")
                 .build();
-
-        try {
-            User savedUser = userRepository.save(user);
-            return SignUpResponse.builder()
-                    .userId(savedUser.getId())
-                    .message("회원가입이 완료되었습니다.")
-                    .build();
-        } catch (DataIntegrityViolationException e) {
-            Throwable cause = e.getMostSpecificCause();
-            if(cause instanceof ConstraintViolationException violation){
-                String constraintName = violation.getConstraintName();
-                if("uk_user_email".equals(constraintName)){
-                    throw new EmailDuplicateException();
-                }
-                if("uk_user_nickname".equals(constraintName)){
-                    throw new NicknameDuplicateException();
-                }
-            }
-            throw new SignUpFailException();
-        }
     }
 
 
@@ -88,5 +58,47 @@ public class AuthService {
         String accessToken = jwtProvider.createToken(user.getId(), user.getEmail(), user.getNickname());
 
         return new LoginResponse(accessToken);
+    }
+
+    private String uploadProfileImage(MultipartFile profileImage){
+        if (profileImage != null && !profileImage.isEmpty()) {
+            try {
+                return imageUploadService.upload(profileImage, "profile");
+            }catch (FileEmptyException | MissingImageTypeException | InvalidImageTypeException e){
+                throw e;
+            }
+            catch (Exception e) {
+                throw new FileUploadFailException();
+            }
+        }
+        return null;
+    }
+
+    private User createUser(SignUpRequest request, String profileImageUrl){
+        return User.builder()
+            .email(request.getEmail())
+            .nickname(request.getNickname())
+            .password(passwordEncoder.encode(request.getPassword()))
+            .profileImageUrl(profileImageUrl)
+            .selfIntroduction(request.getSelfIntroduction())
+            .build();
+    }
+
+    private User saveUser(User user){
+        try {
+            return userRepository.save(user);
+        } catch (DataIntegrityViolationException e) {
+            Throwable cause = e.getMostSpecificCause();
+            if(cause instanceof ConstraintViolationException violation){
+                String constraintName = violation.getConstraintName();
+                if("uk_user_email".equals(constraintName)){
+                    throw new EmailDuplicateException();
+                }
+                if("uk_user_nickname".equals(constraintName)){
+                    throw new NicknameDuplicateException();
+                }
+            }
+            throw new SignUpFailException();
+        }
     }
 }
