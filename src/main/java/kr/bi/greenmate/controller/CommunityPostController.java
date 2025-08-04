@@ -36,8 +36,6 @@ public class CommunityPostController {
         if(images == null || images.isEmpty()){
             request.setImages(null);
         } else request.setImages(images);
-        // request.setImageUrl(images != null && !images.isEmpty() ? images : null);
-        // 삼항 연산자와 if문 중 어떤 것을 사용하는게 더 좋나요?
         CommunityPostCreateResponse response = communityPostService.createPost(user, request);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
