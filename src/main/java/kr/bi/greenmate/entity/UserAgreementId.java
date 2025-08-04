@@ -1,11 +1,12 @@
 package kr.bi.greenmate.entity;
 
-import java.util.Objects;
+import java.io.Serializable;
 
 import jakarta.persistence.Embeddable;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
+import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
@@ -14,26 +15,10 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor
 @Builder
-public class UserAgreementId {
+@EqualsAndHashCode 
+public class UserAgreementId implements Serializable {
 
     private Long userId;
     private Long agreementId;
 
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) {
-            return true;
-        }
-        if (o == null || getClass() != o.getClass()) {
-            return false;
-        }
-        UserAgreementId that = (UserAgreementId) o;
-        return Objects.equals(getUserId(), that.getUserId()) &&
-               Objects.equals(getAgreementId(), that.getAgreementId());
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hash(getUserId(), getAgreementId());
-    }
 }
