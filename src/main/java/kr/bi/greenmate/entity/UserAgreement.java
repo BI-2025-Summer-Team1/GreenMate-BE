@@ -4,11 +4,12 @@ import java.io.Serializable;
 import java.time.LocalDateTime;
 
 import jakarta.persistence.Column;
+import jakarta.persistence.EmbeddedId;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
-import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.MapsId;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -22,13 +23,8 @@ import lombok.NoArgsConstructor;
 @Builder
 public class UserAgreement implements Serializable {
 
-    @Id
-    @Column(nullable = false)
-    private Long userId;
-
-    @Id
-    @Column(nullable = false)
-    private Long agreementId;
+    @EmbeddedId
+    private UserAgreementId userAgreementId;
 
     @Column(nullable = false)
     private boolean isAccepted;
@@ -37,10 +33,12 @@ public class UserAgreement implements Serializable {
     private LocalDateTime acceptedAt;
 
     @ManyToOne(fetch = FetchType.LAZY)
+    @MapsId("userId")
     @JoinColumn(name = "user_id", nullable = false, updatable = false)
     private User user;
 
     @ManyToOne(fetch = FetchType.LAZY)
+    @MapsId("agreementId")
     @JoinColumn(name = "agreement_id", nullable = false, updatable = false)
     private Agreement agreement;
 }
