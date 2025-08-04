@@ -1,6 +1,5 @@
 package kr.bi.greenmate.entity;
 
-import java.io.Serializable;
 import java.util.Objects;
 
 import jakarta.persistence.Embeddable;
@@ -15,7 +14,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor
 @Builder
-public class UserAgreementId implements Serializable {
+public class UserAgreementId {
 
     private Long userId;
     private Long agreementId;

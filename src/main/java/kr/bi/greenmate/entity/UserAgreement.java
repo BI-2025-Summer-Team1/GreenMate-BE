@@ -1,6 +1,5 @@
 package kr.bi.greenmate.entity;
 
-import java.io.Serializable;
 import java.time.LocalDateTime;
 
 import jakarta.persistence.Column;
@@ -21,7 +20,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor
 @Builder
-public class UserAgreement implements Serializable {
+public class UserAgreement {
 
     @EmbeddedId
     private UserAgreementId userAgreementId;
