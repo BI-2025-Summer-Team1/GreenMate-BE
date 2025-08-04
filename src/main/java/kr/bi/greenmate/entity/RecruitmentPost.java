@@ -67,19 +67,19 @@ public class RecruitmentPost extends BaseTimeEntity {
     @Column(nullable = false) 
     private Long version;
 
-    @OneToMany(mappedBy = "recruitmentPost", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
-    @Builder.Default
-    private List<RecruitmentPostComment> comments = new ArrayList<>();
+    // @OneToMany(mappedBy = "recruitmentPost", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    // @Builder.Default
+    // private List<RecruitmentPostComment> comments = new ArrayList<>();
 
-    @OneToMany(mappedBy = "recruitmentPost", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
-    @Builder.Default
-    private List<RecruitmentPostImage> images = new ArrayList<>();
+    // @OneToMany(mappedBy = "recruitmentPost", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    // @Builder.Default
+    // private List<RecruitmentPostImage> images = new ArrayList<>();
 
-    @OneToMany(mappedBy = "recruitmentPost", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
-    @Builder.Default
-    private List<RecruitmentPostLike> likes = new ArrayList<>();
+    // @OneToMany(mappedBy = "recruitmentPost", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    // @Builder.Default
+    // private List<RecruitmentPostLike> likes = new ArrayList<>();
 
-    @OneToMany(mappedBy = "recruitmentPost", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
-    @Builder.Default
-    private List<RecruitmentApplication> applications = new ArrayList<>();
+    // @OneToMany(mappedBy = "recruitmentPost", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    // @Builder.Default
+    // private List<RecruitmentApplication> applications = new ArrayList<>();
 }
