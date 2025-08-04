@@ -51,6 +51,7 @@ dependencies {
     implementation(platform 'io.awspring.cloud:spring-cloud-aws-dependencies:3.3.0')
     implementation 'io.awspring.cloud:spring-cloud-aws-starter-parameter-store:3.3.0'
     implementation 'org.springframework.cloud:spring-cloud-starter-bootstrap:4.2.1'
+    implementation 'org.springframework.boot:spring-boot-starter-security'
 
     // Infrastructure
     implementation 'com.oracle.database.jdbc:ojdbc11:23.8.0.25.04'
