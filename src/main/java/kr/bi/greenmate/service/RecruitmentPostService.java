@@ -60,10 +60,7 @@ public class RecruitmentPostService {
         return RecruitmentPostCreationResponse.builder()
             .postId(savedPost.getId())
             .title(savedPost.getTitle())
-            .content(savedPost.getContent())
-            .authorNickname(creator.getNickname()) 
             .createdAt(savedPost.getCreatedAt())
-            .imageUrls(imageUrls) 
             .build();
     }
 }
