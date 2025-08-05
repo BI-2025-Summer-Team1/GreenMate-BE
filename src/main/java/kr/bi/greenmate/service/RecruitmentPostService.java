@@ -5,6 +5,7 @@ import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
 import kr.bi.greenmate.dto.RecruitmentPostCreationRequest;
 import kr.bi.greenmate.dto.RecruitmentPostCreationResponse;
@@ -25,7 +26,7 @@ public class RecruitmentPostService {
     private final ImageUploadService imageUploadService; 
 
     public RecruitmentPostCreationResponse createRecruitmentPost(
-        RecruitmentPostCreationRequest request, List<String> imageUrls, Long userId) {
+        RecruitmentPostCreationRequest request, List<MultipartFile> images, Long userId) {
 
         User creator = userRepository.findById(userId)
             .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다."));
@@ -38,14 +39,19 @@ public class RecruitmentPostService {
             .recruitmentEndDate(request.getRecruitmentEndDate())
             .build();
 
-        if (imageUrls != null && !imageUrls.isEmpty()) {
-            List<RecruitmentPostImage> images = imageUrls.stream()
+        List<String> imageUrls = null;
+        if (images != null && !images.isEmpty()) {
+            imageUrls = images.stream()
+                .map(file -> imageUploadService.upload(file, "recruitment-post"))
+                .collect(Collectors.toList());
+
+            List<RecruitmentPostImage> postImages = imageUrls.stream()
                 .map(url -> RecruitmentPostImage.builder()
                     .imageUrl(url)
                     .recruitmentPost(post)
                     .build())
                 .collect(Collectors.toList());
-            post.getImages().addAll(images);
+            post.getImages().addAll(postImages);
         }
 
         RecruitmentPost savedPost = recruitmentPostRepository.save(post);
