@@ -3,6 +3,7 @@ package kr.bi.greenmate.controller;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.Size;
 import kr.bi.greenmate.dto.CommunityPostCreateRequest;
 import kr.bi.greenmate.dto.CommunityPostCreateResponse;
 import kr.bi.greenmate.entity.User;
@@ -31,12 +32,9 @@ public class CommunityPostController {
     public ResponseEntity<CommunityPostCreateResponse> createPost(
         @AuthenticationPrincipal User user,
         @RequestPart("request") @Valid CommunityPostCreateRequest request,
-        @RequestPart(value = "images", required = false) List<MultipartFile> images)
+        @RequestPart(value = "images", required = false) @Size(max = 10) List<MultipartFile> images)
     {
-        if(images == null || images.isEmpty()){
-            request.setImages(null);
-        } else request.setImages(images);
-        CommunityPostCreateResponse response = communityPostService.createPost(user, request);
+        CommunityPostCreateResponse response = communityPostService.createPost(user, request, images);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 }

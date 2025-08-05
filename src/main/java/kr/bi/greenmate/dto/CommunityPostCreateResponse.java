@@ -9,5 +9,4 @@ import lombok.Getter;
 @Builder
 public class CommunityPostCreateResponse {
     private Long postId;
-    private String message;
 }
