@@ -9,6 +9,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import kr.bi.greenmate.dto.RecruitmentPostCreationRequest;
 import kr.bi.greenmate.dto.RecruitmentPostCreationResponse;
+import kr.bi.greenmate.dto.RecruitmentPostListResponse;
 import kr.bi.greenmate.entity.RecruitmentPost;
 import kr.bi.greenmate.entity.RecruitmentPostImage;
 import kr.bi.greenmate.entity.User;
@@ -62,5 +63,18 @@ public class RecruitmentPostService {
             .title(savedPost.getTitle())
             .createdAt(savedPost.getCreatedAt())
             .build();
+    }
+
+    @Transactional(readOnly = true)
+    public List<RecruitmentPostListResponse> getPostList() {
+        return recruitmentPostRepository.findAll().stream()
+            .map(post -> RecruitmentPostListResponse.builder()
+                .postId(post.getId())
+                .title(post.getTitle())
+                .authorNickname(post.getUser().getNickname())
+                .activityDate(post.getActivityDate())
+                .createdAt(post.getCreatedAt())
+                .build())
+            .collect(Collectors.toList());
     }
 }
