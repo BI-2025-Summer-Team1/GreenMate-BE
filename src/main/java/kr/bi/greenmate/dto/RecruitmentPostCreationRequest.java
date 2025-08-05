@@ -1,7 +1,6 @@
 package kr.bi.greenmate.dto;
 
 import java.time.LocalDateTime;
-import java.util.List;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotBlank;
@@ -32,6 +31,4 @@ public class RecruitmentPostCreationRequest {
     @NotNull(message = "모집 종료일은 필수입니다.")
     private LocalDateTime recruitmentEndDate;
 
-    @Size(max = 5, message = "사진은 최대 5장까지 등록할 수 있습니다.")
-    private List<String> imageUrls;
 }
