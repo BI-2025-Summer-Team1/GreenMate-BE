@@ -27,7 +27,7 @@ import java.util.List;
 public class CommunityPostController {
     private final CommunityPostService communityPostService;
 
-    @PostMapping("/post")
+    @PostMapping
     @Operation(summary = "커뮤니티 글 작성", description = "새로운 글을 등록합니다.")
     public ResponseEntity<CommunityPostCreateResponse> createPost(
         @AuthenticationPrincipal User user,
