@@ -20,7 +20,7 @@ import kr.bi.greenmate.service.RecruitmentPostService;
 import lombok.RequiredArgsConstructor;
 
 @RestController
-@RequestMapping("/api/recruitment-posts")
+@RequestMapping("/api/v1/recruitment-posts")
 @RequiredArgsConstructor
 @Tag(name = "Recruitment Post API", description = "환경활동 모집글 관련 API")
 public class RecruitmentPostController {
