@@ -12,7 +12,8 @@ public enum ErrorCode {
     INVALID_IMAGE_TYPE("E05", "지원하지 않는 이미지 형식입니다.", HttpStatus.BAD_REQUEST),
     MISSING_IMAGE_TYPE("E06", "이미지 타입이 누락되었습니다.", HttpStatus.BAD_REQUEST),
     FILE_UPLOAD_FAIL("E07", "파일 업로드에 실패했습니다.", HttpStatus.INTERNAL_SERVER_ERROR),
-    SIGNUP_FAIL("E08", "회원가입 처리 중 오류가 발생했습니다.", HttpStatus.INTERNAL_SERVER_ERROR);
+    SIGNUP_FAIL("E08", "회원가입 처리 중 오류가 발생했습니다.", HttpStatus.INTERNAL_SERVER_ERROR),
+    IMAGE_COUNT_EXCEED("E09", "이미지는 최대 10개까지 업로드 가능합니다.", HttpStatus.BAD_REQUEST);
 
     private final String code;
     private final String message;

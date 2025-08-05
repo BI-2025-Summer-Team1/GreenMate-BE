@@ -6,6 +6,7 @@ import kr.bi.greenmate.dto.CommunityPostCreateResponse;
 import kr.bi.greenmate.entity.CommunityPost;
 import kr.bi.greenmate.entity.CommunityPostImage;
 import kr.bi.greenmate.entity.User;
+import kr.bi.greenmate.exception.error.ImageCountExceedException;
 import kr.bi.greenmate.repository.CommunityPostRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -27,6 +28,7 @@ public class CommunityPostService {
                 .build();
 
         if(images != null && !images.isEmpty()){
+            if(images.size() >= 10) throw new ImageCountExceedException();
             List<CommunityPostImage> imageEntities = images.stream()
                     .map(image -> {
                             String imageUrl = imageUploadService.upload(image, "community");
