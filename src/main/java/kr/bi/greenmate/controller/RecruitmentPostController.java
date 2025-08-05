@@ -32,7 +32,7 @@ public class RecruitmentPostController {
 
     @PostMapping(consumes = {"multipart/form-data"})
     @Operation(summary = "모집글 생성", description = "새로운 환경활동 모집글을 생성합니다.")
-    public ResponseEntit<RecruitmentPostCreationResponse> createPost(
+    public ResponseEntity<RecruitmentPostCreationResponse> createPost(
         @RequestPart @Valid RecruitmentPostCreationRequest request,
         @RequestPart(required = false) List<MultipartFile> images,
         @AuthenticationPrincipal Long userId) {
