@@ -9,9 +9,11 @@ import org.springframework.web.multipart.MultipartFile;
 
 import kr.bi.greenmate.dto.RecruitmentPostCreationRequest;
 import kr.bi.greenmate.dto.RecruitmentPostCreationResponse;
+import kr.bi.greenmate.dto.RecruitmentPostDetailResponse;
 import kr.bi.greenmate.entity.RecruitmentPost;
 import kr.bi.greenmate.entity.RecruitmentPostImage;
 import kr.bi.greenmate.entity.User;
+import kr.bi.greenmate.exception.error.RecruitmentPostNotFoundException;
 import kr.bi.greenmate.exception.error.UserNotFoundException;
 import kr.bi.greenmate.repository.RecruitmentPostRepository;
 import kr.bi.greenmate.repository.UserRepository;
@@ -61,6 +63,27 @@ public class RecruitmentPostService {
             .postId(savedPost.getId())
             .title(savedPost.getTitle())
             .createdAt(savedPost.getCreatedAt())
+            .build();
+    }
+
+    @Transactional(readOnly = true)
+    public RecruitmentPostDetailResponse getPostDetail(Long postId) {
+        RecruitmentPost post = recruitmentPostRepository.findById(postId)
+            .orElseThrow(() -> new RecruitmentPostNotFoundException(postId));
+
+        List<String> imageUrls = post.getImages().stream()
+            .map(RecruitmentPostImage::getImageUrl)
+            .collect(Collectors.toList());
+
+        return RecruitmentPostDetailResponse.builder()
+            .postId(post.getId())
+            .title(post.getTitle())
+            .content(post.getContent())
+            .authorNickname(post.getUser().getNickname())
+            .activityDate(post.getActivityDate())
+            .recruitmentEndDate(post.getRecruitmentEndDate())
+            .createdAt(post.getCreatedAt())
+            .imageUrls(imageUrls)
             .build();
     }
 }
