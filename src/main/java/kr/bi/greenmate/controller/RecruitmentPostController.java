@@ -16,6 +16,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import kr.bi.greenmate.dto.RecruitmentPostCreationRequest;
+import kr.bi.greenmate.dto.RecruitmentPostCreationResponse;
 import kr.bi.greenmate.service.ImageUploadService;
 import kr.bi.greenmate.service.RecruitmentPostService;
 import lombok.RequiredArgsConstructor;
@@ -31,7 +32,7 @@ public class RecruitmentPostController {
 
     @PostMapping(consumes = {"multipart/form-data"})
     @Operation(summary = "모집글 생성", description = "새로운 환경활동 모집글을 생성합니다.")
-    public ResponseEntity<Long> createPost(
+    public ResponseEntit<RecruitmentPostCreationResponse> createPost(
         @RequestPart @Valid RecruitmentPostCreationRequest request,
         @RequestPart(required = false) List<MultipartFile> images,
         @AuthenticationPrincipal Long userId) {
@@ -43,8 +44,8 @@ public class RecruitmentPostController {
                 .collect(Collectors.toList());
         }
 
-        Long postId = recruitmentPostService.createRecruitmentPost(request, imageUrls, userId);
+        RecruitmentPostCreationResponse response = recruitmentPostService.createRecruitmentPost(request, imageUrls, userId);
 
-        return ResponseEntity.status(HttpStatus.CREATED).body(postId);
+        return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 }
