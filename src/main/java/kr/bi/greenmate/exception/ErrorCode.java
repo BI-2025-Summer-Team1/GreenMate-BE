@@ -1,7 +1,8 @@
 package kr.bi.greenmate.exception;
 
-import lombok.Getter;
 import org.springframework.http.HttpStatus;
+
+import lombok.Getter;
 
 @Getter
 public enum ErrorCode {
@@ -15,7 +16,8 @@ public enum ErrorCode {
     SIGNUP_FAIL("E08", "회원가입 처리 중 오류가 발생했습니다.", HttpStatus.INTERNAL_SERVER_ERROR),
     IMAGE_COUNT_EXCEED("E09", "이미지는 최대 10개까지 업로드 가능합니다.", HttpStatus.BAD_REQUEST),
     IMAGE_SIZE_EXCEED("E10", "이미지 용량은 1MB를 초과할 수 없습니다.", HttpStatus.BAD_REQUEST),
-    POST_NOT_FOUND("E11", "게시글을 찾을 수 없습니다.", HttpStatus.NOT_FOUND);
+    POST_NOT_FOUND("E11", "게시글을 찾을 수 없습니다.", HttpStatus.NOT_FOUND),
+    RECRUITMENT_POST_NOT_FOUND("E21", "해당 ID의 모집 게시물을 찾을 수 없습니다.", HttpStatus.NOT_FOUND);
 
     private final String code;
     private final String message;

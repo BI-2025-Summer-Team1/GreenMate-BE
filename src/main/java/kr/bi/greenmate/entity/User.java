@@ -44,4 +44,7 @@ public class User extends BaseTimeEntity {
     @Column(nullable = false, length = 300) 
     private String selfIntroduction; 
 
+    // oneToMany 관계 추가 예정
+    
+    
 }
