@@ -58,7 +58,7 @@ public class CommunityPostService {
 
     @Transactional(readOnly = true)
     public CommunityPostDetailResponse getPost(Long postId){
-        CommunityPost post = communityPostRepository.findById(postId)
+        CommunityPost post = communityPostRepository.findByIdWithUserAndImages(postId)
                 .orElseThrow(PostNotFoundException::new);
 
         List<String> imageUrls = post.getImages().stream()
