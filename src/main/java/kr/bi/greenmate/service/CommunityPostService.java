@@ -1,15 +1,16 @@
 package kr.bi.greenmate.service;
 
-import jakarta.transaction.Transactional;
 import kr.bi.greenmate.dto.CommunityPostCreateRequest;
 import kr.bi.greenmate.dto.CommunityPostCreateResponse;
 import kr.bi.greenmate.entity.CommunityPost;
 import kr.bi.greenmate.entity.CommunityPostImage;
 import kr.bi.greenmate.entity.User;
 import kr.bi.greenmate.exception.error.ImageCountExceedException;
+import kr.bi.greenmate.exception.error.ImageSizeExceedException;
 import kr.bi.greenmate.repository.CommunityPostRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 import java.util.List;
 
@@ -27,8 +28,14 @@ public class CommunityPostService {
                 .content(request.getContent())
                 .build();
 
+        final long MAX_IMAGE_SIZE = 1024 * 1024;
         if(images != null && !images.isEmpty()){
             if(images.size() >= 10) throw new ImageCountExceedException();
+            for(MultipartFile image : images){
+                if(image.getSize() > MAX_IMAGE_SIZE){
+                    throw new ImageSizeExceedException();
+                }
+            }
             List<CommunityPostImage> imageEntities = images.stream()
                     .map(image -> {
                             String imageUrl = imageUploadService.upload(image, "community");
@@ -43,8 +50,6 @@ public class CommunityPostService {
 
         CommunityPost savedPost = communityPostRepository.save(post);
 
-        return CommunityPostCreateResponse.builder()
-                .postId(savedPost.getId())
-                .build();
+        return new CommunityPostCreateResponse(savedPost.getId());
     }
 }
