@@ -44,7 +44,6 @@ public class CommunityPostController {
     @GetMapping("/{postId}")
     @Operation(summary = "커뮤니티 글 상세 조회", description = "글의 상세 정보를 조회합니다.")
     public ResponseEntity<CommunityPostDetailResponse> getPost(
-            @AuthenticationPrincipal User user,
             @PathVariable long postId)
     {
         CommunityPostDetailResponse response = communityPostService.getPost(postId);
