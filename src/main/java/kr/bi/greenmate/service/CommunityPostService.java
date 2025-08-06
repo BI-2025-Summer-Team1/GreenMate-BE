@@ -2,17 +2,20 @@ package kr.bi.greenmate.service;
 
 import kr.bi.greenmate.dto.CommunityPostCreateRequest;
 import kr.bi.greenmate.dto.CommunityPostCreateResponse;
+import kr.bi.greenmate.dto.CommunityPostDetailResponse;
 import kr.bi.greenmate.entity.CommunityPost;
 import kr.bi.greenmate.entity.CommunityPostImage;
 import kr.bi.greenmate.entity.User;
 import kr.bi.greenmate.exception.error.ImageCountExceedException;
 import kr.bi.greenmate.exception.error.ImageSizeExceedException;
+import kr.bi.greenmate.exception.error.PostNotFoundException;
 import kr.bi.greenmate.repository.CommunityPostRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -51,5 +54,25 @@ public class CommunityPostService {
         CommunityPost savedPost = communityPostRepository.save(post);
 
         return new CommunityPostCreateResponse(savedPost.getId());
+    }
+
+    @Transactional(readOnly = true)
+    public CommunityPostDetailResponse getPost(Long postId){
+        CommunityPost post = communityPostRepository.findById(postId)
+                .orElseThrow(PostNotFoundException::new);
+
+        List<String> imageUrls = post.getImages().stream()
+                .map(CommunityPostImage::getImageUrl)
+                .collect(Collectors.toList());
+
+        return CommunityPostDetailResponse.builder()
+                .postId(post.getId())
+                .title(post.getTitle())
+                .content(post.getContent())
+                .imageUrls(imageUrls)
+                .authorNickname(post.getUser().getNickname())
+                .createdAt(post.getCreatedAt())
+                .updatedAt(post.getUpdatedAt())
+                .build();
     }
 }

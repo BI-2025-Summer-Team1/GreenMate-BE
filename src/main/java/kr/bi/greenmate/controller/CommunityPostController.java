@@ -6,12 +6,15 @@ import jakarta.validation.Valid;
 import jakarta.validation.constraints.Size;
 import kr.bi.greenmate.dto.CommunityPostCreateRequest;
 import kr.bi.greenmate.dto.CommunityPostCreateResponse;
+import kr.bi.greenmate.dto.CommunityPostDetailResponse;
 import kr.bi.greenmate.entity.User;
 import kr.bi.greenmate.service.CommunityPostService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestPart;
@@ -36,5 +39,15 @@ public class CommunityPostController {
     {
         CommunityPostCreateResponse response = communityPostService.createPost(user, request, images);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
+    }
+
+    @GetMapping("/{postId}")
+    @Operation(summary = "커뮤니티 글 상세 조회", description = "글의 상세 정보를 조회합니다.")
+    public ResponseEntity<CommunityPostDetailResponse> getPost(
+            @AuthenticationPrincipal User user,
+            @PathVariable long postId)
+    {
+        CommunityPostDetailResponse response = communityPostService.getPost(postId);
+        return ResponseEntity.ok(response);
     }
 }
