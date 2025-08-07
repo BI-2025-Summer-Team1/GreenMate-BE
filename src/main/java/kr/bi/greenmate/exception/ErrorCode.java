@@ -17,6 +17,7 @@ public enum ErrorCode {
     IMAGE_COUNT_EXCEED("E09", "이미지는 최대 10개까지 업로드 가능합니다.", HttpStatus.BAD_REQUEST),
     IMAGE_SIZE_EXCEED("E10", "이미지 용량은 1MB를 초과할 수 없습니다.", HttpStatus.BAD_REQUEST),
     POST_NOT_FOUND("E11", "게시글을 찾을 수 없습니다.", HttpStatus.NOT_FOUND),
+    CONCURRENT_LIKE_FAIL("E12", "동시성 문제로 좋아요 처리에 실패했습니다.", HttpStatus.CONFLICT),
     RECRUITMENT_POST_NOT_FOUND("E21", "해당 ID의 모집 게시물을 찾을 수 없습니다.", HttpStatus.NOT_FOUND);
 
     private final String code;

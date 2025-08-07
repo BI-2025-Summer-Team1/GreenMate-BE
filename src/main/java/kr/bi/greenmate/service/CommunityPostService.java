@@ -1,5 +1,6 @@
 package kr.bi.greenmate.service;
 
+import jakarta.persistence.OptimisticLockException;
 import kr.bi.greenmate.dto.CommunityPostCreateRequest;
 import kr.bi.greenmate.dto.CommunityPostCreateResponse;
 import kr.bi.greenmate.dto.CommunityPostLikeResponse;
@@ -9,11 +10,13 @@ import kr.bi.greenmate.entity.CommunityPostLike;
 import kr.bi.greenmate.entity.User;
 import kr.bi.greenmate.exception.error.ImageCountExceedException;
 import kr.bi.greenmate.exception.error.ImageSizeExceedException;
+import kr.bi.greenmate.exception.error.OptimisticLockCustomException;
 import kr.bi.greenmate.exception.error.PostNotFoundException;
 import kr.bi.greenmate.repository.CommunityPostLikeRepository;
 import kr.bi.greenmate.repository.CommunityPostRepository;
 import lombok.RequiredArgsConstructor;
 import oracle.jdbc.proxy.annotation.Post;
+import org.springframework.orm.ObjectOptimisticLockingFailureException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -62,18 +65,36 @@ public class CommunityPostService {
 
     @Transactional
     public CommunityPostLikeResponse toggleLike(Long postId, User user){
-        CommunityPost post = communityPostRepository.findById(postId)
-                .orElseThrow(PostNotFoundException::new);
+        int maxRetry = 3;
+        int retryCount = 0;
 
-        Optional<CommunityPostLike> existingLike = communityPostLikeRepository
-                .findByUserIdAndCommunityPostId(user.getId(), postId);
+        while(retryCount < maxRetry){
+            try {
+                CommunityPost post = communityPostRepository.findById(postId)
+                        .orElseThrow(PostNotFoundException::new);
 
-        if(existingLike.isPresent()){
-            return unlikePost(existingLike, post);
+                Optional<CommunityPostLike> existingLike = communityPostLikeRepository
+                        .findByUserIdAndCommunityPostId(user.getId(), postId);
+
+                if(existingLike.isPresent()){
+                    return unlikePost(existingLike, post);
+                }
+                else{
+                    return likePost(user, post);
+                }
+            } catch (OptimisticLockException | ObjectOptimisticLockingFailureException e){
+                if(++retryCount >= maxRetry){
+                    throw new OptimisticLockCustomException();
+                }
+
+                try {
+                    Thread.sleep(50);
+                } catch (InterruptedException ignored){
+                    Thread.currentThread().interrupt();
+                }
+            }
         }
-        else{
-            return likePost(user, post);
-        }
+        throw new OptimisticLockCustomException();
     }
 
     @Transactional(readOnly = true)
