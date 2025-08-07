@@ -2,22 +2,29 @@ package kr.bi.greenmate.service;
 
 import kr.bi.greenmate.dto.CommunityPostCreateRequest;
 import kr.bi.greenmate.dto.CommunityPostCreateResponse;
+import kr.bi.greenmate.dto.CommunityPostLikeResponse;
 import kr.bi.greenmate.entity.CommunityPost;
 import kr.bi.greenmate.entity.CommunityPostImage;
+import kr.bi.greenmate.entity.CommunityPostLike;
 import kr.bi.greenmate.entity.User;
 import kr.bi.greenmate.exception.error.ImageCountExceedException;
 import kr.bi.greenmate.exception.error.ImageSizeExceedException;
+import kr.bi.greenmate.exception.error.PostNotFoundException;
+import kr.bi.greenmate.repository.CommunityPostLikeRepository;
 import kr.bi.greenmate.repository.CommunityPostRepository;
 import lombok.RequiredArgsConstructor;
+import oracle.jdbc.proxy.annotation.Post;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 import java.util.List;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
 public class CommunityPostService {
     private final CommunityPostRepository communityPostRepository;
+    private final CommunityPostLikeRepository communityPostLikeRepository;
     private final ImageUploadService imageUploadService;
 
     @Transactional
@@ -51,5 +58,60 @@ public class CommunityPostService {
         CommunityPost savedPost = communityPostRepository.save(post);
 
         return new CommunityPostCreateResponse(savedPost.getId());
+    }
+
+    @Transactional
+    public CommunityPostLikeResponse toggleLike(Long postId, User user){
+        CommunityPost post = communityPostRepository.findById(postId)
+                .orElseThrow(PostNotFoundException::new);
+
+        Optional<CommunityPostLike> existingLike = communityPostLikeRepository
+                .findByUserIdAndPostId(user.getId(), postId);
+
+        if(existingLike.isPresent()){
+            return unlikePost(existingLike, post);
+        }
+        else{
+            return likePost(user, post);
+        }
+    }
+
+    @Transactional(readOnly = true)
+    public CommunityPostLikeResponse getLikeStatus(Long postId, User user){
+
+        CommunityPost post = communityPostRepository.findById(postId)
+                .orElseThrow(PostNotFoundException::new);
+
+        boolean isLiked = communityPostLikeRepository.existsByUserIdAndPostId(user.getId(), postId);
+
+        return CommunityPostLikeResponse.builder()
+                .isLiked(isLiked)
+                .likeCount(post.getLikeCount())
+                .build();
+    }
+
+    private CommunityPostLikeResponse unlikePost(Optional<CommunityPostLike> existingLike, CommunityPost post){
+        communityPostLikeRepository.delete(existingLike.get());
+        post.decrementLikeCount();
+
+        return CommunityPostLikeResponse.builder()
+                .isLiked(false)
+                .likeCount(post.getLikeCount())
+                .build();
+    }
+
+    private CommunityPostLikeResponse likePost(User user, CommunityPost post){
+        CommunityPostLike like = CommunityPostLike.builder()
+                .user(user)
+                .communityPost(post)
+                .build();
+
+        communityPostLikeRepository.save(like);
+        post.incrementLikeCount();
+
+        return CommunityPostLikeResponse.builder()
+                .isLiked(true)
+                .likeCount(post.getLikeCount())
+                .build();
     }
 }

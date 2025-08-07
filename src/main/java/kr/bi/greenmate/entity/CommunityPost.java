@@ -58,4 +58,14 @@ public class CommunityPost extends BaseTimeEntity{
             fetch = FetchType.LAZY
     )
     private List<CommunityPostImage> images = new ArrayList<>();
+
+    public void incrementLikeCount(){
+        this.likeCount++;
+    }
+
+    public void decrementLikeCount(){
+        if(this.likeCount > 0){
+            this.likeCount--;
+        }
+    }
 }
