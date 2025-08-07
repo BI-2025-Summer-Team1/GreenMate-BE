@@ -3,6 +3,7 @@ package kr.bi.greenmate.service;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -66,8 +67,8 @@ public class RecruitmentPostService {
     }
 
     @Transactional(readOnly = true)
-    public List<RecruitmentPostListResponse> getPostList() {
-        return recruitmentPostRepository.findAll().stream()
+    public List<RecruitmentPostListResponse> getPostList(Pageable pageable) {
+        return recruitmentPostRepository.findAllWithUser(pageable).stream()
             .map(post -> RecruitmentPostListResponse.builder()
                 .postId(post.getId())
                 .title(post.getTitle())

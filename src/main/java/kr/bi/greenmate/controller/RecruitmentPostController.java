@@ -2,6 +2,8 @@ package kr.bi.greenmate.controller;
 
 import java.util.List;
 
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -42,8 +44,11 @@ public class RecruitmentPostController {
     }
 
     @GetMapping
-    public ResponseEntity<List<RecruitmentPostListResponse>> getRecruitmentPostList() {
-        List<RecruitmentPostListResponse> postList = recruitmentPostService.getPostList();
+    public ResponseEntity<List<RecruitmentPostListResponse>> getRecruitmentPostList(
+        @PageableDefault(page = 0, size = 10) Pageable pageable) {
+        
+        List<RecruitmentPostListResponse> postList = recruitmentPostService.getPostList(pageable);
+        
         return ResponseEntity.ok(postList);
-    }
+        }
 }
