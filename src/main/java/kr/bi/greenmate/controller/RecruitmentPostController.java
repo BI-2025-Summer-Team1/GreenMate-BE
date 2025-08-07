@@ -45,6 +45,7 @@ public class RecruitmentPostController {
     @GetMapping("/{postId}")
     public ResponseEntity<RecruitmentPostDetailResponse> getRecruitmentPostDetail(@PathVariable Long postId) {
         RecruitmentPostDetailResponse postDetail = recruitmentPostService.getPostDetail(postId);
+        
         return ResponseEntity.ok(postDetail);
     }
 }
