@@ -24,10 +24,10 @@ public class RecruitmentPostDetailResponse {
     @Schema(description = "작성자 닉네임", example = "푸른별지킴이")
     private String authorNickname;
 
-    @Schema(description = "활동 일자", example = "2025-08-15")
+    @Schema(description = "활동 일자", example = "2025-08-15T10:30:00")
     private LocalDateTime activityDate;
 
-    @Schema(description = "모집 마감 일자", example = "2025-08-10")
+    @Schema(description = "모집 마감 일자", example = "2025-08-10T23:59:59")
     private LocalDateTime recruitmentEndDate;
 
     @Schema(description = "게시물 작성 시간", example = "2025-08-05T15:30:00")
