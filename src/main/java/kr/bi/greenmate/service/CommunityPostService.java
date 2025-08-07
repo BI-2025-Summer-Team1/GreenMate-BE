@@ -61,9 +61,7 @@ public class CommunityPostService {
         CommunityPost post = communityPostRepository.findByIdWithUserAndImages(postId)
                 .orElseThrow(PostNotFoundException::new);
 
-        List<String> imageUrls = post.getImages().stream()
-                .map(CommunityPostImage::getImageUrl)
-                .collect(Collectors.toList());
+        List<String> imageUrls = communityPostRepository.findImageUrlsByPostId(postId);
 
         return CommunityPostDetailResponse.builder()
                 .postId(post.getId())
