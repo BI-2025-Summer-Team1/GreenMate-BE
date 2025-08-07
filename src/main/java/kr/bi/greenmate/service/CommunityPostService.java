@@ -97,8 +97,8 @@ public class CommunityPostService {
         return buildLikeResponse(isLiked, post);
     }
 
-    private CommunityPostLikeResponse unlikePost(Optional<CommunityPostLike> existingLike, CommunityPost post){
-        communityPostLikeRepository.delete(existingLike.get());
+    private CommunityPostLikeResponse unlikePost(CommunityPostLike existingLike, CommunityPost post){
+        communityPostLikeRepository.delete(existingLike);
         post.decrementLikeCount();
 
         return buildLikeResponse(false, post);
