@@ -43,6 +43,7 @@ public class RecruitmentPostController {
     }
 
     @GetMapping("/{postId}")
+    @Operation(summary = "모집글 상세 조회", description = "특정 ID의 환경활동 모집글 상세 정보를 조회합니다.")
     public ResponseEntity<RecruitmentPostDetailResponse> getRecruitmentPostDetail(@PathVariable Long postId) {
         RecruitmentPostDetailResponse postDetail = recruitmentPostService.getPostDetail(postId);
         
