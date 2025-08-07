@@ -16,7 +16,4 @@ public interface CommunityPostRepository extends JpaRepository<CommunityPost, Lo
     JOIN FETCH p.user
     WHERE p.id = :postId""")
     Optional<CommunityPost> findByIdWithUserAndImages(@Param("postId") Long postId);
-
-    @Query("SELECT cpi.imageUrl FROM CommunityPostImage cpi WHERE cpi.communityPost.id = :postId")
-    List<String> findImageUrlsByPostId(@Param("postId") Long postId);
 }
