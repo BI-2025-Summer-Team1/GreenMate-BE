@@ -10,6 +10,7 @@ import kr.bi.greenmate.exception.error.ImageCountExceedException;
 import kr.bi.greenmate.exception.error.ImageSizeExceedException;
 import kr.bi.greenmate.exception.error.PostNotFoundException;
 import kr.bi.greenmate.repository.CommunityPostRepository;
+import kr.bi.greenmate.repository.ObjectStorageRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -21,6 +22,7 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class CommunityPostService {
     private final CommunityPostRepository communityPostRepository;
+    private final ObjectStorageRepository objectStorageRepository;
     private final ImageUploadService imageUploadService;
 
     @Transactional
@@ -61,7 +63,9 @@ public class CommunityPostService {
         CommunityPost post = communityPostRepository.findByIdWithUserAndImages(postId)
                 .orElseThrow(PostNotFoundException::new);
 
-        List<String> imageUrls = communityPostRepository.findImageUrlsByPostId(postId);
+        List<String> imageUrls = post.getImages().stream()
+                .map(img -> objectStorageRepository.getDownloadUrl(img.getImageUrl()))
+                .collect(Collectors.toList());
 
         return CommunityPostDetailResponse.builder()
                 .postId(post.getId())
