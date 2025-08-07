@@ -2,6 +2,7 @@ package kr.bi.greenmate.controller;
 
 import java.util.List;
 
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
@@ -44,10 +45,11 @@ public class RecruitmentPostController {
     }
 
     @GetMapping
-    public ResponseEntity<List<RecruitmentPostListResponse>> getRecruitmentPostList(
+    @Operation(summary = "모집글 목록 조회", description = "환경활동 모집글 목록을 조회합니다.")
+    public ResponseEntity<Page<RecruitmentPostListResponse>> getRecruitmentPostList(
         @PageableDefault(page = 0, size = 10) Pageable pageable) {
         
-        List<RecruitmentPostListResponse> postList = recruitmentPostService.getPostList(pageable);
+        Page<RecruitmentPostListResponse> postList = recruitmentPostService.getPostList(pageable);
         
         return ResponseEntity.ok(postList);
         }
