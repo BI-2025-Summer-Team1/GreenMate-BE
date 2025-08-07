@@ -9,9 +9,7 @@ import java.util.Optional;
 
 public interface CommunityPostLikeRepository extends JpaRepository<CommunityPostLike, Long> {
 
-    @Query("SELECT cpl FROM CommunityPostLike cpl WHERE cpl.user.id = :userId AND cpl.communityPost.id = :postId")
-    Optional<CommunityPostLike> findByUserIdAndPostId(@Param("userId") Long userId, @Param("postId") Long postId);
+    Optional<CommunityPostLike> findByUserIdAndCommunityPostId(Long userId, Long postId);
 
-    @Query("SELECT COUNT(cpl) > 0 FROM CommunityPostLike cpl WHERE cpl.user.id = :userId AND cpl.communityPost.id = :postId")
-    boolean existsByUserIdAndPostId(@Param("userId") Long userId, @Param("postId") Long postId);
+    boolean existsByUserIdAndCommunityPostId(Long userId, Long postId);
 }

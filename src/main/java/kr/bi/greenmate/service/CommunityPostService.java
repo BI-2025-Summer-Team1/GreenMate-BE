@@ -66,7 +66,7 @@ public class CommunityPostService {
                 .orElseThrow(PostNotFoundException::new);
 
         Optional<CommunityPostLike> existingLike = communityPostLikeRepository
-                .findByUserIdAndPostId(user.getId(), postId);
+                .findByUserIdAndCommunityPostId(user.getId(), postId);
 
         if(existingLike.isPresent()){
             return unlikePost(existingLike, post);
@@ -82,22 +82,16 @@ public class CommunityPostService {
         CommunityPost post = communityPostRepository.findById(postId)
                 .orElseThrow(PostNotFoundException::new);
 
-        boolean isLiked = communityPostLikeRepository.existsByUserIdAndPostId(user.getId(), postId);
+        boolean isLiked = communityPostLikeRepository.existsByUserIdAndCommunityPostId(user.getId(), postId);
 
-        return CommunityPostLikeResponse.builder()
-                .isLiked(isLiked)
-                .likeCount(post.getLikeCount())
-                .build();
+        return buildLikeResponse(isLiked, post);
     }
 
     private CommunityPostLikeResponse unlikePost(Optional<CommunityPostLike> existingLike, CommunityPost post){
         communityPostLikeRepository.delete(existingLike.get());
         post.decrementLikeCount();
 
-        return CommunityPostLikeResponse.builder()
-                .isLiked(false)
-                .likeCount(post.getLikeCount())
-                .build();
+        return buildLikeResponse(false, post);
     }
 
     private CommunityPostLikeResponse likePost(User user, CommunityPost post){
@@ -109,8 +103,12 @@ public class CommunityPostService {
         communityPostLikeRepository.save(like);
         post.incrementLikeCount();
 
+        return buildLikeResponse(true, post);
+    }
+
+    private CommunityPostLikeResponse buildLikeResponse(boolean isLiked, CommunityPost post){
         return CommunityPostLikeResponse.builder()
-                .isLiked(true)
+                .isLiked(isLiked)
                 .likeCount(post.getLikeCount())
                 .build();
     }
