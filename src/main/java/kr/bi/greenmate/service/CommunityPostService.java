@@ -70,18 +70,7 @@ public class CommunityPostService {
 
         while(retryCount < maxRetry){
             try {
-                CommunityPost post = communityPostRepository.findById(postId)
-                        .orElseThrow(PostNotFoundException::new);
-
-                Optional<CommunityPostLike> existingLike = communityPostLikeRepository
-                        .findByUserIdAndCommunityPostId(user.getId(), postId);
-
-                if(existingLike.isPresent()){
-                    return unlikePost(existingLike, post);
-                }
-                else{
-                    return likePost(user, post);
-                }
+                return doToggleLike(postId, user);
             } catch (OptimisticLockException | ObjectOptimisticLockingFailureException e){
                 if(++retryCount >= maxRetry){
                     throw new OptimisticLockCustomException();
@@ -132,5 +121,20 @@ public class CommunityPostService {
                 .isLiked(isLiked)
                 .likeCount(post.getLikeCount())
                 .build();
+    }
+
+    private CommunityPostLikeResponse doToggleLike(Long postId, User user){
+        CommunityPost post = communityPostRepository.findById(postId)
+                .orElseThrow(PostNotFoundException::new);
+
+        Optional<CommunityPostLike> existingLike = communityPostLikeRepository
+                .findByUserIdAndCommunityPostId(user.getId(), postId);
+
+        if(existingLike.isPresent()){
+            return unlikePost(existingLike, post);
+        }
+        else{
+            return likePost(user, post);
+        }
     }
 }
