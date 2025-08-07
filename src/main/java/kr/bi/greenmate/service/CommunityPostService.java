@@ -131,7 +131,7 @@ public class CommunityPostService {
                 .findByUserIdAndCommunityPostId(user.getId(), postId);
 
         if(existingLike.isPresent()){
-            return unlikePost(existingLike, post);
+            return unlikePost(existingLike.get(), post);
         }
         else{
             return likePost(user, post);
