@@ -12,7 +12,7 @@ import kr.bi.greenmate.entity.RecruitmentPost;
 @Repository
 public interface RecruitmentPostRepository extends JpaRepository<RecruitmentPost, Long> {
 
-    @Query("SELECT rp FROM RecruitmentPost rp " +
+    @Query("SELECT DISTINCT rp FROM RecruitmentPost rp " +
            "JOIN FETCH rp.user " +
            "LEFT JOIN FETCH rp.images " +
            "WHERE rp.id = :postId")
