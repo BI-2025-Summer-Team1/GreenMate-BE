@@ -7,6 +7,7 @@ import jakarta.validation.constraints.Size;
 import kr.bi.greenmate.dto.CommunityPostCreateRequest;
 import kr.bi.greenmate.dto.CommunityPostCreateResponse;
 import kr.bi.greenmate.dto.CommunityPostLikeResponse;
+import kr.bi.greenmate.dto.CommunityPostDetailResponse;
 import kr.bi.greenmate.entity.User;
 import kr.bi.greenmate.repository.CommunityPostLikeRepository;
 import kr.bi.greenmate.service.CommunityPostService;
@@ -57,6 +58,14 @@ public class CommunityPostController {
             @AuthenticationPrincipal User user,
             @PathVariable long postId) {
         CommunityPostLikeResponse response = communityPostService.getLikeStatus(postId, user);
+      
+    @GetMapping("/{postId}")
+    @Operation(summary = "커뮤니티 글 상세 조회", description = "글의 상세 정보를 조회합니다.")
+    public ResponseEntity<CommunityPostDetailResponse> getPost(
+            @PathVariable long postId)
+    {
+        CommunityPostDetailResponse response = communityPostService.getPost(postId);
+
         return ResponseEntity.ok(response);
     }
 }

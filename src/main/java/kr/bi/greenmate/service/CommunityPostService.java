@@ -4,6 +4,7 @@ import jakarta.persistence.OptimisticLockException;
 import kr.bi.greenmate.dto.CommunityPostCreateRequest;
 import kr.bi.greenmate.dto.CommunityPostCreateResponse;
 import kr.bi.greenmate.dto.CommunityPostLikeResponse;
+import kr.bi.greenmate.dto.CommunityPostDetailResponse;
 import kr.bi.greenmate.entity.CommunityPost;
 import kr.bi.greenmate.entity.CommunityPostImage;
 import kr.bi.greenmate.entity.CommunityPostLike;
@@ -13,7 +14,10 @@ import kr.bi.greenmate.exception.error.ImageSizeExceedException;
 import kr.bi.greenmate.exception.error.OptimisticLockCustomException;
 import kr.bi.greenmate.exception.error.PostNotFoundException;
 import kr.bi.greenmate.repository.CommunityPostLikeRepository;
+import kr.bi.greenmate.exception.error.PostNotFoundException;
+import kr.bi.greenmate.repository.CommunityPostImageRepository;
 import kr.bi.greenmate.repository.CommunityPostRepository;
+import kr.bi.greenmate.repository.ObjectStorageRepository;
 import lombok.RequiredArgsConstructor;
 import oracle.jdbc.proxy.annotation.Post;
 import org.springframework.orm.ObjectOptimisticLockingFailureException;
@@ -22,12 +26,15 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
 public class CommunityPostService {
     private final CommunityPostRepository communityPostRepository;
     private final CommunityPostLikeRepository communityPostLikeRepository;
+    private final CommunityPostImageRepository communityPostImageRepository;
+    private final ObjectStorageRepository objectStorageRepository;
     private final ImageUploadService imageUploadService;
 
     @Transactional
@@ -136,5 +143,24 @@ public class CommunityPostService {
         else{
             return likePost(user, post);
         }
+
+    @Transactional(readOnly = true)
+    public CommunityPostDetailResponse getPost(Long postId){
+        CommunityPost post = communityPostRepository.findByIdWithUserAndImages(postId)
+                .orElseThrow(PostNotFoundException::new);
+
+        List<String> imageUrls = communityPostImageRepository.findImageUrlsByPostId(postId).stream()
+                .map(objectStorageRepository::getDownloadUrl)
+                .collect(Collectors.toList());
+
+        return CommunityPostDetailResponse.builder()
+                .postId(post.getId())
+                .title(post.getTitle())
+                .content(post.getContent())
+                .imageUrls(imageUrls)
+                .authorNickname(post.getUser().getNickname())
+                .createdAt(post.getCreatedAt())
+                .updatedAt(post.getUpdatedAt())
+                .build();
     }
 }
