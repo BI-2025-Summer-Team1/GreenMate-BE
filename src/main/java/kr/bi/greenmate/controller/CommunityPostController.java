@@ -6,8 +6,10 @@ import jakarta.validation.Valid;
 import jakarta.validation.constraints.Size;
 import kr.bi.greenmate.dto.CommunityPostCreateRequest;
 import kr.bi.greenmate.dto.CommunityPostCreateResponse;
+import kr.bi.greenmate.dto.CommunityPostLikeResponse;
 import kr.bi.greenmate.dto.CommunityPostDetailResponse;
 import kr.bi.greenmate.entity.User;
+import kr.bi.greenmate.repository.CommunityPostLikeRepository;
 import kr.bi.greenmate.service.CommunityPostService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -41,12 +43,29 @@ public class CommunityPostController {
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
+    @PostMapping("/{postId}/like")
+    @Operation(summary = "좋아요 토글", description = "게시글에 좋아요를 추가하거나 취소합니다.")
+    public ResponseEntity<CommunityPostLikeResponse> toggleLike(
+            @AuthenticationPrincipal User user,
+            @PathVariable long postId) {
+        CommunityPostLikeResponse response = communityPostService.toggleLike(postId, user);
+        return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/{postId}/like")
+    @Operation(summary = "좋아요 상태 조회", description = "현재 사용자의 좋아요 상태와 총 좋아요 수를 조회합니다.")
+    public ResponseEntity<CommunityPostLikeResponse> getLikeStatus(
+            @AuthenticationPrincipal User user,
+            @PathVariable long postId) {
+        CommunityPostLikeResponse response = communityPostService.getLikeStatus(postId, user);
+      
     @GetMapping("/{postId}")
     @Operation(summary = "커뮤니티 글 상세 조회", description = "글의 상세 정보를 조회합니다.")
     public ResponseEntity<CommunityPostDetailResponse> getPost(
             @PathVariable long postId)
     {
         CommunityPostDetailResponse response = communityPostService.getPost(postId);
+
         return ResponseEntity.ok(response);
     }
 }
