@@ -23,32 +23,23 @@ public class AgreementService {
     public AgreementsResponse getAllAgreements() {
         List<Agreement> agreements = agreementRepository.findAll();
 
-        Map<Boolean, List<Agreement>> partitionedAgreements = agreements.stream()
-            .collect(Collectors.partitioningBy(Agreement::isRequired));
-        
-        List<AgreementResponse> requiredAgreements = partitionedAgreements.get(true).stream()
-            .map(agreement -> AgreementResponse.builder()
-                .id(agreement.getId())
-                .title(agreement.getTitle())
-                .content(agreement.getContent())
-                .isRequired(agreement.isRequired())
-                .createdAt(agreement.getCreatedAt())
-                .build())
-            .collect(Collectors.toList());
-
-        List<AgreementResponse> optionalAgreements = partitionedAgreements.get(false).stream()
-            .map(agreement -> AgreementResponse.builder()
-                .id(agreement.getId())
-                .title(agreement.getTitle())
-                .content(agreement.getContent())
-                .isRequired(agreement.isRequired())
-                .createdAt(agreement.getCreatedAt())
-                .build())
-            .collect(Collectors.toList());
+        Map<Boolean, List<AgreementResponse>> partitionedAgreements = agreements.stream()
+            .collect(Collectors.partitioningBy(Agreement::isRequired,
+                Collectors.mapping(
+                    agreement -> AgreementResponse.builder()
+                        .id(agreement.getId())
+                        .title(agreement.getTitle())
+                        .content(agreement.getContent())
+                        .isRequired(agreement.isRequired())
+                        .createdAt(agreement.getCreatedAt())
+                        .build(),
+                    Collectors.toList()
+                )
+            ));
 
         return AgreementsResponse.builder()
-            .requiredAgreements(requiredAgreements)
-            .optionalAgreements(optionalAgreements)
+            .requiredAgreements(partitionedAgreements.get(true))
+            .optionalAgreements(partitionedAgreements.get(false))
             .build();
     }
 }
