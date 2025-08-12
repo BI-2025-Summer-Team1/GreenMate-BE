@@ -68,10 +68,10 @@ public class RecruitmentPostService {
 
     @Transactional(readOnly = true)
     public RecruitmentPostDetailResponse getPostDetail(Long postId) {
-        RecruitmentPost post = recruitmentPostRepository.findByIdWithUserAndImages(postId)
+        RecruitmentPost post = recruitmentPostRepository.findByIdWithUser(postId)
             .orElseThrow(() -> new RecruitmentPostNotFoundException(postId));
-
-        List<String> imageUrls = post.getImages().stream()
+            
+        List<String> imageUrls = recruitmentPostRepository.findImagesByPostId(postId).stream()
             .map(RecruitmentPostImage::getImageUrl)
             .collect(Collectors.toList());
 
