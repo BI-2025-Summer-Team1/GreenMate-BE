@@ -12,4 +12,3 @@ public interface RecruitmentPostImageRepository extends JpaRepository<Recruitmen
 
     List<RecruitmentPostImage> findByRecruitmentPostId(Long recruitmentPostId);
 }
-    
