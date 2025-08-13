@@ -25,7 +25,6 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 @Transactional
 public class RecruitmentPostService {
-    
     private final RecruitmentPostRepository recruitmentPostRepository;
     private final RecruitmentPostImageRepository recruitmentPostImageRepository;
     private final ObjectStorageRepository objectStorageRepository;

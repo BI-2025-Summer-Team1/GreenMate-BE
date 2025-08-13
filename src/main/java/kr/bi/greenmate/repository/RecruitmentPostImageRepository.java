@@ -10,5 +10,5 @@ import kr.bi.greenmate.entity.RecruitmentPostImage;
 @Repository
 public interface RecruitmentPostImageRepository extends JpaRepository<RecruitmentPostImage, Long> {
 
-    List<RecruitmentPostImage> findByRecruitmentPostId(Long recruitmentPostId);
+    List<RecruitmentPostImage> findByRecruitmentPostId(Long postId);
 }
