@@ -3,12 +3,15 @@ package kr.bi.greenmate.service;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import kr.bi.greenmate.dto.RecruitmentPostCreationRequest;
 import kr.bi.greenmate.dto.RecruitmentPostCreationResponse;
+import kr.bi.greenmate.dto.RecruitmentPostListResponse;
 import kr.bi.greenmate.dto.RecruitmentPostDetailResponse;
 import kr.bi.greenmate.entity.RecruitmentPost;
 import kr.bi.greenmate.entity.RecruitmentPostImage;
@@ -70,6 +73,16 @@ public class RecruitmentPostService {
     }
 
     @Transactional(readOnly = true)
+    public Page<RecruitmentPostListResponse> getPostList(Pageable pageable) {
+        return recruitmentPostRepository.findAllWithUser(pageable)
+            .map(post -> RecruitmentPostListResponse.builder()
+                .postId(post.getId())
+                .title(post.getTitle())
+                .authorNickname(post.getUser().getNickname())
+                .activityDate(post.getActivityDate())
+                .createdAt(post.getCreatedAt())
+                .build());
+      
     public RecruitmentPostDetailResponse getPostDetail(Long postId) {
         RecruitmentPost post = recruitmentPostRepository.findByIdWithUser(postId)
             .orElseThrow(() -> new RecruitmentPostNotFoundException(postId));

@@ -2,6 +2,9 @@ package kr.bi.greenmate.controller;
 
 import java.util.List;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -18,6 +21,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import kr.bi.greenmate.dto.RecruitmentPostCreationRequest;
 import kr.bi.greenmate.dto.RecruitmentPostCreationResponse;
+import kr.bi.greenmate.dto.RecruitmentPostListResponse;
 import kr.bi.greenmate.dto.RecruitmentPostDetailResponse;
 import kr.bi.greenmate.service.RecruitmentPostService;
 import lombok.RequiredArgsConstructor;
@@ -42,6 +46,16 @@ public class RecruitmentPostController {
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
+    @GetMapping
+    @Operation(summary = "모집글 목록 조회", description = "환경활동 모집글 목록을 조회합니다.")
+    public ResponseEntity<Page<RecruitmentPostListResponse>> getRecruitmentPostList(
+        @PageableDefault(page = 0, size = 10) Pageable pageable) {
+        
+        Page<RecruitmentPostListResponse> postList = recruitmentPostService.getPostList(pageable);
+        
+        return ResponseEntity.ok(postList);
+        }
+  
     @GetMapping("/{postId}")
     @Operation(summary = "모집글 상세 조회", description = "특정 ID의 환경활동 모집글 상세 정보를 조회합니다.")
     public ResponseEntity<RecruitmentPostDetailResponse> getRecruitmentPostDetail(@PathVariable Long postId) {
