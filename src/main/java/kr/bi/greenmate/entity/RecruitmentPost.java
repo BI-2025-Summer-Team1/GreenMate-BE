@@ -21,6 +21,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import org.springframework.data.annotation.Version;
 
 @Entity
 @Getter
@@ -63,7 +64,7 @@ public class RecruitmentPost extends BaseTimeEntity {
     @Column(nullable = false)
     private LocalDateTime recruitmentEndDate;
 
-    @Version 
+    @Version
     @Column(nullable = false) 
     private Long version;
 

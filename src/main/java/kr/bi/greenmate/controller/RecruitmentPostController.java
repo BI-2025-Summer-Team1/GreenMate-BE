@@ -9,6 +9,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestPart;
@@ -21,6 +22,7 @@ import jakarta.validation.Valid;
 import kr.bi.greenmate.dto.RecruitmentPostCreationRequest;
 import kr.bi.greenmate.dto.RecruitmentPostCreationResponse;
 import kr.bi.greenmate.dto.RecruitmentPostListResponse;
+import kr.bi.greenmate.dto.RecruitmentPostDetailResponse;
 import kr.bi.greenmate.service.RecruitmentPostService;
 import lombok.RequiredArgsConstructor;
 
@@ -53,4 +55,12 @@ public class RecruitmentPostController {
         
         return ResponseEntity.ok(postList);
         }
+  
+    @GetMapping("/{postId}")
+    @Operation(summary = "모집글 상세 조회", description = "특정 ID의 환경활동 모집글 상세 정보를 조회합니다.")
+    public ResponseEntity<RecruitmentPostDetailResponse> getRecruitmentPostDetail(@PathVariable Long postId) {
+        RecruitmentPostDetailResponse postDetail = recruitmentPostService.getPostDetail(postId);
+        
+        return ResponseEntity.ok(postDetail);
+    }
 }

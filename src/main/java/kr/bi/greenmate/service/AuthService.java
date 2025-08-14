@@ -1,5 +1,6 @@
 package kr.bi.greenmate.service;
 
+import kr.bi.greenmate.common.enums.ImageType;
 import kr.bi.greenmate.config.JwtProvider;
 import kr.bi.greenmate.dto.LoginRequest;
 import kr.bi.greenmate.dto.LoginResponse;
@@ -63,7 +64,7 @@ public class AuthService {
     private String uploadProfileImage(MultipartFile profileImage){
         if (profileImage != null && !profileImage.isEmpty()) {
             try {
-                return imageUploadService.upload(profileImage, "profile");
+                return imageUploadService.upload(profileImage, ImageType.COMMUNITY.getValue());
             }catch (FileEmptyException | MissingImageTypeException | InvalidImageTypeException e){
                 throw e;
             }

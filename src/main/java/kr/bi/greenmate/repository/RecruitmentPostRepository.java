@@ -4,6 +4,11 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
+import java.util.Optional;
+
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import kr.bi.greenmate.entity.RecruitmentPost;
@@ -14,4 +19,7 @@ public interface RecruitmentPostRepository extends JpaRepository<RecruitmentPost
     @Query(value = "SELECT rp FROM RecruitmentPost rp JOIN FETCH rp.user",
            countQuery = "SELECT count(rp) FROM RecruitmentPost rp")
     Page<RecruitmentPost> findAllWithUser(Pageable pageable);
+  
+    @Query("SELECT r FROM RecruitmentPost r JOIN FETCH r.user WHERE r.id = :id")
+    Optional<RecruitmentPost> findByIdWithUser(@Param("id") Long id);
 }
