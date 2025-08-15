@@ -21,8 +21,8 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import kr.bi.greenmate.dto.RecruitmentPostCreationRequest;
 import kr.bi.greenmate.dto.RecruitmentPostCreationResponse;
-import kr.bi.greenmate.dto.RecruitmentPostListResponse;
 import kr.bi.greenmate.dto.RecruitmentPostDetailResponse;
+import kr.bi.greenmate.dto.RecruitmentPostListResponse;
 import kr.bi.greenmate.service.RecruitmentPostService;
 import lombok.RequiredArgsConstructor;
 

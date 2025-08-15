@@ -11,8 +11,8 @@ import org.springframework.web.multipart.MultipartFile;
 
 import kr.bi.greenmate.dto.RecruitmentPostCreationRequest;
 import kr.bi.greenmate.dto.RecruitmentPostCreationResponse;
-import kr.bi.greenmate.dto.RecruitmentPostListResponse;
 import kr.bi.greenmate.dto.RecruitmentPostDetailResponse;
+import kr.bi.greenmate.dto.RecruitmentPostListResponse;
 import kr.bi.greenmate.entity.RecruitmentPost;
 import kr.bi.greenmate.entity.RecruitmentPostImage;
 import kr.bi.greenmate.entity.User;
@@ -82,7 +82,9 @@ public class RecruitmentPostService {
                 .activityDate(post.getActivityDate())
                 .createdAt(post.getCreatedAt())
                 .build());
-      
+    }
+
+    @Transactional(readOnly = true)
     public RecruitmentPostDetailResponse getPostDetail(Long postId) {
         RecruitmentPost post = recruitmentPostRepository.findByIdWithUser(postId)
             .orElseThrow(() -> new RecruitmentPostNotFoundException(postId));
