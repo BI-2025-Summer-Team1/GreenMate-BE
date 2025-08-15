@@ -35,10 +35,9 @@ public class CommunityPostController {
     @PostMapping
     @Operation(summary = "커뮤니티 글 작성", description = "새로운 글을 등록합니다.")
     public ResponseEntity<CommunityPostCreateResponse> createPost(
-        @AuthenticationPrincipal User user,
-        @RequestPart("request") @Valid CommunityPostCreateRequest request,
-        @RequestPart(value = "images", required = false) @Size(max = 10) List<MultipartFile> images)
-    {
+            @AuthenticationPrincipal User user,
+            @RequestPart("request") @Valid CommunityPostCreateRequest request,
+            @RequestPart(value = "images", required = false) @Size(max = 10) List<MultipartFile> images) {
         CommunityPostCreateResponse response = communityPostService.createPost(user, request, images);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
@@ -58,13 +57,16 @@ public class CommunityPostController {
             @AuthenticationPrincipal User user,
             @PathVariable long postId) {
         CommunityPostLikeResponse response = communityPostService.getLikeStatus(postId, user);
+        return ResponseEntity.ok(response);
+    }
       
     @GetMapping("/{postId}")
     @Operation(summary = "커뮤니티 글 상세 조회", description = "글의 상세 정보를 조회합니다.")
     public ResponseEntity<CommunityPostDetailResponse> getPost(
-            @PathVariable long postId)
+            @PathVariable long postId,
+            @AuthenticationPrincipal User user)
     {
-        CommunityPostDetailResponse response = communityPostService.getPost(postId);
+        CommunityPostDetailResponse response = communityPostService.getPost(postId, user);
 
         return ResponseEntity.ok(response);
     }

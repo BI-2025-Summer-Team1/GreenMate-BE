@@ -27,6 +27,15 @@ public class CommunityPostDetailResponse {
     
     @Schema(description = "작성자 닉네임", example = "환경지킴이")
     private String authorNickname;
+
+    @Schema(description = "현재 사용자의 좋아요 여부", example = "true")
+    private Boolean isLikedByUser;
+
+    @Schema(description = "좋아요 여부", example = "true")
+    private Boolean isLiked;
+
+    @Schema(description = "총 좋아요 수", example = "42")
+    private Long likeCount;
     
     @Schema(description = "생성일시", example = "2024-01-01T10:00:00")
     private LocalDateTime createdAt;

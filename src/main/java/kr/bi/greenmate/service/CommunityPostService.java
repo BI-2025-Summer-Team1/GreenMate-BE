@@ -130,22 +130,22 @@ public class CommunityPostService {
                 .build();
     }
 
-    private CommunityPostLikeResponse doToggleLike(Long postId, User user){
+    private CommunityPostLikeResponse doToggleLike(Long postId, User user) {
         CommunityPost post = communityPostRepository.findById(postId)
                 .orElseThrow(PostNotFoundException::new);
 
         Optional<CommunityPostLike> existingLike = communityPostLikeRepository
                 .findByUserIdAndCommunityPostId(user.getId(), postId);
 
-        if(existingLike.isPresent()){
+        if (existingLike.isPresent()) {
             return unlikePost(existingLike.get(), post);
-        }
-        else{
+        } else {
             return likePost(user, post);
         }
+    }
 
     @Transactional(readOnly = true)
-    public CommunityPostDetailResponse getPost(Long postId){
+    public CommunityPostDetailResponse getPost(Long postId, User user){
         CommunityPost post = communityPostRepository.findByIdWithUserAndImages(postId)
                 .orElseThrow(PostNotFoundException::new);
 
@@ -153,12 +153,16 @@ public class CommunityPostService {
                 .map(objectStorageRepository::getDownloadUrl)
                 .collect(Collectors.toList());
 
+        Boolean isLikedByUser = communityPostLikeRepository.existsByUserIdAndCommunityPostId(user.getId(), postId);
+
         return CommunityPostDetailResponse.builder()
                 .postId(post.getId())
                 .title(post.getTitle())
                 .content(post.getContent())
                 .imageUrls(imageUrls)
                 .authorNickname(post.getUser().getNickname())
+                .isLikedByUser(isLikedByUser)
+                .likeCount(post.getLikeCount())
                 .createdAt(post.getCreatedAt())
                 .updatedAt(post.getUpdatedAt())
                 .build();
