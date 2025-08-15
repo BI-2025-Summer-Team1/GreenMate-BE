@@ -31,9 +31,6 @@ public class CommunityPostDetailResponse {
     @Schema(description = "현재 사용자의 좋아요 여부", example = "true")
     private Boolean isLikedByUser;
 
-    @Schema(description = "좋아요 여부", example = "true")
-    private Boolean isLiked;
-
     @Schema(description = "총 좋아요 수", example = "42")
     private Long likeCount;
     
