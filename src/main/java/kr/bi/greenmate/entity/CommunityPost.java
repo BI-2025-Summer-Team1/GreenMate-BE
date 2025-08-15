@@ -15,6 +15,8 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import org.springframework.data.annotation.Version;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -24,6 +26,7 @@ import java.util.List;
 @AllArgsConstructor
 @Builder
 public class CommunityPost extends BaseTimeEntity{
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -58,4 +61,17 @@ public class CommunityPost extends BaseTimeEntity{
             fetch = FetchType.LAZY
     )
     private List<CommunityPostImage> images = new ArrayList<>();
+
+    @Version
+    private Long version;
+
+    public void incrementLikeCount(){
+        this.likeCount++;
+    }
+
+    public void decrementLikeCount(){
+        if(this.likeCount > 0){
+            this.likeCount--;
+        }
+    }
 }

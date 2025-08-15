@@ -1,28 +1,38 @@
 package kr.bi.greenmate.service;
 
+import jakarta.persistence.OptimisticLockException;
 import kr.bi.greenmate.dto.CommunityPostCreateRequest;
 import kr.bi.greenmate.dto.CommunityPostCreateResponse;
+import kr.bi.greenmate.dto.CommunityPostLikeResponse;
 import kr.bi.greenmate.dto.CommunityPostDetailResponse;
 import kr.bi.greenmate.entity.CommunityPost;
 import kr.bi.greenmate.entity.CommunityPostImage;
+import kr.bi.greenmate.entity.CommunityPostLike;
 import kr.bi.greenmate.entity.User;
 import kr.bi.greenmate.exception.error.ImageCountExceedException;
 import kr.bi.greenmate.exception.error.ImageSizeExceedException;
+import kr.bi.greenmate.exception.error.OptimisticLockCustomException;
+import kr.bi.greenmate.exception.error.PostNotFoundException;
+import kr.bi.greenmate.repository.CommunityPostLikeRepository;
 import kr.bi.greenmate.exception.error.PostNotFoundException;
 import kr.bi.greenmate.repository.CommunityPostImageRepository;
 import kr.bi.greenmate.repository.CommunityPostRepository;
 import kr.bi.greenmate.repository.ObjectStorageRepository;
 import lombok.RequiredArgsConstructor;
+import oracle.jdbc.proxy.annotation.Post;
+import org.springframework.orm.ObjectOptimisticLockingFailureException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
 public class CommunityPostService {
     private final CommunityPostRepository communityPostRepository;
+    private final CommunityPostLikeRepository communityPostLikeRepository;
     private final CommunityPostImageRepository communityPostImageRepository;
     private final ObjectStorageRepository objectStorageRepository;
     private final ImageUploadService imageUploadService;
@@ -60,8 +70,82 @@ public class CommunityPostService {
         return new CommunityPostCreateResponse(savedPost.getId());
     }
 
+    @Transactional
+    public CommunityPostLikeResponse toggleLike(Long postId, User user){
+        int maxRetry = 3;
+        int retryCount = 0;
+
+        while(retryCount < maxRetry){
+            try {
+                return doToggleLike(postId, user);
+            } catch (OptimisticLockException | ObjectOptimisticLockingFailureException e){
+                if(++retryCount >= maxRetry){
+                    throw new OptimisticLockCustomException();
+                }
+
+                try {
+                    Thread.sleep(50);
+                } catch (InterruptedException ignored){
+                    Thread.currentThread().interrupt();
+                }
+            }
+        }
+        throw new OptimisticLockCustomException();
+    }
+
     @Transactional(readOnly = true)
-    public CommunityPostDetailResponse getPost(Long postId){
+    public CommunityPostLikeResponse getLikeStatus(Long postId, User user){
+
+        CommunityPost post = communityPostRepository.findById(postId)
+                .orElseThrow(PostNotFoundException::new);
+
+        boolean isLiked = communityPostLikeRepository.existsByUserIdAndCommunityPostId(user.getId(), postId);
+
+        return buildLikeResponse(isLiked, post);
+    }
+
+    private CommunityPostLikeResponse unlikePost(CommunityPostLike existingLike, CommunityPost post){
+        communityPostLikeRepository.delete(existingLike);
+        post.decrementLikeCount();
+
+        return buildLikeResponse(false, post);
+    }
+
+    private CommunityPostLikeResponse likePost(User user, CommunityPost post){
+        CommunityPostLike like = CommunityPostLike.builder()
+                .user(user)
+                .communityPost(post)
+                .build();
+
+        communityPostLikeRepository.save(like);
+        post.incrementLikeCount();
+
+        return buildLikeResponse(true, post);
+    }
+
+    private CommunityPostLikeResponse buildLikeResponse(boolean isLiked, CommunityPost post){
+        return CommunityPostLikeResponse.builder()
+                .isLiked(isLiked)
+                .likeCount(post.getLikeCount())
+                .build();
+    }
+
+    private CommunityPostLikeResponse doToggleLike(Long postId, User user) {
+        CommunityPost post = communityPostRepository.findById(postId)
+                .orElseThrow(PostNotFoundException::new);
+
+        Optional<CommunityPostLike> existingLike = communityPostLikeRepository
+                .findByUserIdAndCommunityPostId(user.getId(), postId);
+
+        if (existingLike.isPresent()) {
+            return unlikePost(existingLike.get(), post);
+        } else {
+            return likePost(user, post);
+        }
+    }
+
+    @Transactional(readOnly = true)
+    public CommunityPostDetailResponse getPost(Long postId, User user){
         CommunityPost post = communityPostRepository.findByIdWithUserAndImages(postId)
                 .orElseThrow(PostNotFoundException::new);
 
@@ -69,12 +153,16 @@ public class CommunityPostService {
                 .map(objectStorageRepository::getDownloadUrl)
                 .collect(Collectors.toList());
 
+        Boolean isLikedByUser = communityPostLikeRepository.existsByUserIdAndCommunityPostId(user.getId(), postId);
+
         return CommunityPostDetailResponse.builder()
                 .postId(post.getId())
                 .title(post.getTitle())
                 .content(post.getContent())
                 .imageUrls(imageUrls)
                 .authorNickname(post.getUser().getNickname())
+                .isLikedByUser(isLikedByUser)
+                .likeCount(post.getLikeCount())
                 .createdAt(post.getCreatedAt())
                 .updatedAt(post.getUpdatedAt())
                 .build();
