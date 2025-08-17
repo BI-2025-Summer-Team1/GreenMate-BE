@@ -22,6 +22,7 @@ public interface CommunityPostRepository extends JpaRepository<CommunityPost, Lo
 
     @Query("""
     SELECT p FROM CommunityPost p
+    JOIN FETCH p.user
     WHERE (:lastPostId IS NULL OR p.id < :lastPostId)
     ORDER BY p.id DESC
     LIMIT :size
