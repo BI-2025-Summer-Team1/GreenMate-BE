@@ -26,7 +26,6 @@ import java.util.List;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor
 @Builder
-@BatchSize(size = 50)
 public class CommunityPost extends BaseTimeEntity{
 
     @Id
