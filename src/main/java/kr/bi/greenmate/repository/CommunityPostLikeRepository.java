@@ -19,5 +19,7 @@ public interface CommunityPostLikeRepository extends JpaRepository<CommunityPost
     FROM CommunityPostLike l
     WHERE l.user.id = :userId AND l.communityPost.id IN :postIds
 """)
-    List<Long> findLikedPostIdsByUserIdAndPostIds(Long userId, List<Long> postIds);
+    List<Long> findLikedPostIdsByUserIdAndPostIds(
+            @Param("userId") Long userId,
+            @Param("postIds") List<Long> postIds);
 }

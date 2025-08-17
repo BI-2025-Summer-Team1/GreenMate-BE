@@ -6,6 +6,7 @@ import kr.bi.greenmate.dto.CommunityPostCreateResponse;
 import kr.bi.greenmate.dto.CommunityPostLikeResponse;
 import kr.bi.greenmate.dto.CommunityPostDetailResponse;
 import kr.bi.greenmate.dto.CommunityPostListResponse;
+import kr.bi.greenmate.dto.KeysetSliceResponse;
 import kr.bi.greenmate.entity.CommunityPost;
 import kr.bi.greenmate.entity.CommunityPostImage;
 import kr.bi.greenmate.entity.CommunityPostLike;
@@ -19,15 +20,24 @@ import kr.bi.greenmate.exception.error.PostNotFoundException;
 import kr.bi.greenmate.repository.CommunityPostImageRepository;
 import kr.bi.greenmate.repository.CommunityPostRepository;
 import kr.bi.greenmate.repository.ObjectStorageRepository;
+import kr.bi.greenmate.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import oracle.jdbc.proxy.annotation.Post;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Slice;
+import org.springframework.data.domain.SliceImpl;
+import org.springframework.data.domain.Sort;
 import org.springframework.orm.ObjectOptimisticLockingFailureException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -40,6 +50,7 @@ public class CommunityPostService {
     private final CommunityPostImageRepository communityPostImageRepository;
     private final ObjectStorageRepository objectStorageRepository;
     private final ImageUploadService imageUploadService;
+    private final UserRepository userRepository;
 
     @Transactional
     public CommunityPostCreateResponse createPost(User user, CommunityPostCreateRequest request, List<MultipartFile> images){
@@ -173,31 +184,39 @@ public class CommunityPostService {
     }
 
     @Transactional(readOnly = true)
-    public List<CommunityPostListResponse> getPosts(User user, int page, int size){
-        int offset = page * size;
+    public KeysetSliceResponse<CommunityPostListResponse> getPosts(User user, Long lastPostId, int size){
 
-        List<CommunityPost> posts = communityPostRepository.findAllByOrderByCreatedAtDesc(offset, size);
+        List<CommunityPost> posts = communityPostRepository.findNextPosts(lastPostId, size + 1);
+
+        boolean hasNext = posts.size() > size;
+        if(hasNext){
+            posts.remove(size);
+        }
 
         List<Long> postIds = posts.stream()
                 .map(CommunityPost::getId)
-                .collect(Collectors.toList());
+                .toList();
 
-        Set<Long> likedPostIds = new HashSet<>(communityPostLikeRepository.findLikedPostIdsByUserIdAndPostIds(user.getId(), postIds));
+        Set<Long> likedPostIds;
+        if(user != null && !postIds.isEmpty()){
+            likedPostIds = new HashSet<>(communityPostLikeRepository.findLikedPostIdsByUserIdAndPostIds(user.getId(), postIds));
+        }
+        else {
+            likedPostIds = Collections.emptySet();
+        }
 
-        return posts.stream()
-                .map(post -> {
-                    Boolean isLikedByUser = likedPostIds.contains(post.getId());
+        List<CommunityPostListResponse> content = posts.stream()
+                .map(post -> CommunityPostListResponse.builder()
+                        .postId(post.getId())
+                        .title(post.getTitle())
+                        .authorNickname(post.getUser().getNickname())
+                        .createdAt(post.getCreatedAt())
+                        .isLikedByUser(likedPostIds.contains(post.getId()))
+                        .likeCount(post.getLikeCount())
+                        .commentCount(post.getCommentCount())
+                        .build())
+                .toList();
 
-                    return CommunityPostListResponse.builder()
-                            .postId(post.getId())
-                            .title(post.getTitle())
-                            .authorNickname(post.getUser().getNickname())
-                            .createdAt(post.getCreatedAt())
-                            .isLikedByUser(isLikedByUser)
-                            .likeCount(post.getLikeCount())
-                            .commentCount(post.getCommentCount())
-                            .build();
-                })
-                .collect(Collectors.toList());
+        return new KeysetSliceResponse<>(content, hasNext);
     }
 }

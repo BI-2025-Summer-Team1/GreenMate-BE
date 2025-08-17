@@ -9,10 +9,15 @@ import kr.bi.greenmate.dto.CommunityPostCreateResponse;
 import kr.bi.greenmate.dto.CommunityPostLikeResponse;
 import kr.bi.greenmate.dto.CommunityPostDetailResponse;
 import kr.bi.greenmate.dto.CommunityPostListResponse;
+import kr.bi.greenmate.dto.KeysetSliceResponse;
 import kr.bi.greenmate.entity.User;
 import kr.bi.greenmate.repository.CommunityPostLikeRepository;
 import kr.bi.greenmate.service.CommunityPostService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Slice;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -55,11 +60,11 @@ public class CommunityPostController {
 
     @GetMapping
     @Operation(summary = "커뮤니티 글 목록 조회", description = "커뮤니티 글 목록을 조회합니다.")
-    public ResponseEntity<List<CommunityPostListResponse>> getPosts(
+    public ResponseEntity<KeysetSliceResponse<CommunityPostListResponse>> getPosts(
             @AuthenticationPrincipal User user,
-            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(required = false) Long lastPostId,
             @RequestParam(defaultValue = "10") int size){
-        List<CommunityPostListResponse> response = communityPostService.getPosts(user, page, size);
+        KeysetSliceResponse<CommunityPostListResponse> response = communityPostService.getPosts(user, lastPostId, size);
         return ResponseEntity.ok(response);
     }
 
