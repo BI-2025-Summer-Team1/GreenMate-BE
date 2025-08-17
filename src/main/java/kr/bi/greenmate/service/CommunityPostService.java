@@ -20,15 +20,7 @@ import kr.bi.greenmate.exception.error.PostNotFoundException;
 import kr.bi.greenmate.repository.CommunityPostImageRepository;
 import kr.bi.greenmate.repository.CommunityPostRepository;
 import kr.bi.greenmate.repository.ObjectStorageRepository;
-import kr.bi.greenmate.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
-import oracle.jdbc.proxy.annotation.Post;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Slice;
-import org.springframework.data.domain.SliceImpl;
-import org.springframework.data.domain.Sort;
 import org.springframework.orm.ObjectOptimisticLockingFailureException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -37,7 +29,6 @@ import org.springframework.web.multipart.MultipartFile;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -50,7 +41,6 @@ public class CommunityPostService {
     private final CommunityPostImageRepository communityPostImageRepository;
     private final ObjectStorageRepository objectStorageRepository;
     private final ImageUploadService imageUploadService;
-    private final UserRepository userRepository;
 
     @Transactional
     public CommunityPostCreateResponse createPost(User user, CommunityPostCreateRequest request, List<MultipartFile> images){
