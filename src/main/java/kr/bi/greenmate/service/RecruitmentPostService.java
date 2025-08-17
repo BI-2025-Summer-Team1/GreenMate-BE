@@ -75,32 +75,34 @@ public class RecruitmentPostService {
     @Transactional(readOnly = true)
     public Page<RecruitmentPostListResponse> getPostList(Pageable pageable) {
         return recruitmentPostRepository.findAllWithUser(pageable)
-            .map(post -> RecruitmentPostListResponse.builder()
-                .postId(post.getId())
-                .title(post.getTitle())
-                .authorNickname(post.getUser().getNickname())
-                .activityDate(post.getActivityDate())
-                .createdAt(post.getCreatedAt())
-                .build());
-      
+                .map(post -> RecruitmentPostListResponse.builder()
+                        .postId(post.getId())
+                        .title(post.getTitle())
+                        .authorNickname(post.getUser().getNickname())
+                        .activityDate(post.getActivityDate())
+                        .createdAt(post.getCreatedAt())
+                        .build());
+
+    }
+
+    @Transactional(readOnly = true)
     public RecruitmentPostDetailResponse getPostDetail(Long postId) {
         RecruitmentPost post = recruitmentPostRepository.findByIdWithUser(postId)
-            .orElseThrow(() -> new RecruitmentPostNotFoundException(postId));
-            
-        List<String> imageUrls = recruitmentPostImageRepository.findByRecruitmentPostId(postId).stream()
-            .map(RecruitmentPostImage::getImageUrl)
-            .map(objectStorageRepository::getDownloadUrl)
-            .collect(Collectors.toList());
+                .orElseThrow(() -> new RecruitmentPostNotFoundException(postId));
 
+        List<String> imageUrls = recruitmentPostImageRepository.findByRecruitmentPostId(postId).stream()
+                .map(RecruitmentPostImage::getImageUrl)
+                .map(objectStorageRepository::getDownloadUrl)
+                .collect(Collectors.toList());
         return RecruitmentPostDetailResponse.builder()
-            .postId(post.getId())
-            .title(post.getTitle())
-            .content(post.getContent())
-            .authorNickname(post.getUser().getNickname())
-            .activityDate(post.getActivityDate())
-            .recruitmentEndDate(post.getRecruitmentEndDate())
-            .createdAt(post.getCreatedAt())
-            .imageUrls(imageUrls)
-            .build();
+                .postId(post.getId())
+                .title(post.getTitle())
+                .content(post.getContent())
+                .authorNickname(post.getUser().getNickname())
+                .activityDate(post.getActivityDate())
+                .recruitmentEndDate(post.getRecruitmentEndDate())
+                .createdAt(post.getCreatedAt())
+                .imageUrls(imageUrls)
+                .build();
     }
 }

@@ -16,4 +16,13 @@ public interface CommunityPostRepository extends JpaRepository<CommunityPost, Lo
     JOIN FETCH p.user
     WHERE p.id = :postId""")
     Optional<CommunityPost> findByIdWithUserAndImages(@Param("postId") Long postId);
+
+    @Query("""
+    SELECT p 
+    FROM CommunityPost p
+    JOIN FETCH p.user
+    ORDER BY p.createdAt DESC
+    LIMIT :size OFFSET :offset
+    """)
+    List<CommunityPost> findAllByOrderByCreatedAtDesc(@Param("offset") int offset, @Param("size") int size);
 }

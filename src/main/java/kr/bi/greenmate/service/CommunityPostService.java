@@ -5,6 +5,7 @@ import kr.bi.greenmate.dto.CommunityPostCreateRequest;
 import kr.bi.greenmate.dto.CommunityPostCreateResponse;
 import kr.bi.greenmate.dto.CommunityPostLikeResponse;
 import kr.bi.greenmate.dto.CommunityPostDetailResponse;
+import kr.bi.greenmate.dto.CommunityPostListResponse;
 import kr.bi.greenmate.entity.CommunityPost;
 import kr.bi.greenmate.entity.CommunityPostImage;
 import kr.bi.greenmate.entity.CommunityPostLike;
@@ -24,8 +25,11 @@ import org.springframework.orm.ObjectOptimisticLockingFailureException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
+
+import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @Service
@@ -166,5 +170,34 @@ public class CommunityPostService {
                 .createdAt(post.getCreatedAt())
                 .updatedAt(post.getUpdatedAt())
                 .build();
+    }
+
+    @Transactional(readOnly = true)
+    public List<CommunityPostListResponse> getPosts(User user, int page, int size){
+        int offset = page * size;
+
+        List<CommunityPost> posts = communityPostRepository.findAllByOrderByCreatedAtDesc(offset, size);
+
+        List<Long> postIds = posts.stream()
+                .map(CommunityPost::getId)
+                .collect(Collectors.toList());
+
+        Set<Long> likedPostIds = new HashSet<>(communityPostLikeRepository.findLikedPostIdsByUserIdAndPostIds(user.getId(), postIds));
+
+        return posts.stream()
+                .map(post -> {
+                    Boolean isLikedByUser = likedPostIds.contains(post.getId());
+
+                    return CommunityPostListResponse.builder()
+                            .postId(post.getId())
+                            .title(post.getTitle())
+                            .authorNickname(post.getUser().getNickname())
+                            .createdAt(post.getCreatedAt())
+                            .isLikedByUser(isLikedByUser)
+                            .likeCount(post.getLikeCount())
+                            .commentCount(post.getCommentCount())
+                            .build();
+                })
+                .collect(Collectors.toList());
     }
 }

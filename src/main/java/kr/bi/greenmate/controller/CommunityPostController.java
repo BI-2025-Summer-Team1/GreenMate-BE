@@ -8,6 +8,7 @@ import kr.bi.greenmate.dto.CommunityPostCreateRequest;
 import kr.bi.greenmate.dto.CommunityPostCreateResponse;
 import kr.bi.greenmate.dto.CommunityPostLikeResponse;
 import kr.bi.greenmate.dto.CommunityPostDetailResponse;
+import kr.bi.greenmate.dto.CommunityPostListResponse;
 import kr.bi.greenmate.entity.User;
 import kr.bi.greenmate.repository.CommunityPostLikeRepository;
 import kr.bi.greenmate.service.CommunityPostService;
@@ -19,6 +20,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
@@ -48,6 +50,16 @@ public class CommunityPostController {
             @AuthenticationPrincipal User user,
             @PathVariable long postId) {
         CommunityPostLikeResponse response = communityPostService.toggleLike(postId, user);
+        return ResponseEntity.ok(response);
+    }
+
+    @GetMapping
+    @Operation(summary = "커뮤니티 글 목록 조회", description = "커뮤니티 글 목록을 조회합니다.")
+    public ResponseEntity<List<CommunityPostListResponse>> getPosts(
+            @AuthenticationPrincipal User user,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size){
+        List<CommunityPostListResponse> response = communityPostService.getPosts(user, page, size);
         return ResponseEntity.ok(response);
     }
 
