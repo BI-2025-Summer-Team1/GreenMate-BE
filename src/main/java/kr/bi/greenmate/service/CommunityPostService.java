@@ -20,6 +20,8 @@ import kr.bi.greenmate.repository.CommunityPostImageRepository;
 import kr.bi.greenmate.repository.CommunityPostRepository;
 import kr.bi.greenmate.repository.ObjectStorageRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.orm.ObjectOptimisticLockingFailureException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -166,7 +168,15 @@ public class CommunityPostService {
     @Transactional(readOnly = true)
     public KeysetSliceResponse<CommunityPostListResponse> getPosts(User user, Long lastPostId, int size){
 
-        List<CommunityPost> posts = communityPostRepository.findNextPosts(lastPostId, size + 1);
+        Pageable pageable = PageRequest.of(0, size + 1);
+
+        List<CommunityPost> posts;
+
+        if (lastPostId == null) {
+            posts = communityPostRepository.findFirstPage(pageable);
+        } else {
+            posts = communityPostRepository.findNextPage(lastPostId, pageable);
+        }
 
         boolean hasNext = posts.size() > size;
         if(hasNext){
