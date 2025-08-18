@@ -30,6 +30,9 @@ public class CommunityPostListResponse {
     @Schema(description = "총 좋아요 수", example = "42")
     private Long likeCount;
 
+    @Schema(description = "조회수", example = "128")
+    private Long viewCount;
+
     @Schema(description = "댓글 수", example = "5")
     private Long commentCount;
 }
