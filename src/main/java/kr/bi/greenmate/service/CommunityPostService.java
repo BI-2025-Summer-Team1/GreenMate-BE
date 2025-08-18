@@ -5,6 +5,8 @@ import kr.bi.greenmate.dto.CommunityPostCreateRequest;
 import kr.bi.greenmate.dto.CommunityPostCreateResponse;
 import kr.bi.greenmate.dto.CommunityPostLikeResponse;
 import kr.bi.greenmate.dto.CommunityPostDetailResponse;
+import kr.bi.greenmate.dto.CommunityPostListResponse;
+import kr.bi.greenmate.dto.KeysetSliceResponse;
 import kr.bi.greenmate.entity.CommunityPost;
 import kr.bi.greenmate.entity.CommunityPostImage;
 import kr.bi.greenmate.entity.CommunityPostLike;
@@ -14,18 +16,23 @@ import kr.bi.greenmate.exception.error.ImageSizeExceedException;
 import kr.bi.greenmate.exception.error.OptimisticLockCustomException;
 import kr.bi.greenmate.exception.error.PostNotFoundException;
 import kr.bi.greenmate.repository.CommunityPostLikeRepository;
-import kr.bi.greenmate.exception.error.PostNotFoundException;
 import kr.bi.greenmate.repository.CommunityPostImageRepository;
 import kr.bi.greenmate.repository.CommunityPostRepository;
 import kr.bi.greenmate.repository.ObjectStorageRepository;
 import lombok.RequiredArgsConstructor;
-import oracle.jdbc.proxy.annotation.Post;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Slice;
 import org.springframework.orm.ObjectOptimisticLockingFailureException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
+
+import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @Service
@@ -93,16 +100,7 @@ public class CommunityPostService {
         throw new OptimisticLockCustomException();
     }
 
-    @Transactional(readOnly = true)
-    public CommunityPostLikeResponse getLikeStatus(Long postId, User user){
 
-        CommunityPost post = communityPostRepository.findById(postId)
-                .orElseThrow(PostNotFoundException::new);
-
-        boolean isLiked = communityPostLikeRepository.existsByUserIdAndCommunityPostId(user.getId(), postId);
-
-        return buildLikeResponse(isLiked, post);
-    }
 
     private CommunityPostLikeResponse unlikePost(CommunityPostLike existingLike, CommunityPost post){
         communityPostLikeRepository.delete(existingLike);
@@ -166,5 +164,44 @@ public class CommunityPostService {
                 .createdAt(post.getCreatedAt())
                 .updatedAt(post.getUpdatedAt())
                 .build();
+    }
+
+    @Transactional(readOnly = true)
+    public KeysetSliceResponse<CommunityPostListResponse> getPosts(User user, Long lastPostId, int size){
+
+        Pageable pageable = PageRequest.of(0, size);
+
+        Slice<CommunityPost> slice;
+        if(lastPostId == null){
+            slice = communityPostRepository.findFirstPage(pageable);
+        }
+        else{
+            slice = communityPostRepository.findNextPage(lastPostId, pageable);
+        }
+
+        List<CommunityPost> posts = slice.getContent();
+
+        Set<Long> likedPostIds;
+        if(user != null && !posts.isEmpty()){
+            likedPostIds = new HashSet<>(communityPostLikeRepository.findLikedPostIdsByUserIdAndPosts(user.getId(), posts));
+        }
+        else {
+            likedPostIds = Collections.emptySet();
+        }
+
+        List<CommunityPostListResponse> content = posts.stream()
+                .map(post -> CommunityPostListResponse.builder()
+                        .postId(post.getId())
+                        .title(post.getTitle())
+                        .authorNickname(post.getUser().getNickname())
+                        .createdAt(post.getCreatedAt())
+                        .isLikedByUser(likedPostIds.contains(post.getId()))
+                        .likeCount(post.getLikeCount())
+                        .viewCount(post.getViewCount())
+                        .commentCount(post.getCommentCount())
+                        .build())
+                .toList();
+
+        return new KeysetSliceResponse<>(content, slice.hasNext());
     }
 }
