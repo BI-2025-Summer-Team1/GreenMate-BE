@@ -183,13 +183,9 @@ public class CommunityPostService {
             posts.remove(size);
         }
 
-        List<Long> postIds = posts.stream()
-                .map(CommunityPost::getId)
-                .toList();
-
         Set<Long> likedPostIds;
-        if(user != null && !postIds.isEmpty()){
-            likedPostIds = new HashSet<>(communityPostLikeRepository.findLikedPostIdsByUserIdAndPostIds(user.getId(), postIds));
+        if(user != null && !posts.isEmpty()){
+            likedPostIds = new HashSet<>(communityPostLikeRepository.findLikedPostIdsByUserIdAndPosts(user.getId(), posts));
         }
         else {
             likedPostIds = Collections.emptySet();

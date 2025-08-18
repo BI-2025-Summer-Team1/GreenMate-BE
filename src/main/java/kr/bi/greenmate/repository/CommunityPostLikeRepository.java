@@ -1,5 +1,6 @@
 package kr.bi.greenmate.repository;
 
+import kr.bi.greenmate.entity.CommunityPost;
 import kr.bi.greenmate.entity.CommunityPostLike;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -17,9 +18,9 @@ public interface CommunityPostLikeRepository extends JpaRepository<CommunityPost
     @Query("""
     SELECT l.communityPost.id
     FROM CommunityPostLike l
-    WHERE l.user.id = :userId AND l.communityPost.id IN :postIds
+    WHERE l.user.id = :userId AND l.communityPost IN :posts
 """)
-    List<Long> findLikedPostIdsByUserIdAndPostIds(
+    List<Long> findLikedPostIdsByUserIdAndPosts(
             @Param("userId") Long userId,
-            @Param("postIds") List<Long> postIds);
+            @Param("posts") List<CommunityPost> posts   );
 }
