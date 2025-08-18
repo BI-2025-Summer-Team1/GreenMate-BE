@@ -97,16 +97,7 @@ public class CommunityPostService {
         throw new OptimisticLockCustomException();
     }
 
-    @Transactional(readOnly = true)
-    public CommunityPostLikeResponse getLikeStatus(Long postId, User user){
 
-        CommunityPost post = communityPostRepository.findById(postId)
-                .orElseThrow(PostNotFoundException::new);
-
-        boolean isLiked = communityPostLikeRepository.existsByUserIdAndCommunityPostId(user.getId(), postId);
-
-        return buildLikeResponse(isLiked, post);
-    }
 
     private CommunityPostLikeResponse unlikePost(CommunityPostLike existingLike, CommunityPost post){
         communityPostLikeRepository.delete(existingLike);

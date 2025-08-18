@@ -63,14 +63,7 @@ public class CommunityPostController {
         return ResponseEntity.ok(response);
     }
 
-    @GetMapping("/{postId}/like")
-    @Operation(summary = "좋아요 상태 조회", description = "현재 사용자의 좋아요 상태와 총 좋아요 수를 조회합니다.")
-    public ResponseEntity<CommunityPostLikeResponse> getLikeStatus(
-            @AuthenticationPrincipal User user,
-            @PathVariable long postId) {
-        CommunityPostLikeResponse response = communityPostService.getLikeStatus(postId, user);
-        return ResponseEntity.ok(response);
-    }
+
       
     @GetMapping("/{postId}")
     @Operation(summary = "커뮤니티 글 상세 조회", description = "글의 상세 정보를 조회합니다.")
