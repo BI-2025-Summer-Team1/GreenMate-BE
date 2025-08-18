@@ -1,6 +1,7 @@
 package kr.bi.greenmate.controller;
 
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Size;
@@ -39,6 +40,7 @@ public class CommunityPostController {
     public ResponseEntity<CommunityPostCreateResponse> createPost(
             @AuthenticationPrincipal User user,
             @RequestPart("request") @Valid CommunityPostCreateRequest request,
+            @Parameter(description = "게시글에 첨부할 이미지 파일들 (최대 10개, 선택사항)", example = "image1.jpg, image2.png")
             @RequestPart(value = "images", required = false) @Size(max = 10) List<MultipartFile> images) {
         CommunityPostCreateResponse response = communityPostService.createPost(user, request, images);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
@@ -48,6 +50,7 @@ public class CommunityPostController {
     @Operation(summary = "좋아요 토글", description = "게시글에 좋아요를 추가하거나 취소합니다.")
     public ResponseEntity<CommunityPostLikeResponse> toggleLike(
             @AuthenticationPrincipal User user,
+            @Parameter(description = "좋아요를 토글할 게시글 ID", example = "123")
             @PathVariable long postId) {
         CommunityPostLikeResponse response = communityPostService.toggleLike(postId, user);
         return ResponseEntity.ok(response);
@@ -57,7 +60,9 @@ public class CommunityPostController {
     @Operation(summary = "커뮤니티 글 목록 조회", description = "커뮤니티 글 목록을 조회합니다.")
     public ResponseEntity<KeysetSliceResponse<CommunityPostListResponse>> getPosts(
             @AuthenticationPrincipal User user,
+            @Parameter(description = "마지막으로 조회한 게시글 ID (첫 페이지 조회 시 생략 가능)", example = "100")
             @RequestParam(required = false) Long lastPostId,
+            @Parameter(description = "한 번에 조회할 게시글 개수", example = "10")
             @RequestParam(defaultValue = "10") int size){
         KeysetSliceResponse<CommunityPostListResponse> response = communityPostService.getPosts(user, lastPostId, size);
         return ResponseEntity.ok(response);
@@ -68,6 +73,7 @@ public class CommunityPostController {
     @GetMapping("/{postId}")
     @Operation(summary = "커뮤니티 글 상세 조회", description = "글의 상세 정보를 조회합니다.")
     public ResponseEntity<CommunityPostDetailResponse> getPost(
+            @Parameter(description = "조회할 게시글 ID", example = "123")
             @PathVariable long postId,
             @AuthenticationPrincipal User user)
     {
