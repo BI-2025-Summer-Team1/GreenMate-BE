@@ -32,13 +32,13 @@ import lombok.RequiredArgsConstructor;
 public class RecruitmentPostController {
 
     private final RecruitmentPostService recruitmentPostService;
-   
+
     @PostMapping(consumes = {"multipart/form-data"})
     @Operation(summary = "모집글 생성", description = "새로운 환경활동 모집글을 생성합니다.")
     public ResponseEntity<RecruitmentPostCreationResponse> createPost(
-        @RequestPart @Valid RecruitmentPostCreationRequest request,
-        @RequestPart(required = false) List<MultipartFile> images,
-        @AuthenticationPrincipal Long userId) {
+            @RequestPart @Valid RecruitmentPostCreationRequest request,
+            @RequestPart(required = false) List<MultipartFile> images,
+            @AuthenticationPrincipal Long userId) {
 
         RecruitmentPostCreationResponse response = recruitmentPostService.createRecruitmentPost(request, images, userId);
 
@@ -48,18 +48,18 @@ public class RecruitmentPostController {
     @GetMapping
     @Operation(summary = "모집글 목록 조회", description = "환경활동 모집글 목록을 조회합니다.")
     public ResponseEntity<Page<RecruitmentPostListResponse>> getRecruitmentPostList(
-        @PageableDefault(page = 0, size = 10) Pageable pageable) {
-        
+            @PageableDefault(page = 0, size = 10) Pageable pageable) {
+
         Page<RecruitmentPostListResponse> postList = recruitmentPostService.getPostList(pageable);
-        
+
         return ResponseEntity.ok(postList);
-        }
-  
+    }
+
     @GetMapping("/{postId}")
     @Operation(summary = "모집글 상세 조회", description = "특정 ID의 환경활동 모집글 상세 정보를 조회합니다.")
     public ResponseEntity<RecruitmentPostDetailResponse> getRecruitmentPostDetail(@PathVariable Long postId) {
         RecruitmentPostDetailResponse postDetail = recruitmentPostService.getPostDetail(postId);
-        
+
         return ResponseEntity.ok(postDetail);
     }
 }
