@@ -3,6 +3,7 @@ package kr.bi.greenmate.repository;
 import kr.bi.greenmate.entity.CommunityPost;
 import kr.bi.greenmate.entity.CommunityPostImage;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Slice;
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -21,16 +22,16 @@ public interface CommunityPostRepository extends JpaRepository<CommunityPost, Lo
 
     @EntityGraph(attributePaths = {"user"})
     @Query("""
-    SELECT p FROM CommunityPost p
-    ORDER BY p.id DESC
+SELECT p FROM CommunityPost p
+ORDER BY p.id DESC
 """)
-    List<CommunityPost> findFirstPage(Pageable pageable);
+    Slice<CommunityPost> findFirstPage(Pageable pageable);
 
     @EntityGraph(attributePaths = {"user"})
     @Query("""
-    SELECT p FROM CommunityPost p
-    WHERE p.id < :lastPostId
-    ORDER BY p.id DESC
+SELECT p FROM CommunityPost p
+WHERE p.id < :lastPostId
+ORDER BY p.id DESC
 """)
-    List<CommunityPost> findNextPage(@Param("lastPostId") Long lastPostId, Pageable pageable);
+    Slice<CommunityPost> findNextPage(@Param("lastPostId") Long lastPostId, Pageable pageable);
 }

@@ -22,6 +22,7 @@ import kr.bi.greenmate.repository.ObjectStorageRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Slice;
 import org.springframework.orm.ObjectOptimisticLockingFailureException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -168,20 +169,17 @@ public class CommunityPostService {
     @Transactional(readOnly = true)
     public KeysetSliceResponse<CommunityPostListResponse> getPosts(User user, Long lastPostId, int size){
 
-        Pageable pageable = PageRequest.of(0, size + 1);
+        Pageable pageable = PageRequest.of(0, size);
 
-        List<CommunityPost> posts;
-
-        if (lastPostId == null) {
-            posts = communityPostRepository.findFirstPage(pageable);
-        } else {
-            posts = communityPostRepository.findNextPage(lastPostId, pageable);
+        Slice<CommunityPost> slice;
+        if(lastPostId == null){
+            slice = communityPostRepository.findFirstPage(pageable);
+        }
+        else{
+            slice = communityPostRepository.findNextPage(lastPostId, pageable);
         }
 
-        boolean hasNext = posts.size() > size;
-        if(hasNext){
-            posts.remove(size);
-        }
+        List<CommunityPost> posts = slice.getContent();
 
         Set<Long> likedPostIds;
         if(user != null && !posts.isEmpty()){
@@ -199,10 +197,11 @@ public class CommunityPostService {
                         .createdAt(post.getCreatedAt())
                         .isLikedByUser(likedPostIds.contains(post.getId()))
                         .likeCount(post.getLikeCount())
+                        .viewCount(post.getViewCount())
                         .commentCount(post.getCommentCount())
                         .build())
                 .toList();
 
-        return new KeysetSliceResponse<>(content, hasNext);
+        return new KeysetSliceResponse<>(content, slice.hasNext());
     }
 }
