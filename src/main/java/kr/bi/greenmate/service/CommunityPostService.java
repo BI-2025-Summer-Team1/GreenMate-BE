@@ -16,7 +16,6 @@ import kr.bi.greenmate.exception.error.ImageSizeExceedException;
 import kr.bi.greenmate.exception.error.OptimisticLockCustomException;
 import kr.bi.greenmate.exception.error.PostNotFoundException;
 import kr.bi.greenmate.repository.CommunityPostLikeRepository;
-import kr.bi.greenmate.exception.error.PostNotFoundException;
 import kr.bi.greenmate.repository.CommunityPostImageRepository;
 import kr.bi.greenmate.repository.CommunityPostRepository;
 import kr.bi.greenmate.repository.ObjectStorageRepository;

@@ -11,7 +11,6 @@ import kr.bi.greenmate.dto.CommunityPostDetailResponse;
 import kr.bi.greenmate.dto.CommunityPostListResponse;
 import kr.bi.greenmate.dto.KeysetSliceResponse;
 import kr.bi.greenmate.entity.User;
-import kr.bi.greenmate.repository.CommunityPostLikeRepository;
 import kr.bi.greenmate.service.CommunityPostService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
