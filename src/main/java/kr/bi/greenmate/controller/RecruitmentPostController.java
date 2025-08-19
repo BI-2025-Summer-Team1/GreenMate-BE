@@ -15,12 +15,14 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
+
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import kr.bi.greenmate.dto.RecruitmentPostCreationRequest;
 import kr.bi.greenmate.dto.RecruitmentPostCreationResponse;
 import kr.bi.greenmate.dto.RecruitmentPostDetailResponse;
+import kr.bi.greenmate.dto.RecruitmentPostLikeResponse;
 import kr.bi.greenmate.dto.RecruitmentPostListResponse;
 import kr.bi.greenmate.service.RecruitmentPostService;
 import lombok.RequiredArgsConstructor;
@@ -61,5 +63,16 @@ public class RecruitmentPostController {
         RecruitmentPostDetailResponse postDetail = recruitmentPostService.getPostDetail(postId);
 
         return ResponseEntity.ok(postDetail);
+    }
+
+    @PostMapping("/{postId}/like")
+    @Operation(summary = "모집글 좋아요 토글", description = "모집글에 좋아요를 누르거나 취소합니다.")
+    public ResponseEntity<RecruitmentPostLikeResponse> toggleLike(
+            @PathVariable Long postId,
+            @AuthenticationPrincipal Long userId) {
+
+        RecruitmentPostLikeResponse response = recruitmentPostService.doToggleLike(postId, userId);
+        
+        return ResponseEntity.ok(response);
     }
 }
