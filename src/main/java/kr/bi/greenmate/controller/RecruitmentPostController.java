@@ -15,13 +15,18 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
+
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.parameters.RequestBody;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import kr.bi.greenmate.dto.RecruitmentPostCommentRequest;
+import kr.bi.greenmate.dto.RecruitmentPostCommentResponse;
 import kr.bi.greenmate.dto.RecruitmentPostCreationRequest;
 import kr.bi.greenmate.dto.RecruitmentPostCreationResponse;
 import kr.bi.greenmate.dto.RecruitmentPostDetailResponse;
 import kr.bi.greenmate.dto.RecruitmentPostListResponse;
+import kr.bi.greenmate.service.RecruitmentPostCommentService;
 import kr.bi.greenmate.service.RecruitmentPostService;
 import lombok.RequiredArgsConstructor;
 
@@ -32,6 +37,7 @@ import lombok.RequiredArgsConstructor;
 public class RecruitmentPostController {
 
     private final RecruitmentPostService recruitmentPostService;
+    private final RecruitmentPostCommentService recruitmentPostCommentService;
 
     @PostMapping(consumes = {"multipart/form-data"})
     @Operation(summary = "모집글 생성", description = "새로운 환경활동 모집글을 생성합니다.")
@@ -61,5 +67,17 @@ public class RecruitmentPostController {
         RecruitmentPostDetailResponse postDetail = recruitmentPostService.getPostDetail(postId);
 
         return ResponseEntity.ok(postDetail);
+    }
+
+    @PostMapping("/{postId}/comments")
+    @Operation(summary = "모집글 댓글 작성", description = "특정 모집글에 댓글을 작성합니다.")
+    public ResponseEntity<RecruitmentPostCommentResponse> createComment(
+            @PathVariable Long postId,
+            @RequestBody @Valid RecruitmentPostCommentRequest request,
+            @AuthenticationPrincipal Long userId) {
+
+        RecruitmentPostCommentResponse response = recruitmentPostCommentService.createComment(postId, userId, request);
+       
+        return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 }
