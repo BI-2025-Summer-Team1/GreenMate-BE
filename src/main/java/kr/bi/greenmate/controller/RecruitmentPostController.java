@@ -2,10 +2,12 @@ package kr.bi.greenmate.controller;
 
 import java.util.List;
 
+import kr.bi.greenmate.entity.User;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -33,14 +35,14 @@ public class RecruitmentPostController {
 
     private final RecruitmentPostService recruitmentPostService;
 
-    @PostMapping(consumes = {"multipart/form-data"})
+    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @Operation(summary = "모집글 생성", description = "새로운 환경활동 모집글을 생성합니다.")
     public ResponseEntity<RecruitmentPostCreationResponse> createPost(
             @RequestPart @Valid RecruitmentPostCreationRequest request,
             @RequestPart(required = false) List<MultipartFile> images,
-            @AuthenticationPrincipal Long userId) {
+            @AuthenticationPrincipal User user) {
 
-        RecruitmentPostCreationResponse response = recruitmentPostService.createRecruitmentPost(request, images, userId);
+        RecruitmentPostCreationResponse response = recruitmentPostService.createRecruitmentPost(request, images, user.getId());
 
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
