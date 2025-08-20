@@ -40,7 +40,6 @@ public class CommunityPost extends BaseTimeEntity{
 
     @Column(length = 500, nullable = false)
     private String content;
-    .
 
     @Builder.Default
     @Column(nullable = false)
