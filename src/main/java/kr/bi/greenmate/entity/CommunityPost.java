@@ -40,6 +40,7 @@ public class CommunityPost extends BaseTimeEntity{
 
     @Column(length = 500, nullable = false)
     private String content;
+    .
 
     @Builder.Default
     @Column(nullable = false)
@@ -73,5 +74,5 @@ public class CommunityPost extends BaseTimeEntity{
         if(this.likeCount > 0){
             this.likeCount--;
         }
-    }
+    }   
 }
