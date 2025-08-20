@@ -33,6 +33,9 @@ public class CommunityPostDetailResponse {
 
     @Schema(description = "총 좋아요 수", example = "42")
     private Long likeCount;
+
+    @Schema(description = "조회수", example = "128")
+    private Long viewCount;
     
     @Schema(description = "생성일시", example = "2024-01-01T10:00:00")
     private LocalDateTime createdAt;
