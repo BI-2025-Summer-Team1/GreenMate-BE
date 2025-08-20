@@ -10,6 +10,7 @@ import kr.bi.greenmate.dto.SignUpResponse;
 import kr.bi.greenmate.service.AuthService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -26,7 +27,7 @@ public class UserController {
 
     private final AuthService authService;
 
-    @PostMapping("/signup")
+    @PostMapping(value = "/signup", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @Operation(summary = "회원가입", description = "새로운 사용자를 등록합니다.")
     public ResponseEntity<SignUpResponse> signUp(
             @RequestPart("request") @Valid SignUpRequest request,
