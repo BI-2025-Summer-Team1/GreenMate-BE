@@ -34,11 +34,16 @@ public class SecurityConfig {
                 .cors(Customizer.withDefaults())
                 .csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/api/v1/users/signup").permitAll()
-                        .requestMatchers("/api/v1/users/login").permitAll()
-                        .requestMatchers(HttpMethod.GET, "/api/v1/agreements").permitAll()
-                        .requestMatchers(HttpMethod.GET, "/api/v1/recruitment-posts").permitAll()
-                        .requestMatchers(new RegexRequestMatcher("^/api/v1/recruitment-posts/[0-9]+$", HttpMethod.GET.name())).permitAll()
+                        .requestMatchers(
+                                "/api/v1/users/signup",
+                                "/api/v1/users/login"
+                        ).permitAll()
+                        .requestMatchers(HttpMethod.GET,
+                                "/api/v1/agreements",
+                                "/api/v1/recruitment-posts"
+                        ).permitAll()
+                        .requestMatchers(new RegexRequestMatcher("^/api/v1/recruitment-posts/[0-9]+$", HttpMethod.GET.name()))
+                        .permitAll()
                         .anyRequest().authenticated()
                 )
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
