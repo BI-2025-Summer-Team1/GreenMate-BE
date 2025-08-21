@@ -2,6 +2,9 @@ package kr.bi.greenmate.controller;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Encoding;
+import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Size;
@@ -37,7 +40,19 @@ public class CommunityPostController {
     private final CommunityPostService communityPostService;
 
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    @Operation(summary = "커뮤니티 글 작성", description = "새로운 글을 등록합니다.")
+    @Operation(
+            summary = "커뮤니티 글 작성",
+            description = "새로운 글을 등록합니다.",
+            requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(
+                    content = @Content(
+                            mediaType = MediaType.MULTIPART_FORM_DATA_VALUE,
+                            encoding = {
+                                    @Encoding(name = "request", contentType = MediaType.APPLICATION_JSON_VALUE),
+                                    @Encoding(name = "images", contentType = MediaType.APPLICATION_OCTET_STREAM_VALUE)
+                            }
+                    )
+            )
+    )
     public ResponseEntity<CommunityPostCreateResponse> createPost(
             @AuthenticationPrincipal User user,
             @RequestPart("request") @Valid CommunityPostCreateRequest request,

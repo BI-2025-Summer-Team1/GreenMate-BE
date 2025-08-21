@@ -1,6 +1,10 @@
 package kr.bi.greenmate.controller;
 
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Encoding;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.media.SchemaProperty;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import kr.bi.greenmate.dto.LoginRequest;
@@ -28,7 +32,19 @@ public class UserController {
     private final AuthService authService;
 
     @PostMapping(value = "/signup", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    @Operation(summary = "회원가입", description = "새로운 사용자를 등록합니다.")
+    @Operation(
+            summary = "회원가입",
+            description = "새로운 사용자를 등록합니다.",
+            requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(
+                    content = @Content(
+                            mediaType = MediaType.MULTIPART_FORM_DATA_VALUE,
+                            encoding = {
+                                    @Encoding(name = "request", contentType = MediaType.APPLICATION_JSON_VALUE),
+                                    @Encoding(name = "profileImage", contentType = MediaType.APPLICATION_OCTET_STREAM_VALUE)
+                            }
+                    )
+            )
+    )
     public ResponseEntity<SignUpResponse> signUp(
             @RequestPart("request") @Valid SignUpRequest request,
             @RequestPart(value = "profileImage", required = false) MultipartFile profileImage

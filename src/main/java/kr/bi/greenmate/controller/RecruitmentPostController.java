@@ -18,6 +18,8 @@ import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Encoding;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import kr.bi.greenmate.dto.RecruitmentPostCreationRequest;
@@ -36,10 +38,22 @@ public class RecruitmentPostController {
     private final RecruitmentPostService recruitmentPostService;
 
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    @Operation(summary = "모집글 생성", description = "새로운 환경활동 모집글을 생성합니다.")
+    @Operation(
+            summary = "모집글 생성",
+            description = "새로운 환경활동 모집글을 생성합니다.",
+            requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(
+                    content = @Content(
+                            mediaType = MediaType.MULTIPART_FORM_DATA_VALUE,
+                            encoding = {
+                                    @Encoding(name = "request", contentType = MediaType.APPLICATION_JSON_VALUE),
+                                    @Encoding(name = "images", contentType = MediaType.APPLICATION_OCTET_STREAM_VALUE)
+                            }
+                    )
+            )
+    )
     public ResponseEntity<RecruitmentPostCreationResponse> createPost(
-            @RequestPart @Valid RecruitmentPostCreationRequest request,
-            @RequestPart(required = false) List<MultipartFile> images,
+            @RequestPart("request") @Valid RecruitmentPostCreationRequest request,
+            @RequestPart(value = "images", required = false) List<MultipartFile> images,
             @AuthenticationPrincipal User user) {
 
         RecruitmentPostCreationResponse response = recruitmentPostService.createRecruitmentPost(request, images, user.getId());
