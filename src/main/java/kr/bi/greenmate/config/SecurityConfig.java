@@ -38,10 +38,11 @@ public class SecurityConfig {
                                 "/api/v1/users/signup",
                                 "/api/v1/users/login"
                         ).permitAll()
-                        .requestMatchers(HttpMethod.GET,
+                        .requestMatchers(
+                                HttpMethod.GET,
                                 "/api/v1/agreements",
-                                "/api/v1/recruitment-posts"
-                        ).permitAll()
+                                "/api/v1/agreements/**")
+                        .permitAll()
                         .anyRequest().authenticated()
                 )
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
