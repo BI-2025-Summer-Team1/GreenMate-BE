@@ -8,6 +8,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Optional;
 
@@ -37,4 +38,9 @@ ORDER BY p.id DESC
     @Modifying(clearAutomatically = true, flushAutomatically = true)
     @Query("UPDATE CommunityPost p SET p.viewCount = p.viewCount + :delta WHERE p.id = :postId")
     int incrementViewCountBy(@Param("postId") Long postId, @Param("delta") long delta);
+
+    @Modifying
+    @Transactional
+    @Query("update CommunityPost p set p.viewCount = p.viewCount + :delta where p.id = :id")
+    int incrementViewCountBy(@Param("id") long id, @Param("delta") long delta);
 }
