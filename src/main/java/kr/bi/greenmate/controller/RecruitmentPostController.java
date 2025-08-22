@@ -28,6 +28,7 @@ import kr.bi.greenmate.dto.RecruitmentPostCommentResponse;
 import kr.bi.greenmate.dto.RecruitmentPostCreationRequest;
 import kr.bi.greenmate.dto.RecruitmentPostCreationResponse;
 import kr.bi.greenmate.dto.RecruitmentPostDetailResponse;
+import kr.bi.greenmate.dto.RecruitmentPostLikeResponse;
 import kr.bi.greenmate.dto.RecruitmentPostListResponse;
 import kr.bi.greenmate.service.RecruitmentPostService;
 import lombok.RequiredArgsConstructor;
@@ -75,6 +76,16 @@ public class RecruitmentPostController {
         return ResponseEntity.ok(postDetail);
     }
 
+    @PostMapping("/{postId}/like")
+    @Operation(summary = "모집글 좋아요 토글", description = "모집글에 좋아요를 누르거나 취소합니다.")
+    public ResponseEntity<RecruitmentPostLikeResponse> toggleLike(
+            @PathVariable Long postId,
+            @AuthenticationPrincipal Long userId) {
+
+        RecruitmentPostLikeResponse response = recruitmentPostService.toggleLike(postId, userId);
+        
+        return ResponseEntity.ok(response);
+    
     @PostMapping(value = "/{postId}/comments", consumes = {"multipart/form-data"})
     @Operation(summary = "모집글 댓글 작성", description = "특정 모집글에 댓글을 작성합니다.")
     public ResponseEntity<RecruitmentPostCommentResponse> createComment(
