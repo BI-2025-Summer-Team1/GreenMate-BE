@@ -11,7 +11,6 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
@@ -67,11 +66,11 @@ public class RecruitmentPostController {
         return ResponseEntity.ok(postDetail);
     }
 
-    @PostMapping("/{postId}/comments")
+    @PostMapping(value = "/{postId}/comments", consumes = {"multipart/form-data"})
     @Operation(summary = "모집글 댓글 작성", description = "특정 모집글에 댓글을 작성합니다.")
     public ResponseEntity<RecruitmentPostCommentResponse> createComment(
             @PathVariable Long postId,
-            @RequestBody @Valid RecruitmentPostCommentRequest request,
+            @RequestPart @Valid RecruitmentPostCommentRequest request,
             @RequestPart(required = false) MultipartFile image,
             @AuthenticationPrincipal Long userId) {
 
