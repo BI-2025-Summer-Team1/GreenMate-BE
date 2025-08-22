@@ -84,5 +84,8 @@ public class RecruitmentPost extends BaseTimeEntity {
         } else {
             this.likeCount--;
         }
+    
+    public void increaseCommentCount() {
+        this.commentCount++;
     }
 }
