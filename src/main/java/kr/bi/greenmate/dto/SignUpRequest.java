@@ -32,11 +32,6 @@ public class SignUpRequest {
     @Schema(description = "사용자 비밀번호", example = "password123", minLength = 8, maxLength = 60)
     private String password;
 
-    @NotBlank(message = "자기소개는 필수입니다.")
-    @Size(max = 300, message = "자기소개는 300자 이하여야 합니다.")
-    @Schema(description = "사용자 자기소개", example = "환경 보호에 관심이 많은 사용자입니다.", maxLength = 300)
-    private String selfIntroduction;
-
     @Setter
     @Schema(description = "프로필 이미지 파일")
     private MultipartFile profileImage;

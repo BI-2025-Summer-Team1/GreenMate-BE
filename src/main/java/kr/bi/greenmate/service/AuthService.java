@@ -81,7 +81,6 @@ public class AuthService {
             .nickname(request.getNickname())
             .password(passwordEncoder.encode(request.getPassword()))
             .profileImageUrl(profileImageUrl)
-            .selfIntroduction(request.getSelfIntroduction())
             .build();
     }
 

@@ -41,7 +41,7 @@ public class User extends BaseTimeEntity {
     @Column(length = 50) 
     private String profileImageUrl; 
 
-    @Column(nullable = false, length = 300) 
+    @Column(length = 300)
     private String selfIntroduction; 
 
     // oneToMany 관계 추가 예정
