@@ -133,9 +133,6 @@ public class RecruitmentPostService {
                 if (++retryCount >= MAX_RETRIES) {
                     throw new OptimisticLockCustomException();
                 }
-                
-                System.out.println("Optimistic lock conflict occurred. Retrying... (" + retryCount + "/" + MAX_RETRIES + ")");
-
                 try {
                     Thread.sleep(50);
                 } catch (InterruptedException ignored) {
@@ -187,7 +184,6 @@ public class RecruitmentPostService {
         recruitmentPostCommentRepository.save(recruitmentPostComment);
 
         recruitmentPost.increaseCommentCount();
-        recruitmentPostRepository.save(recruitmentPost);
 
         return RecruitmentPostCommentResponse.builder()
                 .id(recruitmentPostComment.getId())
