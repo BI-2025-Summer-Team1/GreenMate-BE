@@ -71,7 +71,7 @@ public class RecruitmentPostController {
             @PathVariable Long postId,
             @AuthenticationPrincipal Long userId) {
 
-        RecruitmentPostLikeResponse response = recruitmentPostService.doToggleLike(postId, userId);
+        RecruitmentPostLikeResponse response = recruitmentPostService.toggleLike(postId, userId);
         
         return ResponseEntity.ok(response);
     }
