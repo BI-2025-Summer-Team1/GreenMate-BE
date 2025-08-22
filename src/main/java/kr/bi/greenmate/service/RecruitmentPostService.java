@@ -6,12 +6,10 @@ import java.util.stream.Collectors;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.orm.ObjectOptimisticLockingFailureException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
-import jakarta.persistence.OptimisticLockException;
 import kr.bi.greenmate.dto.RecruitmentPostCommentRequest;
 import kr.bi.greenmate.dto.RecruitmentPostCommentResponse;
 import kr.bi.greenmate.dto.RecruitmentPostCreationRequest;
@@ -24,7 +22,6 @@ import kr.bi.greenmate.entity.RecruitmentPostImage;
 import kr.bi.greenmate.entity.User;
 import kr.bi.greenmate.exception.error.CommentNotFoundException;
 import kr.bi.greenmate.exception.error.FileUploadFailException;
-import kr.bi.greenmate.exception.error.OptimisticLockCustomException;
 import kr.bi.greenmate.exception.error.ParentCommentMismatchException;
 import kr.bi.greenmate.exception.error.RecruitmentPostNotFoundException;
 import kr.bi.greenmate.exception.error.UserNotFoundException;
@@ -119,32 +116,7 @@ public class RecruitmentPostService {
                 .build();
     }
 
-    @Transactional
     public RecruitmentPostCommentResponse createComment(
-            Long recruitmentPostId, Long userId, RecruitmentPostCommentRequest request, MultipartFile image) {
-
-        final int MAX_RETRIES = 3;
-        int retryCount = 0;
-
-        while (retryCount < MAX_RETRIES) {
-            try {
-                return doCreateComment(recruitmentPostId, userId, request, image);
-            } catch (OptimisticLockException | ObjectOptimisticLockingFailureException e) {
-                if (++retryCount >= MAX_RETRIES) {
-                    throw new OptimisticLockCustomException();
-                }
-                try {
-                    Thread.sleep(50);
-                } catch (InterruptedException ignored) {
-                    Thread.currentThread().interrupt();
-                }
-            }
-        }
-        
-        throw new OptimisticLockCustomException();
-    }
-
-    private RecruitmentPostCommentResponse doCreateComment(
             Long recruitmentPostId, Long userId, RecruitmentPostCommentRequest request, MultipartFile image) {
 
         RecruitmentPost recruitmentPost = recruitmentPostRepository.findById(recruitmentPostId)
