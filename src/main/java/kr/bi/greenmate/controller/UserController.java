@@ -22,6 +22,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
+import io.swagger.v3.oas.annotations.Parameter;
 
 @RestController
 @RequestMapping("/api/v1/users")
@@ -34,19 +35,11 @@ public class UserController {
     @PostMapping(value = "/signup", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @Operation(
             summary = "회원가입",
-            description = "새로운 사용자를 등록합니다.",
-            requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(
-                    content = @Content(
-                            mediaType = MediaType.MULTIPART_FORM_DATA_VALUE,
-                            encoding = {
-                                    @Encoding(name = "request", contentType = MediaType.APPLICATION_JSON_VALUE),
-                                    @Encoding(name = "profileImage", contentType = MediaType.APPLICATION_OCTET_STREAM_VALUE)
-                            }
-                    )
-            )
+            description = "새로운 사용자를 등록합니다."
     )
     public ResponseEntity<SignUpResponse> signUp(
             @RequestPart("request") @Valid SignUpRequest request,
+            @Parameter(description = "프로필 이미지 파일 (선택사항)", example = "profile.jpg")
             @RequestPart(value = "profileImage", required = false) MultipartFile profileImage
     ) {
         request.setProfileImage(profileImage);

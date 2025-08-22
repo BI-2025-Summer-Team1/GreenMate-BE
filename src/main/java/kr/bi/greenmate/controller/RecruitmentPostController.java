@@ -28,6 +28,7 @@ import kr.bi.greenmate.dto.RecruitmentPostDetailResponse;
 import kr.bi.greenmate.dto.RecruitmentPostListResponse;
 import kr.bi.greenmate.service.RecruitmentPostService;
 import lombok.RequiredArgsConstructor;
+import io.swagger.v3.oas.annotations.Parameter;
 
 @RestController
 @RequestMapping("/api/v1/recruitment-posts")
@@ -40,19 +41,11 @@ public class RecruitmentPostController {
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @Operation(
             summary = "모집글 생성",
-            description = "새로운 환경활동 모집글을 생성합니다.",
-            requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(
-                    content = @Content(
-                            mediaType = MediaType.MULTIPART_FORM_DATA_VALUE,
-                            encoding = {
-                                    @Encoding(name = "request", contentType = MediaType.APPLICATION_JSON_VALUE),
-                                    @Encoding(name = "images", contentType = MediaType.APPLICATION_OCTET_STREAM_VALUE)
-                            }
-                    )
-            )
+            description = "새로운 환경활동 모집글을 생성합니다."
     )
     public ResponseEntity<RecruitmentPostCreationResponse> createPost(
             @RequestPart("request") @Valid RecruitmentPostCreationRequest request,
+            @Parameter(description = "모집글에 첨부할 이미지 파일들 (최대 10개, 선택사항)", example = "image1.jpg, image2.png")
             @RequestPart(value = "images", required = false) List<MultipartFile> images,
             @AuthenticationPrincipal User user) {
 
