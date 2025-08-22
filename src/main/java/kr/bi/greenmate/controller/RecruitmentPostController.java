@@ -2,7 +2,6 @@ package kr.bi.greenmate.controller;
 
 import java.util.List;
 
-import kr.bi.greenmate.entity.User;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
@@ -19,8 +18,7 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
 import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.media.Content;
-import io.swagger.v3.oas.annotations.media.Encoding;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import kr.bi.greenmate.dto.RecruitmentPostCommentRequest;
@@ -30,9 +28,9 @@ import kr.bi.greenmate.dto.RecruitmentPostCreationResponse;
 import kr.bi.greenmate.dto.RecruitmentPostDetailResponse;
 import kr.bi.greenmate.dto.RecruitmentPostLikeResponse;
 import kr.bi.greenmate.dto.RecruitmentPostListResponse;
+import kr.bi.greenmate.entity.User;
 import kr.bi.greenmate.service.RecruitmentPostService;
 import lombok.RequiredArgsConstructor;
-import io.swagger.v3.oas.annotations.Parameter;
 
 @RestController
 @RequestMapping("/api/v1/recruitment-posts")
@@ -85,6 +83,7 @@ public class RecruitmentPostController {
         RecruitmentPostLikeResponse response = recruitmentPostService.toggleLike(postId, userId);
         
         return ResponseEntity.ok(response);
+    }
     
     @PostMapping(value = "/{postId}/comments", consumes = {"multipart/form-data"})
     @Operation(summary = "모집글 댓글 작성", description = "특정 모집글에 댓글을 작성합니다.")
