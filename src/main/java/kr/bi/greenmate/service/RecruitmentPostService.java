@@ -6,10 +6,12 @@ import java.util.stream.Collectors;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.orm.ObjectOptimisticLockingFailureException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
+import jakarta.persistence.OptimisticLockException;
 import kr.bi.greenmate.dto.RecruitmentPostCreationRequest;
 import kr.bi.greenmate.dto.RecruitmentPostCreationResponse;
 import kr.bi.greenmate.dto.RecruitmentPostDetailResponse;
@@ -19,6 +21,7 @@ import kr.bi.greenmate.entity.RecruitmentPost;
 import kr.bi.greenmate.entity.RecruitmentPostImage;
 import kr.bi.greenmate.entity.RecruitmentPostLike;
 import kr.bi.greenmate.entity.User;
+import kr.bi.greenmate.exception.error.OptimisticLockCustomException;
 import kr.bi.greenmate.exception.error.RecruitmentPostNotFoundException;
 import kr.bi.greenmate.exception.error.UserNotFoundException;
 import kr.bi.greenmate.repository.ObjectStorageRepository;
@@ -113,40 +116,64 @@ public class RecruitmentPostService {
     }
 
     @Transactional
-    public RecruitmentPostLikeResponse doToggleLike(Long postId, Long userId) {
+    public RecruitmentPostLikeResponse toggleLike(Long postId, Long userId) {
+        final int MAX_RETRIES = 3;
+        int retryCount = 0;
+
+        while (retryCount < MAX_RETRIES) {
+            try {
+                return doToggleLike(postId, userId);
+            } catch (OptimisticLockException | ObjectOptimisticLockingFailureException e) {
+                if (++retryCount >= MAX_RETRIES) {
+                    throw new OptimisticLockCustomException();
+                }
+
+                try {
+                    Thread.sleep(50);
+                } catch (InterruptedException ignored) {
+                    Thread.currentThread().interrupt();
+                }
+            }
+        }
+        
+        throw new OptimisticLockCustomException();
+    }
+    
+    private RecruitmentPostLikeResponse doToggleLike(Long postId, Long userId) {
         RecruitmentPost post = recruitmentPostRepository.findById(postId)
                 .orElseThrow(() -> new RecruitmentPostNotFoundException(postId));
-        
+
         User user = userRepository.findById(userId)
                 .orElseThrow(UserNotFoundException::new);
-                
+
         Optional<RecruitmentPostLike> existingLike = recruitmentPostLikeRepository
                 .findByUser_IdAndRecruitmentPost_Id(user.getId(), postId);
-
+        
+        boolean isLiked;
         if (existingLike.isPresent()) {
-            return unlikePost(existingLike.get(), post);
+            unlikePost(existingLike.get(), post);
+            isLiked = false;
         } else {
-            return likePost(user, post);
+            likePost(user, post);
+            isLiked = true;
         }
+        
+        return buildLikeResponse(isLiked, post);
     }
-    
-    private RecruitmentPostLikeResponse likePost(User user, RecruitmentPost post) {
+
+    private void likePost(User user, RecruitmentPost post) {
         RecruitmentPostLike like = RecruitmentPostLike.builder()
-                .user(user)
-                .recruitmentPost(post)
-                .build();
-        
+            .user(user)
+            .recruitmentPost(post)
+            .build();
+            
         recruitmentPostLikeRepository.save(like);
-        post.increaseLikeCount(); 
-        
-        return buildLikeResponse(true, post);
+        post.increaseLikeCount();
     }
-    
-    private RecruitmentPostLikeResponse unlikePost(RecruitmentPostLike existingLike, RecruitmentPost post) {
+
+    private void unlikePost(RecruitmentPostLike existingLike, RecruitmentPost post) {
         recruitmentPostLikeRepository.delete(existingLike);
-        post.decreaseLikeCount(); 
-        
-        return buildLikeResponse(false, post);
+        post.decreaseLikeCount();
     }
     
     private RecruitmentPostLikeResponse buildLikeResponse(boolean isLiked, RecruitmentPost post) {
