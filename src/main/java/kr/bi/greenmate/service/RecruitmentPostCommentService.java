@@ -11,6 +11,11 @@ import kr.bi.greenmate.dto.RecruitmentPostCommentResponse;
 import kr.bi.greenmate.entity.RecruitmentPost;
 import kr.bi.greenmate.entity.RecruitmentPostComment;
 import kr.bi.greenmate.entity.User;
+import kr.bi.greenmate.exception.error.CommentNotFoundException;
+import kr.bi.greenmate.exception.error.FileUploadFailException;
+import kr.bi.greenmate.exception.error.ParentCommentMismatchException;
+import kr.bi.greenmate.exception.error.RecruitmentPostNotFoundException;
+import kr.bi.greenmate.exception.error.UserNotFoundException;
 import kr.bi.greenmate.repository.RecruitmentPostCommentRepository;
 import kr.bi.greenmate.repository.RecruitmentPostRepository;
 import kr.bi.greenmate.repository.UserRepository;
@@ -30,26 +35,30 @@ public class RecruitmentPostCommentService {
             Long recruitmentPostId, Long userId, RecruitmentPostCommentRequest request, MultipartFile image) {
 
         RecruitmentPost recruitmentPost = recruitmentPostRepository.findById(recruitmentPostId)
-                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 모집글입니다."));
+                .orElseThrow(() -> new RecruitmentPostNotFoundException(recruitmentPostId));
 
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 사용자입니다."));
+                .orElseThrow(UserNotFoundException::new);
 
         Optional<Long> parentCommentIdOptional = Optional.ofNullable(request.getParentCommentId());
 
         RecruitmentPostComment parentComment = null;
         if (request.getParentCommentId() != null) {
             parentComment = recruitmentPostCommentRepository.findById(parentCommentIdOptional.get())
-                    .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 부모 댓글입니다."));
+                    .orElseThrow(CommentNotFoundException::new);
 
             if (!parentComment.getRecruitmentPost().getId().equals(recruitmentPostId)) {
-                throw new IllegalArgumentException("부모 댓글이 해당 모집글에 속하지 않습니다.");
+                throw new ParentCommentMismatchException();
             }
         }
 
         String imageUrl = null;
         if (image != null && !image.isEmpty()) {
-            imageUrl = imageUploadService.upload(image, "recruitment-comment");
+            try {
+                imageUrl = imageUploadService.upload(image, "recruitment-comment");
+            } catch (Exception e) {
+                throw new FileUploadFailException();
+            }
         }
 
         RecruitmentPostComment recruitmentPostComment = RecruitmentPostComment.builder()
