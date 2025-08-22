@@ -74,9 +74,10 @@ public class RecruitmentPostController {
     public ResponseEntity<RecruitmentPostCommentResponse> createComment(
             @PathVariable Long postId,
             @RequestBody @Valid RecruitmentPostCommentRequest request,
+            @RequestPart(required = false) MultipartFile image,
             @AuthenticationPrincipal Long userId) {
 
-        RecruitmentPostCommentResponse response = recruitmentPostCommentService.createComment(postId, userId, request);
+        RecruitmentPostCommentResponse response = recruitmentPostCommentService.createComment(postId, userId, request, image);
        
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }

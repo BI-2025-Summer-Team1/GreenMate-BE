@@ -25,7 +25,4 @@ public class RecruitmentPostCommentResponse {
 
     @Schema(description = "작성 시간")
     private LocalDateTime createdAt;
-
-    @Schema(description = "댓글 이미지 URL", nullable = true)
-    private String imageUrl;
 }

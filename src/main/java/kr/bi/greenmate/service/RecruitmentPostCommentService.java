@@ -1,7 +1,10 @@
 package kr.bi.greenmate.service;
 
+import java.util.Optional;
+
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
 import kr.bi.greenmate.dto.RecruitmentPostCommentRequest;
 import kr.bi.greenmate.dto.RecruitmentPostCommentResponse;
@@ -20,18 +23,23 @@ public class RecruitmentPostCommentService {
     private final RecruitmentPostCommentRepository recruitmentPostCommentRepository;
     private final UserRepository userRepository;
     private final RecruitmentPostRepository recruitmentPostRepository;
+    private final ImageUploadService imageUploadService;
 
     @Transactional
-    public RecruitmentPostCommentResponse createComment(Long recruitmentPostId, Long userId, RecruitmentPostCommentRequest request) {
+    public RecruitmentPostCommentResponse createComment(
+            Long recruitmentPostId, Long userId, RecruitmentPostCommentRequest request, MultipartFile image) {
+
         RecruitmentPost recruitmentPost = recruitmentPostRepository.findById(recruitmentPostId)
                 .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 모집글입니다."));
 
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 사용자입니다."));
 
+        Optional<Long> parentCommentIdOptional = Optional.ofNullable(request.getParentCommentId());
+
         RecruitmentPostComment parentComment = null;
         if (request.getParentCommentId() != null) {
-            parentComment = recruitmentPostCommentRepository.findById(request.getParentCommentId())
+            parentComment = recruitmentPostCommentRepository.findById(parentCommentIdOptional.get())
                     .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 부모 댓글입니다."));
 
             if (!parentComment.getRecruitmentPost().getId().equals(recruitmentPostId)) {
@@ -39,11 +47,16 @@ public class RecruitmentPostCommentService {
             }
         }
 
+        String imageUrl = null;
+        if (image != null && !image.isEmpty()) {
+            imageUrl = imageUploadService.upload(image, "recruitment-comment");
+        }
+
         RecruitmentPostComment recruitmentPostComment = RecruitmentPostComment.builder()
                 .recruitmentPost(recruitmentPost)
                 .user(user)
                 .content(request.getContent())
-                .imageUrl(request.getImageUrl()) 
+                .imageUrl(imageUrl) 
                 .parentComment(parentComment) 
                 .build();
 
@@ -58,7 +71,6 @@ public class RecruitmentPostCommentService {
                 .nickname(user.getNickname())
                 .content(recruitmentPostComment.getContent())
                 .createdAt(recruitmentPostComment.getCreatedAt())
-                .imageUrl(recruitmentPostComment.getImageUrl())
                 .build();
     }
 }
