@@ -7,6 +7,8 @@ import java.util.stream.Collectors;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.orm.ObjectOptimisticLockingFailureException;
+import org.springframework.retry.annotation.Backoff;
+import org.springframework.retry.annotation.Retryable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -21,7 +23,6 @@ import kr.bi.greenmate.entity.RecruitmentPost;
 import kr.bi.greenmate.entity.RecruitmentPostImage;
 import kr.bi.greenmate.entity.RecruitmentPostLike;
 import kr.bi.greenmate.entity.User;
-import kr.bi.greenmate.exception.error.OptimisticLockCustomException;
 import kr.bi.greenmate.exception.error.RecruitmentPostNotFoundException;
 import kr.bi.greenmate.exception.error.UserNotFoundException;
 import kr.bi.greenmate.repository.ObjectStorageRepository;
@@ -116,30 +117,12 @@ public class RecruitmentPostService {
     }
 
     @Transactional
+    @Retryable(
+            retryFor = {OptimisticLockException.class, ObjectOptimisticLockingFailureException.class},
+            maxAttempts = 3,
+            backoff = @Backoff(delay = 50)
+    )
     public RecruitmentPostLikeResponse toggleLike(Long postId, Long userId) {
-        final int MAX_RETRIES = 3;
-        int retryCount = 0;
-
-        while (retryCount < MAX_RETRIES) {
-            try {
-                return doToggleLike(postId, userId);
-            } catch (OptimisticLockException | ObjectOptimisticLockingFailureException e) {
-                if (++retryCount >= MAX_RETRIES) {
-                    throw new OptimisticLockCustomException();
-                }
-
-                try {
-                    Thread.sleep(50);
-                } catch (InterruptedException ignored) {
-                    Thread.currentThread().interrupt();
-                }
-            }
-        }
-        
-        throw new OptimisticLockCustomException();
-    }
-    
-    private RecruitmentPostLikeResponse doToggleLike(Long postId, Long userId) {
         RecruitmentPost post = recruitmentPostRepository.findById(postId)
                 .orElseThrow(() -> new RecruitmentPostNotFoundException(postId));
 
@@ -160,7 +143,7 @@ public class RecruitmentPostService {
         
         return buildLikeResponse(isLiked, post);
     }
-
+    
     private void likePost(User user, RecruitmentPost post) {
         RecruitmentPostLike like = RecruitmentPostLike.builder()
             .user(user)
