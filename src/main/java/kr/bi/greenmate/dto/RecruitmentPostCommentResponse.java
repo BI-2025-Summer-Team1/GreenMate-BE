@@ -1,6 +1,7 @@
 package kr.bi.greenmate.dto;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Builder;
@@ -25,4 +26,7 @@ public class RecruitmentPostCommentResponse {
 
     @Schema(description = "작성 시간")
     private LocalDateTime createdAt;
+
+    @Schema(description = "대댓글 목록")
+    private List<RecruitmentPostCommentResponse> replies;
 }

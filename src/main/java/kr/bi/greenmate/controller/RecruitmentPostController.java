@@ -97,4 +97,15 @@ public class RecruitmentPostController {
        
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
+
+    @GetMapping("/{postId}/comments")
+    @Operation(summary = "모집글 댓글 목록 조회", description = "특정 모집글의 댓글 목록을 페이징하여 조회합니다.")
+    public ResponseEntity<Page<RecruitmentPostCommentResponse>> getComments(
+            @PathVariable Long postId,
+            @PageableDefault(page = 0, size = 10) Pageable pageable) {
+        
+        Page<RecruitmentPostCommentResponse> comments = recruitmentPostService.getComments(postId, pageable);
+        
+        return ResponseEntity.ok(comments);
+    }
 }

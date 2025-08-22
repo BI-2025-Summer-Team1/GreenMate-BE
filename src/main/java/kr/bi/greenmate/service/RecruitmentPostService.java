@@ -223,4 +223,51 @@ public class RecruitmentPostService {
                 .createdAt(recruitmentPostComment.getCreatedAt())
                 .build();
     }
+
+    @Transactional(readOnly = true)
+    public Page<RecruitmentPostCommentResponse> getComments(Long postId, Pageable pageable) {
+        // 1. 최상위 댓글 목록 조회
+        Page<RecruitmentPostComment> topLevelCommentsPage = recruitmentPostCommentRepository
+                .findByRecruitmentPostIdAndParentCommentIsNull(postId, pageable);
+
+        // 2. 각 최상위 댓글에 대한 대댓글 목록을 가져와서 DTO로 변환
+        return topLevelCommentsPage.map(topComment -> {
+            // 대댓글 목록 조회 (N+1 쿼리 방지를 위해 Repository에서 JOIN FETCH 사용)
+            List<RecruitmentPostComment> replies = recruitmentPostCommentRepository
+                    .findByParentCommentIdWithUser(topComment.getId());
+            
+            // DTO 변환 및 대댓글 리스트 채우기
+            return mapToCommentResponse(topComment, replies);
+        });
+    }
+
+    private RecruitmentPostCommentResponse mapToCommentResponse(
+            RecruitmentPostComment comment, List<RecruitmentPostComment> replies) {
+        
+        List<RecruitmentPostCommentResponse> replyResponses = replies.stream()
+                .map(this::mapToCommentResponse)
+                .collect(Collectors.toList());
+
+        return RecruitmentPostCommentResponse.builder()
+                .id(comment.getId())
+                .userId(comment.getUser().getId())
+                .nickname(comment.getUser().getNickname())
+                .content(comment.getContent())
+                .imageUrl(comment.getImageUrl() != null ? objectStorageRepository.getDownloadUrl(comment.getImageUrl()) : null)
+                .createdAt(comment.getCreatedAt())
+                .replies(replyResponses)
+                .build();
+    }
+
+    private RecruitmentPostCommentResponse mapToCommentResponse(RecruitmentPostComment comment) {
+        return RecruitmentPostCommentResponse.builder()
+                .id(comment.getId())
+                .userId(comment.getUser().getId())
+                .nickname(comment.getUser().getNickname())
+                .content(comment.getContent())
+                .imageUrl(comment.getImageUrl() != null ? objectStorageRepository.getDownloadUrl(comment.getImageUrl()) : null)
+                .createdAt(comment.getCreatedAt())
+                .replies(null) // 대댓글의 replies는 null로 설정
+                .build();
+    }
 }
