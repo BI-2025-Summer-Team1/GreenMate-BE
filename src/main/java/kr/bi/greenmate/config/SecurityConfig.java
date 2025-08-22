@@ -36,7 +36,7 @@ public class SecurityConfig {
                                 "/api/v1/users/login",
                                 "/api/v1/users/check-nickname"
                         ).permitAll()
-                        .requestMatchers("/api/users/**").authenticated()
+                        .requestMatchers("/api/v1/users/**").authenticated()
                         .anyRequest().authenticated()
                 );
         return http.build();
