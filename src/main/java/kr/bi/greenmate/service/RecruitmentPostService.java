@@ -1,6 +1,7 @@
 package kr.bi.greenmate.service;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 import org.springframework.data.domain.Page;
@@ -9,16 +10,23 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
+import kr.bi.greenmate.dto.RecruitmentPostCommentRequest;
+import kr.bi.greenmate.dto.RecruitmentPostCommentResponse;
 import kr.bi.greenmate.dto.RecruitmentPostCreationRequest;
 import kr.bi.greenmate.dto.RecruitmentPostCreationResponse;
 import kr.bi.greenmate.dto.RecruitmentPostDetailResponse;
 import kr.bi.greenmate.dto.RecruitmentPostListResponse;
 import kr.bi.greenmate.entity.RecruitmentPost;
+import kr.bi.greenmate.entity.RecruitmentPostComment;
 import kr.bi.greenmate.entity.RecruitmentPostImage;
 import kr.bi.greenmate.entity.User;
+import kr.bi.greenmate.exception.error.CommentNotFoundException;
+import kr.bi.greenmate.exception.error.FileUploadFailException;
+import kr.bi.greenmate.exception.error.ParentCommentMismatchException;
 import kr.bi.greenmate.exception.error.RecruitmentPostNotFoundException;
 import kr.bi.greenmate.exception.error.UserNotFoundException;
 import kr.bi.greenmate.repository.ObjectStorageRepository;
+import kr.bi.greenmate.repository.RecruitmentPostCommentRepository;
 import kr.bi.greenmate.repository.RecruitmentPostImageRepository;
 import kr.bi.greenmate.repository.RecruitmentPostRepository;
 import kr.bi.greenmate.repository.UserRepository;
@@ -28,11 +36,13 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 @Transactional
 public class RecruitmentPostService {
+
     private final RecruitmentPostRepository recruitmentPostRepository;
     private final RecruitmentPostImageRepository recruitmentPostImageRepository;
     private final ObjectStorageRepository objectStorageRepository;
     private final UserRepository userRepository;
     private final ImageUploadService imageUploadService;
+    private final RecruitmentPostCommentRepository recruitmentPostCommentRepository;
 
     public RecruitmentPostCreationResponse createRecruitmentPost(
             RecruitmentPostCreationRequest request, List<MultipartFile> images, Long userId) {
@@ -103,6 +113,56 @@ public class RecruitmentPostService {
                 .recruitmentEndDate(post.getRecruitmentEndDate())
                 .createdAt(post.getCreatedAt())
                 .imageUrls(imageUrls)
+                .build();
+    }
+
+    public RecruitmentPostCommentResponse createComment(
+            Long recruitmentPostId, Long userId, RecruitmentPostCommentRequest request, MultipartFile image) {
+
+        RecruitmentPost recruitmentPost = recruitmentPostRepository.findById(recruitmentPostId)
+                .orElseThrow(() -> new RecruitmentPostNotFoundException(recruitmentPostId));
+
+        User user = userRepository.findById(userId)
+                .orElseThrow(UserNotFoundException::new);
+
+        RecruitmentPostComment parentComment = null;
+        if (request.getParentCommentId() != null) {
+            Optional<Long> parentCommentIdOptional = Optional.ofNullable(request.getParentCommentId());
+            parentComment = recruitmentPostCommentRepository.findById(parentCommentIdOptional.get())
+                    .orElseThrow(CommentNotFoundException::new);
+
+            if (!parentComment.getRecruitmentPost().getId().equals(recruitmentPostId)) {
+                throw new ParentCommentMismatchException();
+            }
+        }
+
+        String imageUrl = null;
+        if (image != null && !image.isEmpty()) {
+            try {
+                imageUrl = imageUploadService.upload(image, "recruitment-comment");
+            } catch (Exception e) {
+                throw new FileUploadFailException();
+            }
+        }
+
+        RecruitmentPostComment recruitmentPostComment = RecruitmentPostComment.builder()
+                .recruitmentPost(recruitmentPost)
+                .user(user)
+                .content(request.getContent())
+                .imageUrl(imageUrl)
+                .parentComment(parentComment)
+                .build();
+
+        recruitmentPostCommentRepository.save(recruitmentPostComment);
+
+        recruitmentPost.increaseCommentCount();
+
+        return RecruitmentPostCommentResponse.builder()
+                .id(recruitmentPostComment.getId())
+                .userId(user.getId())
+                .nickname(user.getNickname())
+                .content(recruitmentPostComment.getContent())
+                .createdAt(recruitmentPostComment.getCreatedAt())
                 .build();
     }
 }

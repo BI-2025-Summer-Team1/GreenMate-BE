@@ -17,11 +17,14 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
+
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Encoding;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import kr.bi.greenmate.dto.RecruitmentPostCommentRequest;
+import kr.bi.greenmate.dto.RecruitmentPostCommentResponse;
 import kr.bi.greenmate.dto.RecruitmentPostCreationRequest;
 import kr.bi.greenmate.dto.RecruitmentPostCreationResponse;
 import kr.bi.greenmate.dto.RecruitmentPostDetailResponse;
@@ -70,5 +73,18 @@ public class RecruitmentPostController {
         RecruitmentPostDetailResponse postDetail = recruitmentPostService.getPostDetail(postId);
 
         return ResponseEntity.ok(postDetail);
+    }
+
+    @PostMapping(value = "/{postId}/comments", consumes = {"multipart/form-data"})
+    @Operation(summary = "모집글 댓글 작성", description = "특정 모집글에 댓글을 작성합니다.")
+    public ResponseEntity<RecruitmentPostCommentResponse> createComment(
+            @PathVariable Long postId,
+            @RequestPart @Valid RecruitmentPostCommentRequest request,
+            @RequestPart(required = false) MultipartFile image,
+            @AuthenticationPrincipal Long userId) {
+
+        RecruitmentPostCommentResponse response = recruitmentPostService.createComment(postId, userId, request, image);
+       
+        return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 }

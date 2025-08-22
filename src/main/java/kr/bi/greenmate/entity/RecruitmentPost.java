@@ -70,5 +70,8 @@ public class RecruitmentPost extends BaseTimeEntity {
     @OneToMany(mappedBy = "recruitmentPost", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     @Builder.Default
     private List<RecruitmentPostImage> images = new ArrayList<>();
-    
+
+    public void increaseCommentCount() {
+        this.commentCount++;
+    }
 }
