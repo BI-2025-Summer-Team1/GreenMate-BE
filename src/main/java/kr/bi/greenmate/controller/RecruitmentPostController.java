@@ -26,7 +26,6 @@ import kr.bi.greenmate.dto.RecruitmentPostCreationRequest;
 import kr.bi.greenmate.dto.RecruitmentPostCreationResponse;
 import kr.bi.greenmate.dto.RecruitmentPostDetailResponse;
 import kr.bi.greenmate.dto.RecruitmentPostListResponse;
-import kr.bi.greenmate.service.RecruitmentPostCommentService;
 import kr.bi.greenmate.service.RecruitmentPostService;
 import lombok.RequiredArgsConstructor;
 
@@ -37,7 +36,6 @@ import lombok.RequiredArgsConstructor;
 public class RecruitmentPostController {
 
     private final RecruitmentPostService recruitmentPostService;
-    private final RecruitmentPostCommentService recruitmentPostCommentService;
 
     @PostMapping(consumes = {"multipart/form-data"})
     @Operation(summary = "모집글 생성", description = "새로운 환경활동 모집글을 생성합니다.")
@@ -77,7 +75,7 @@ public class RecruitmentPostController {
             @RequestPart(required = false) MultipartFile image,
             @AuthenticationPrincipal Long userId) {
 
-        RecruitmentPostCommentResponse response = recruitmentPostCommentService.createComment(postId, userId, request, image);
+        RecruitmentPostCommentResponse response = recruitmentPostService.createComment(postId, userId, request, image);
        
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
