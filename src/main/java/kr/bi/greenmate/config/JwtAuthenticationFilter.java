@@ -30,7 +30,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             throws ServletException, IOException {
         String header = request.getHeader("Authorization");
         if (StringUtils.hasText(header) && header.startsWith("Bearer ")) {
-            String token = header.substring(7);
+            String token = header.replace("Bearer ", "");
             if (jwtProvider.validateToken(token)) {
                 Long userId = jwtProvider.getUserId(token);
                 userRepository.findById(userId).ifPresent(user -> {
