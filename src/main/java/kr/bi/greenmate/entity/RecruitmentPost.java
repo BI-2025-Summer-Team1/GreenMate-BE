@@ -27,13 +27,13 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor
 @Builder
-public class RecruitmentPost extends BaseTimeEntity { 
+public class RecruitmentPost extends BaseTimeEntity {
 
-    @Id 
-    @GeneratedValue(strategy = GenerationType.IDENTITY) 
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(nullable = false, updatable = false)
     private Long id;
-    
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false, updatable = false)
     private User user;
@@ -53,7 +53,7 @@ public class RecruitmentPost extends BaseTimeEntity {
     @Column(nullable = false)
     private Long likeCount = 0L;
 
-    @Builder.Default 
+    @Builder.Default
     @Column(nullable = false)
     private Long commentCount = 0L;
 
@@ -64,7 +64,7 @@ public class RecruitmentPost extends BaseTimeEntity {
     private LocalDateTime recruitmentEndDate;
 
     @Version
-    @Column(nullable = false) 
+    @Column(nullable = false)
     private Long version;
 
     @OneToMany(mappedBy = "recruitmentPost", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
@@ -84,7 +84,8 @@ public class RecruitmentPost extends BaseTimeEntity {
         } else {
             this.likeCount--;
         }
-    
+    }
+
     public void increaseCommentCount() {
         this.commentCount++;
     }
