@@ -81,10 +81,10 @@ public class RecruitmentPostController {
             @AuthenticationPrincipal Long userId) {
 
         RecruitmentPostLikeResponse response = recruitmentPostService.toggleLike(postId, userId);
-
+        
         return ResponseEntity.ok(response);
     }
-
+    
     @PostMapping(value = "/{postId}/comments", consumes = {"multipart/form-data"})
     @Operation(summary = "모집글 댓글 작성", description = "특정 모집글에 댓글을 작성합니다.")
     public ResponseEntity<RecruitmentPostCommentResponse> createComment(
@@ -94,7 +94,7 @@ public class RecruitmentPostController {
             @AuthenticationPrincipal Long userId) {
 
         RecruitmentPostCommentResponse response = recruitmentPostService.createComment(postId, userId, request, image);
-
+       
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 }

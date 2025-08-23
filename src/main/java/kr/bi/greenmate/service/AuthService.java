@@ -12,7 +12,6 @@ import kr.bi.greenmate.exception.error.FileEmptyException;
 import kr.bi.greenmate.exception.error.FileUploadFailException;
 import kr.bi.greenmate.exception.error.InvalidImageTypeException;
 import kr.bi.greenmate.exception.error.MissingImageTypeException;
-import kr.bi.greenmate.exception.error.NicknameDuplicateException;
 import kr.bi.greenmate.exception.error.SignUpFailException;
 import kr.bi.greenmate.exception.error.UserNotFoundException;
 import kr.bi.greenmate.repository.UserRepository;
@@ -94,11 +93,12 @@ public class AuthService {
                 if("uk_user_email".equals(constraintName)){
                     throw new EmailDuplicateException();
                 }
-                if("uk_user_nickname".equals(constraintName)){
-                    throw new NicknameDuplicateException();
-                }
             }
             throw new SignUpFailException();
         }
+    }
+
+    public boolean isNicknameDuplicate(String nickname){
+        return userRepository.existsByNickname(nickname);
     }
 }

@@ -23,7 +23,11 @@ public enum ErrorCode {
     CONCURRENT_LIKE_FAIL("409-03", "동시성 문제로 좋아요 처리에 실패했습니다.", HttpStatus.CONFLICT),
 
     FILE_UPLOAD_FAIL("500-01", "파일 업로드에 실패했습니다.", HttpStatus.INTERNAL_SERVER_ERROR),
-    SIGNUP_FAIL("500-02", "회원가입 처리 중 오류가 발생했습니다.", HttpStatus.INTERNAL_SERVER_ERROR);
+    SIGNUP_FAIL("500-02", "회원가입 처리 중 오류가 발생했습니다.", HttpStatus.INTERNAL_SERVER_ERROR),
+
+    VIEW_COUNT_FLUSH_FAIL("500-03", "조회수 동기화 처리 중 오류가 발생했습니다.", HttpStatus.INTERNAL_SERVER_ERROR),
+    VIEW_COUNT_PERSIST_FAIL("500-04", "조회수 데이터베이스 반영 중 오류가 발생했습니다.", HttpStatus.INTERNAL_SERVER_ERROR),
+    REDIS_CONNECTION_FAIL("500-05", "Redis 연결에 실패했습니다.", HttpStatus.INTERNAL_SERVER_ERROR);
 
     private final String code;
     private final String message;

@@ -43,7 +43,7 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 @Transactional
 public class RecruitmentPostService {
-
+    
     private final RecruitmentPostRepository recruitmentPostRepository;
     private final RecruitmentPostImageRepository recruitmentPostImageRepository;
     private final ObjectStorageRepository objectStorageRepository;
@@ -139,7 +139,7 @@ public class RecruitmentPostService {
 
         Optional<RecruitmentPostLike> existingLike = recruitmentPostLikeRepository
                 .findByUser_IdAndRecruitmentPost_Id(user.getId(), postId);
-
+        
         boolean isLiked;
         if (existingLike.isPresent()) {
             unlikePost(existingLike.get(), post);
@@ -148,16 +148,16 @@ public class RecruitmentPostService {
             likePost(user, post);
             isLiked = true;
         }
-
+        
         return buildLikeResponse(isLiked, post);
     }
-
+    
     private void likePost(User user, RecruitmentPost post) {
         RecruitmentPostLike like = RecruitmentPostLike.builder()
-                .user(user)
-                .recruitmentPost(post)
-                .build();
-
+            .user(user)
+            .recruitmentPost(post)
+            .build();
+            
         recruitmentPostLikeRepository.save(like);
         post.increaseLikeCount();
     }
@@ -166,23 +166,23 @@ public class RecruitmentPostService {
         recruitmentPostLikeRepository.delete(existingLike);
         post.decreaseLikeCount();
     }
-
+    
     private RecruitmentPostLikeResponse buildLikeResponse(boolean isLiked, RecruitmentPost post) {
         return RecruitmentPostLikeResponse.builder()
                 .liked(isLiked)
                 .likeCount(post.getLikeCount())
                 .build();
-    }
-
+    }            
+    
     public RecruitmentPostCommentResponse createComment(
             Long recruitmentPostId, Long userId, RecruitmentPostCommentRequest request, MultipartFile image) {
 
         RecruitmentPost recruitmentPost = recruitmentPostRepository.findById(recruitmentPostId)
                 .orElseThrow(() -> new RecruitmentPostNotFoundException(recruitmentPostId));
-
+      
         User user = userRepository.findById(userId)
                 .orElseThrow(UserNotFoundException::new);
-
+        
         RecruitmentPostComment parentComment = null;
         if (request.getParentCommentId() != null) {
             Optional<Long> parentCommentIdOptional = Optional.ofNullable(request.getParentCommentId());
