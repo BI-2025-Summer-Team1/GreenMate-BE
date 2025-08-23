@@ -73,5 +73,5 @@ public class CommunityPost extends BaseTimeEntity{
         if(this.likeCount > 0){
             this.likeCount--;
         }
-    }
+    }   
 }

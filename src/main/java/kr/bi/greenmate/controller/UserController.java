@@ -1,6 +1,10 @@
 package kr.bi.greenmate.controller;
 
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Encoding;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.media.SchemaProperty;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import kr.bi.greenmate.dto.LoginRequest;
@@ -11,6 +15,7 @@ import kr.bi.greenmate.dto.SignUpResponse;
 import kr.bi.greenmate.service.AuthService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -20,6 +25,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
+import io.swagger.v3.oas.annotations.Parameter;
 
 
 @RestController
@@ -30,10 +36,14 @@ public class UserController {
 
     private final AuthService authService;
 
-    @PostMapping("/signup")
-    @Operation(summary = "회원가입", description = "새로운 사용자를 등록합니다.")
+    @PostMapping(value = "/signup", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @Operation(
+            summary = "회원가입",
+            description = "새로운 사용자를 등록합니다."
+    )
     public ResponseEntity<SignUpResponse> signUp(
             @RequestPart("request") @Valid SignUpRequest request,
+            @Parameter(description = "프로필 이미지 파일 (선택사항)", example = "profile.jpg")
             @RequestPart(value = "profileImage", required = false) MultipartFile profileImage
     ) {
         request.setProfileImage(profileImage);
