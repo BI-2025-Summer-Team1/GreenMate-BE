@@ -119,8 +119,7 @@ public class AuthService {
 		return userRepository.existsByNickname(nickname);
 	}
 
-	@Transactional
-	public void saveUserAgreements(User user, List<Long> acceptedAgreementIds) {
+	private void saveUserAgreements(User user, List<Long> acceptedAgreementIds) {
 
 		Set<Long> accepted;
 		if (acceptedAgreementIds == null) {
