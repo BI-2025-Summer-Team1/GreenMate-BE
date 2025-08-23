@@ -171,6 +171,8 @@ public class RecruitmentPostService {
         return RecruitmentPostLikeResponse.builder()
                 .liked(isLiked)
                 .likeCount(post.getLikeCount())
+                .build();
+    }            
     
     public RecruitmentPostCommentResponse createComment(
             Long recruitmentPostId, Long userId, RecruitmentPostCommentRequest request, MultipartFile image) {
