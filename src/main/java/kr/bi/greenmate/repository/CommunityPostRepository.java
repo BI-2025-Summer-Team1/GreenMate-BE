@@ -40,7 +40,6 @@ ORDER BY p.id DESC
     int incrementViewCountBy(@Param("postId") Long postId, @Param("delta") long delta);
 
     @Modifying
-    @Transactional
     @Query("update CommunityPost p set p.viewCount = p.viewCount + :delta where p.id = :id")
     int incrementViewCountBy(@Param("id") long id, @Param("delta") long delta);
 }
