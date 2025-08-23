@@ -99,7 +99,6 @@ public class AuthService {
         }
     }
 
-    @Transactional(readOnly = true)
     public boolean isNicknameDuplicate(String nickname){
         return userRepository.existsByNickname(nickname);
     }
