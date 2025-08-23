@@ -1,15 +1,15 @@
 package kr.bi.greenmate.repository;
 
 import kr.bi.greenmate.entity.CommunityPost;
-import kr.bi.greenmate.entity.CommunityPostImage;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
+import org.springframework.transaction.annotation.Transactional;
 
-import java.util.List;
 import java.util.Optional;
 
 public interface CommunityPostRepository extends JpaRepository<CommunityPost, Long>  {
@@ -34,4 +34,12 @@ WHERE p.id < :lastPostId
 ORDER BY p.id DESC
 """)
     Slice<CommunityPost> findNextPage(@Param("lastPostId") Long lastPostId, Pageable pageable);
+
+    @Modifying(clearAutomatically = true, flushAutomatically = true)
+    @Query("UPDATE CommunityPost p SET p.viewCount = p.viewCount + :delta WHERE p.id = :postId")
+    int incrementViewCountBy(@Param("postId") Long postId, @Param("delta") long delta);
+
+    @Modifying
+    @Query("update CommunityPost p set p.viewCount = p.viewCount + :delta where p.id = :id")
+    int incrementViewCountBy(@Param("id") long id, @Param("delta") long delta);
 }

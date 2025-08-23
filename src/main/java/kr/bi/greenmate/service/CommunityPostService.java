@@ -43,6 +43,7 @@ public class CommunityPostService {
     private final CommunityPostImageRepository communityPostImageRepository;
     private final ObjectStorageRepository objectStorageRepository;
     private final ImageUploadService imageUploadService;
+    private final ViewCountService viewCountService;
 
     @Transactional
     public CommunityPostCreateResponse createPost(User user, CommunityPostCreateRequest request, List<MultipartFile> images){
@@ -144,14 +145,19 @@ public class CommunityPostService {
 
     @Transactional(readOnly = true)
     public CommunityPostDetailResponse getPost(Long postId, User user){
+
         CommunityPost post = communityPostRepository.findByIdWithUserAndImages(postId)
                 .orElseThrow(PostNotFoundException::new);
+
+        viewCountService.increment(postId);
 
         List<String> imageUrls = communityPostImageRepository.findImageUrlsByPostId(postId).stream()
                 .map(objectStorageRepository::getDownloadUrl)
                 .collect(Collectors.toList());
 
         Boolean isLikedByUser = communityPostLikeRepository.existsByUserIdAndCommunityPostId(user.getId(), postId);
+
+        long displayViewCount = post.getViewCount() + viewCountService.getDelta(postId);
 
         return CommunityPostDetailResponse.builder()
                 .postId(post.getId())
@@ -161,6 +167,7 @@ public class CommunityPostService {
                 .authorNickname(post.getUser().getNickname())
                 .isLikedByUser(isLikedByUser)
                 .likeCount(post.getLikeCount())
+                .viewCount(displayViewCount)
                 .createdAt(post.getCreatedAt())
                 .updatedAt(post.getUpdatedAt())
                 .build();
