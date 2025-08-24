@@ -5,7 +5,7 @@ import kr.bi.greenmate.exception.ErrorCode;
 
 public class ParentCommentMismatchException extends BusinessException {
 
-    public ParentCommentMismatchException() {
-        super(ErrorCode.PARENT_COMMENT_MISMATCH);
-    }
+	public ParentCommentMismatchException() {
+		super(ErrorCode.PARENT_COMMENT_MISMATCH);
+	}
 }

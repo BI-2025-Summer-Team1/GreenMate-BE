@@ -9,9 +9,9 @@ import lombok.Data;
 @Schema(description = "모집 게시물 좋아요 토글 및 좋아요 개수 응답 DTO")
 public class RecruitmentPostLikeResponse {
 
-    @Schema(description = "좋아요 여부", example = "true")
-    private boolean liked; 
+	@Schema(description = "좋아요 여부", example = "true")
+	private boolean liked;
 
-    @Schema(description = "좋아요 개수", example = "1")
-    private long likeCount; 
+	@Schema(description = "좋아요 개수", example = "1")
+	private long likeCount;
 }
