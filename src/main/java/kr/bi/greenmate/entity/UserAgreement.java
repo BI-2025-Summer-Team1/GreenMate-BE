@@ -22,22 +22,29 @@ import lombok.NoArgsConstructor;
 @Builder
 public class UserAgreement {
 
-    @EmbeddedId
-    private UserAgreementId userAgreementId;
+	@EmbeddedId
+	private UserAgreementId userAgreementId;
 
-    @Column(nullable = false)
-    private boolean isAccepted;
+	@Column(nullable = false)
+	private boolean isAccepted;
 
-    @Column
-    private LocalDateTime acceptedAt;
+	@Column
+	private LocalDateTime acceptedAt;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @MapsId("userId")
-    @JoinColumn(name = "user_id", nullable = false, updatable = false)
-    private User user;
+	@ManyToOne(fetch = FetchType.LAZY)
+	@MapsId("userId")
+	@JoinColumn(name = "user_id", nullable = false, updatable = false)
+	private User user;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @MapsId("agreementId")
-    @JoinColumn(name = "agreement_id", nullable = false, updatable = false)
-    private Agreement agreement;
+	@ManyToOne(fetch = FetchType.LAZY)
+	@MapsId("agreementId")
+	@JoinColumn(name = "agreement_id", nullable = false, updatable = false)
+	private Agreement agreement;
+
+	public void accept(LocalDateTime time) {
+		this.isAccepted = true;
+		if (this.acceptedAt == null || this.acceptedAt.isBefore((time))) {
+			this.acceptedAt = time;
+		}
+	}
 }

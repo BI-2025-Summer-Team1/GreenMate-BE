@@ -4,6 +4,7 @@ import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -141,8 +142,21 @@ public class AuthService {
 		}
 
 		LocalDateTime now = LocalDateTime.now();
-		for (Agreement i : acceptedAgreements) {
-			userAgreementRepository.upsert(user.getId(), i.getId(), now);
+		for (Agreement agreement : acceptedAgreements) {
+			UserAgreementId id = new UserAgreementId(user.getId(), agreement.getId());
+			Optional<UserAgreement> existing = userAgreementRepository.findById(id);
+			if (existing.isPresent()) {
+				existing.get().accept(now);
+			} else {
+				UserAgreement userAgreement = UserAgreement.builder()
+					.userAgreementId(id)
+					.isAccepted(true)
+					.acceptedAt(now)
+					.user(user)
+					.agreement(agreement)
+					.build();
+				userAgreementRepository.save(userAgreement);
+			}
 		}
 	}
 }
