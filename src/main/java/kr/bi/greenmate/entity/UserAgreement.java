@@ -31,6 +31,9 @@ public class UserAgreement {
 	@Column
 	private LocalDateTime acceptedAt;
 
+	@Column
+	private LocalDateTime revokedAt;
+
 	@ManyToOne(fetch = FetchType.LAZY)
 	@MapsId("userId")
 	@JoinColumn(name = "user_id", nullable = false, updatable = false)
@@ -43,8 +46,14 @@ public class UserAgreement {
 
 	public void accept(LocalDateTime time) {
 		this.isAccepted = true;
-		if (this.acceptedAt == null || this.acceptedAt.isBefore((time))) {
+		if (this.acceptedAt == null || this.acceptedAt.isBefore(time)) {
 			this.acceptedAt = time;
 		}
+		this.revokedAt = null;
+	}
+
+	public void revoke(LocalDateTime time) {
+		this.isAccepted = false;
+		this.revokedAt = time;
 	}
 }

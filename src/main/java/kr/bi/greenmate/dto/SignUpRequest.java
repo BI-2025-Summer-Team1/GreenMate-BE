@@ -1,6 +1,7 @@
 package kr.bi.greenmate.dto;
 
 import java.util.List;
+import java.util.Set;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.Email;
@@ -40,5 +41,5 @@ public class SignUpRequest {
 	private MultipartFile profileImage;
 
 	@Schema(description = "동의한 약관 ID 목록", example = "[1, 2, 3]")
-	private List<Long> acceptedAgreementIds;
+	private Set<Long> acceptedAgreementIds;
 }

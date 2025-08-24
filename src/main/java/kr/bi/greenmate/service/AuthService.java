@@ -3,10 +3,8 @@ package kr.bi.greenmate.service;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -122,13 +120,13 @@ public class AuthService {
 		return userRepository.existsByNickname(nickname);
 	}
 
-	private void saveUserAgreements(User user, List<Long> acceptedAgreementIds) {
+	private void saveUserAgreements(User user, Set<Long> acceptedAgreementIds) {
 
 		Set<Long> accepted;
 		if (acceptedAgreementIds == null) {
 			accepted = Collections.emptySet();
 		} else {
-			accepted = new HashSet<>(acceptedAgreementIds);
+			accepted = acceptedAgreementIds;
 		}
 
 		List<Agreement> required = agreementRepository.findByIsRequiredTrue();
@@ -143,34 +141,36 @@ public class AuthService {
 			throw new AgreementNotFoundException();
 		}
 
-		List<UserAgreement> existingList =
-			userAgreementRepository.findByUserAgreementIdUserIdAndUserAgreementIdAgreementIdIn(
-				user.getId(), accepted);
-
-		Map<Long, UserAgreement> existingMap = existingList.stream()
-			.collect(Collectors.toMap(ua -> ua.getUserAgreementId().getAgreementId(), ua -> ua));
+		Map<Long, UserAgreement> previousAgreements =
+			userAgreementRepository.findByUserAgreementIdUserId(user.getId()).stream()
+				.collect(Collectors.toMap(ua -> ua.getUserAgreementId().getAgreementId(), ua -> ua));
 
 		LocalDateTime now = LocalDateTime.now();
 		List<UserAgreement> toSave = new ArrayList<>();
 
 		for (Agreement agreement : acceptedAgreements) {
-			UserAgreement existing = existingMap.get(agreement.getId());
-			if (existing != null) {
-				existing.accept(now);
+			UserAgreement userAgreement = previousAgreements.get(agreement.getId());
+			if (userAgreement != null) {
+				userAgreement.accept(now);
 			} else {
-				UserAgreement ua = UserAgreement.builder()
+				UserAgreement newUserAgreement = UserAgreement.builder()
 					.userAgreementId(new UserAgreementId(user.getId(), agreement.getId()))
 					.isAccepted(true)
 					.acceptedAt(now)
 					.user(user)
 					.agreement(agreement)
 					.build();
-				toSave.add(ua);
+				toSave.add(newUserAgreement);
 			}
 		}
 
-		if (!toSave.isEmpty()) {
-			userAgreementRepository.saveAll(toSave);
+		for (UserAgreement userAgreement : previousAgreements.values()) {
+			Long agreementId = userAgreement.getUserAgreementId().getAgreementId();
+			if (!accepted.contains(agreementId)) {
+				userAgreement.revoke(now);
+			}
 		}
+
+		userAgreementRepository.saveAll(toSave);
 	}
 }
