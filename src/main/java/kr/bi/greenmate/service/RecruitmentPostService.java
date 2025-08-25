@@ -223,4 +223,18 @@ public class RecruitmentPostService {
                 .createdAt(recruitmentPostComment.getCreatedAt())
                 .build();
     }
+
+    @Transactional
+    public void deleteComment(Long commentId, Long userId) {
+        RecruitmentPostComment comment = recruitmentPostCommentRepository.findById(commentId)
+                .orElseThrow(() -> new CommentNotFoundException());
+
+        if (!comment.getUser().getId().equals(userId)) {
+            throw new AccessDeniedException();
+        }
+        
+        recruitmentPostCommentRepository.delete(comment);
+        
+        comment.getRecruitmentPost().decreaseCommentCount();
+    }
 }

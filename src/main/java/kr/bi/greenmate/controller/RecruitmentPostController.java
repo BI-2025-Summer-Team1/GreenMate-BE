@@ -9,6 +9,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -96,5 +97,17 @@ public class RecruitmentPostController {
         RecruitmentPostCommentResponse response = recruitmentPostService.createComment(postId, userId, request, image);
        
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
+    }
+
+    @DeleteMapping("/comments/{commentId}")
+    @Operation(
+            summary = "모집글 댓글 삭제",
+            description = "특정 ID의 댓글을 삭제합니다."
+    )
+    public ResponseEntity<Void> deleteComment(
+            @PathVariable Long commentId,
+            @AuthenticationPrincipal Long userId) {
+        recruitmentPostService.deleteComment(commentId, userId);
+        return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
     }
 }
