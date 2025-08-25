@@ -9,6 +9,7 @@ import java.util.stream.Collectors;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
+import org.springframework.data.domain.SliceImpl;
 import org.springframework.orm.ObjectOptimisticLockingFailureException;
 import org.springframework.retry.annotation.Backoff;
 import org.springframework.retry.annotation.Retryable;
@@ -228,13 +229,13 @@ public class RecruitmentPostService {
     }
 
     @Transactional(readOnly = true)
-    public Slice<RecruitmentPostCommentResponse> getComments(Long postId, Pageable pageable) {
+    public Slice<RecruitmentPostCommentResponse> getComments(Long postId, Long lastId, Pageable pageable) {
         Slice<RecruitmentPostComment> topLevelCommentsPage = recruitmentPostCommentRepository
-                .findByRecruitmentPostIdAndParentCommentIsNull(postId, pageable);
+                .findByRecruitmentPostIdAndParentCommentIsNull(postId, lastId, pageable);
 
         if (topLevelCommentsPage.isEmpty()) {
-            return Page.empty(pageable);
-        }
+        return new SliceImpl<>(Collections.emptyList(), pageable, false);
+    }
 
         List<Long> topCommentIds = topLevelCommentsPage.getContent().stream()
                 .map(RecruitmentPostComment::getId)

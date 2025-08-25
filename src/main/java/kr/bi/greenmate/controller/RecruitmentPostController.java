@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
@@ -100,12 +101,13 @@ public class RecruitmentPostController {
     }
 
     @GetMapping("/{postId}/comments")
-    @Operation(summary = "모집글 댓글 목록 조회", description = "특정 모집글의 댓글 목록을 페이징하여 조회합니다.")
+    @Operation(summary = "모집글 댓글 목록 조회", description = "특정 모집글의 댓글 목록을 무한 스크롤로 조회합니다.")
     public ResponseEntity<Slice<RecruitmentPostCommentResponse>> getComments(
-            @PathVariable Long postId,
-            @PageableDefault(page = 0, size = 10) Pageable pageable) {
-        
-        Slice<RecruitmentPostCommentResponse> comments = recruitmentPostService.getComments(postId, pageable);
+        @PathVariable Long postId,
+        @RequestParam(required = false) Long lastId,
+        @PageableDefault(size = 10) Pageable pageable) {
+
+        Slice<RecruitmentPostCommentResponse> comments = recruitmentPostService.getComments(postId, lastId, pageable);
         
         return ResponseEntity.ok(comments);
     }
