@@ -256,7 +256,7 @@ public class RecruitmentPostService {
             RecruitmentPostComment comment, List<RecruitmentPostComment> replies) {
         
         List<RecruitmentPostCommentResponse> replyResponses = replies.stream()  
-                .map(reply -> mapToCommentResponse(reply, java.util.Collections.emptyList()))  
+                .map(reply -> mapToCommentResponse(reply, Collections.emptyList()))  
                 .collect(Collectors.toList());  
 
         return RecruitmentPostCommentResponse.builder()
