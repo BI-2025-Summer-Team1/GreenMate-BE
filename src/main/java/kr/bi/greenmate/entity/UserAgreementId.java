@@ -15,10 +15,10 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor
 @Builder
-@EqualsAndHashCode 
+@EqualsAndHashCode
 public class UserAgreementId implements Serializable {
 
-    private Long userId;
-    private Long agreementId;
+	private Long userId;
+	private Long agreementId;
 
 }

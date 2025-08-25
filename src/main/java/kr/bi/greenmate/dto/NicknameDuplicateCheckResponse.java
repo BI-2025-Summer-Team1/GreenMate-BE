@@ -9,6 +9,6 @@ import lombok.Getter;
 @AllArgsConstructor
 public class NicknameDuplicateCheckResponse {
 
-    @Schema(description = "닉네임이 이미 사용중인지 여부", example = "true")
-    private final boolean duplicate;
+	@Schema(description = "닉네임이 이미 사용중인지 여부", example = "true")
+	private final boolean duplicate;
 }

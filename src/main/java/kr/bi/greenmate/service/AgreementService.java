@@ -17,23 +17,23 @@ import lombok.RequiredArgsConstructor;
 @Transactional(readOnly = true)
 public class AgreementService {
 
-    private final AgreementRepository agreementRepository;
+	private final AgreementRepository agreementRepository;
 
-    public AgreementsResponse getAllAgreements() {
-        List<Agreement> agreements = agreementRepository.findAll();
+	public AgreementsResponse getAllAgreements() {
+		List<Agreement> agreements = agreementRepository.findAll();
 
-        List<AgreementResponse> agreementResponses = agreements.stream()
-            .map(agreement -> AgreementResponse.builder()
-                .id(agreement.getId())
-                .title(agreement.getTitle())
-                .content(agreement.getContent())
-                .isRequired(agreement.isRequired())
-                .createdAt(agreement.getCreatedAt())
-                .build())
-            .collect(Collectors.toList());
+		List<AgreementResponse> agreementResponses = agreements.stream()
+			.map(agreement -> AgreementResponse.builder()
+				.id(agreement.getId())
+				.title(agreement.getTitle())
+				.content(agreement.getContent())
+				.isRequired(agreement.isRequired())
+				.createdAt(agreement.getCreatedAt())
+				.build())
+			.collect(Collectors.toList());
 
-        return AgreementsResponse.builder()
-            .agreements(agreementResponses)
-            .build();
-    }
+		return AgreementsResponse.builder()
+			.agreements(agreementResponses)
+			.build();
+	}
 }

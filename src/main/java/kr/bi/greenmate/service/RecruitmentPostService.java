@@ -43,184 +43,184 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 @Transactional
 public class RecruitmentPostService {
-    
-    private final RecruitmentPostRepository recruitmentPostRepository;
-    private final RecruitmentPostImageRepository recruitmentPostImageRepository;
-    private final ObjectStorageRepository objectStorageRepository;
-    private final UserRepository userRepository;
-    private final ImageUploadService imageUploadService;
-    private final RecruitmentPostLikeRepository recruitmentPostLikeRepository;
-    private final RecruitmentPostCommentRepository recruitmentPostCommentRepository;
 
-    public RecruitmentPostCreationResponse createRecruitmentPost(
-            RecruitmentPostCreationRequest request, List<MultipartFile> images, Long userId) {
+	private final RecruitmentPostRepository recruitmentPostRepository;
+	private final RecruitmentPostImageRepository recruitmentPostImageRepository;
+	private final ObjectStorageRepository objectStorageRepository;
+	private final UserRepository userRepository;
+	private final ImageUploadService imageUploadService;
+	private final RecruitmentPostLikeRepository recruitmentPostLikeRepository;
+	private final RecruitmentPostCommentRepository recruitmentPostCommentRepository;
 
-        User creator = userRepository.findById(userId)
-                .orElseThrow(UserNotFoundException::new);
+	public RecruitmentPostCreationResponse createRecruitmentPost(
+		RecruitmentPostCreationRequest request, List<MultipartFile> images, Long userId) {
 
-        RecruitmentPost post = RecruitmentPost.builder()
-                .user(creator)
-                .title(request.getTitle())
-                .content(request.getContent())
-                .activityDate(request.getActivityDate())
-                .recruitmentEndDate(request.getRecruitmentEndDate())
-                .build();
+		User creator = userRepository.findById(userId)
+			.orElseThrow(UserNotFoundException::new);
 
-        List<String> imageUrls = null;
-        if (images != null && !images.isEmpty()) {
-            imageUrls = images.stream()
-                    .map(file -> imageUploadService.upload(file, "recruitment-post"))
-                    .collect(Collectors.toList());
+		RecruitmentPost post = RecruitmentPost.builder()
+			.user(creator)
+			.title(request.getTitle())
+			.content(request.getContent())
+			.activityDate(request.getActivityDate())
+			.recruitmentEndDate(request.getRecruitmentEndDate())
+			.build();
 
-            List<RecruitmentPostImage> postImages = imageUrls.stream()
-                    .map(url -> RecruitmentPostImage.builder()
-                            .imageUrl(url)
-                            .recruitmentPost(post)
-                            .build())
-                    .collect(Collectors.toList());
-            post.getImages().addAll(postImages);
-        }
+		List<String> imageUrls = null;
+		if (images != null && !images.isEmpty()) {
+			imageUrls = images.stream()
+				.map(file -> imageUploadService.upload(file, "recruitment-post"))
+				.collect(Collectors.toList());
 
-        RecruitmentPost savedPost = recruitmentPostRepository.save(post);
+			List<RecruitmentPostImage> postImages = imageUrls.stream()
+				.map(url -> RecruitmentPostImage.builder()
+					.imageUrl(url)
+					.recruitmentPost(post)
+					.build())
+				.collect(Collectors.toList());
+			post.getImages().addAll(postImages);
+		}
 
-        return RecruitmentPostCreationResponse.builder()
-                .postId(savedPost.getId())
-                .title(savedPost.getTitle())
-                .createdAt(savedPost.getCreatedAt())
-                .build();
-    }
+		RecruitmentPost savedPost = recruitmentPostRepository.save(post);
 
-    @Transactional(readOnly = true)
-    public Page<RecruitmentPostListResponse> getPostList(Pageable pageable) {
-        return recruitmentPostRepository.findAllWithUser(pageable)
-                .map(post -> RecruitmentPostListResponse.builder()
-                        .postId(post.getId())
-                        .title(post.getTitle())
-                        .authorNickname(post.getUser().getNickname())
-                        .activityDate(post.getActivityDate())
-                        .createdAt(post.getCreatedAt())
-                        .build());
-    }
+		return RecruitmentPostCreationResponse.builder()
+			.postId(savedPost.getId())
+			.title(savedPost.getTitle())
+			.createdAt(savedPost.getCreatedAt())
+			.build();
+	}
 
-    @Transactional(readOnly = true)
-    public RecruitmentPostDetailResponse getPostDetail(Long postId) {
-        RecruitmentPost post = recruitmentPostRepository.findByIdWithUser(postId)
-                .orElseThrow(() -> new RecruitmentPostNotFoundException(postId));
+	@Transactional(readOnly = true)
+	public Page<RecruitmentPostListResponse> getPostList(Pageable pageable) {
+		return recruitmentPostRepository.findAllWithUser(pageable)
+			.map(post -> RecruitmentPostListResponse.builder()
+				.postId(post.getId())
+				.title(post.getTitle())
+				.authorNickname(post.getUser().getNickname())
+				.activityDate(post.getActivityDate())
+				.createdAt(post.getCreatedAt())
+				.build());
+	}
 
-        List<String> imageUrls = recruitmentPostImageRepository.findByRecruitmentPostId(postId).stream()
-                .map(RecruitmentPostImage::getImageUrl)
-                .map(objectStorageRepository::getDownloadUrl)
-                .collect(Collectors.toList());
+	@Transactional(readOnly = true)
+	public RecruitmentPostDetailResponse getPostDetail(Long postId) {
+		RecruitmentPost post = recruitmentPostRepository.findByIdWithUser(postId)
+			.orElseThrow(() -> new RecruitmentPostNotFoundException(postId));
 
-        return RecruitmentPostDetailResponse.builder()
-                .postId(post.getId())
-                .title(post.getTitle())
-                .content(post.getContent())
-                .authorNickname(post.getUser().getNickname())
-                .activityDate(post.getActivityDate())
-                .recruitmentEndDate(post.getRecruitmentEndDate())
-                .createdAt(post.getCreatedAt())
-                .imageUrls(imageUrls)
-                .build();
-    }
+		List<String> imageUrls = recruitmentPostImageRepository.findByRecruitmentPostId(postId).stream()
+			.map(RecruitmentPostImage::getImageUrl)
+			.map(objectStorageRepository::getDownloadUrl)
+			.collect(Collectors.toList());
 
-    @Transactional
-    @Retryable(
-            retryFor = {OptimisticLockException.class, ObjectOptimisticLockingFailureException.class},
-            maxAttempts = 3,
-            backoff = @Backoff(delay = 50)
-    )
-    public RecruitmentPostLikeResponse toggleLike(Long postId, Long userId) {
-        RecruitmentPost post = recruitmentPostRepository.findById(postId)
-                .orElseThrow(() -> new RecruitmentPostNotFoundException(postId));
+		return RecruitmentPostDetailResponse.builder()
+			.postId(post.getId())
+			.title(post.getTitle())
+			.content(post.getContent())
+			.authorNickname(post.getUser().getNickname())
+			.activityDate(post.getActivityDate())
+			.recruitmentEndDate(post.getRecruitmentEndDate())
+			.createdAt(post.getCreatedAt())
+			.imageUrls(imageUrls)
+			.build();
+	}
 
-        User user = userRepository.findById(userId)
-                .orElseThrow(UserNotFoundException::new);
+	@Transactional
+	@Retryable(
+		retryFor = {OptimisticLockException.class, ObjectOptimisticLockingFailureException.class},
+		maxAttempts = 3,
+		backoff = @Backoff(delay = 50)
+	)
+	public RecruitmentPostLikeResponse toggleLike(Long postId, Long userId) {
+		RecruitmentPost post = recruitmentPostRepository.findById(postId)
+			.orElseThrow(() -> new RecruitmentPostNotFoundException(postId));
 
-        Optional<RecruitmentPostLike> existingLike = recruitmentPostLikeRepository
-                .findByUser_IdAndRecruitmentPost_Id(user.getId(), postId);
-        
-        boolean isLiked;
-        if (existingLike.isPresent()) {
-            unlikePost(existingLike.get(), post);
-            isLiked = false;
-        } else {
-            likePost(user, post);
-            isLiked = true;
-        }
-        
-        return buildLikeResponse(isLiked, post);
-    }
-    
-    private void likePost(User user, RecruitmentPost post) {
-        RecruitmentPostLike like = RecruitmentPostLike.builder()
-            .user(user)
-            .recruitmentPost(post)
-            .build();
-            
-        recruitmentPostLikeRepository.save(like);
-        post.increaseLikeCount();
-    }
+		User user = userRepository.findById(userId)
+			.orElseThrow(UserNotFoundException::new);
 
-    private void unlikePost(RecruitmentPostLike existingLike, RecruitmentPost post) {
-        recruitmentPostLikeRepository.delete(existingLike);
-        post.decreaseLikeCount();
-    }
-    
-    private RecruitmentPostLikeResponse buildLikeResponse(boolean isLiked, RecruitmentPost post) {
-        return RecruitmentPostLikeResponse.builder()
-                .liked(isLiked)
-                .likeCount(post.getLikeCount())
-                .build();
-    }            
-    
-    public RecruitmentPostCommentResponse createComment(
-            Long recruitmentPostId, Long userId, RecruitmentPostCommentRequest request, MultipartFile image) {
+		Optional<RecruitmentPostLike> existingLike = recruitmentPostLikeRepository
+			.findByUser_IdAndRecruitmentPost_Id(user.getId(), postId);
 
-        RecruitmentPost recruitmentPost = recruitmentPostRepository.findById(recruitmentPostId)
-                .orElseThrow(() -> new RecruitmentPostNotFoundException(recruitmentPostId));
-      
-        User user = userRepository.findById(userId)
-                .orElseThrow(UserNotFoundException::new);
-        
-        RecruitmentPostComment parentComment = null;
-        if (request.getParentCommentId() != null) {
-            Optional<Long> parentCommentIdOptional = Optional.ofNullable(request.getParentCommentId());
-            parentComment = recruitmentPostCommentRepository.findById(parentCommentIdOptional.get())
-                    .orElseThrow(CommentNotFoundException::new);
+		boolean isLiked;
+		if (existingLike.isPresent()) {
+			unlikePost(existingLike.get(), post);
+			isLiked = false;
+		} else {
+			likePost(user, post);
+			isLiked = true;
+		}
 
-            if (!parentComment.getRecruitmentPost().getId().equals(recruitmentPostId)) {
-                throw new ParentCommentMismatchException();
-            }
-        }
+		return buildLikeResponse(isLiked, post);
+	}
 
-        String imageUrl = null;
-        if (image != null && !image.isEmpty()) {
-            try {
-                imageUrl = imageUploadService.upload(image, "recruitment-comment");
-            } catch (Exception e) {
-                throw new FileUploadFailException();
-            }
-        }
+	private void likePost(User user, RecruitmentPost post) {
+		RecruitmentPostLike like = RecruitmentPostLike.builder()
+			.user(user)
+			.recruitmentPost(post)
+			.build();
 
-        RecruitmentPostComment recruitmentPostComment = RecruitmentPostComment.builder()
-                .recruitmentPost(recruitmentPost)
-                .user(user)
-                .content(request.getContent())
-                .imageUrl(imageUrl)
-                .parentComment(parentComment)
-                .build();
+		recruitmentPostLikeRepository.save(like);
+		post.increaseLikeCount();
+	}
 
-        recruitmentPostCommentRepository.save(recruitmentPostComment);
+	private void unlikePost(RecruitmentPostLike existingLike, RecruitmentPost post) {
+		recruitmentPostLikeRepository.delete(existingLike);
+		post.decreaseLikeCount();
+	}
 
-        recruitmentPost.increaseCommentCount();
+	private RecruitmentPostLikeResponse buildLikeResponse(boolean isLiked, RecruitmentPost post) {
+		return RecruitmentPostLikeResponse.builder()
+			.liked(isLiked)
+			.likeCount(post.getLikeCount())
+			.build();
+	}
 
-        return RecruitmentPostCommentResponse.builder()
-                .id(recruitmentPostComment.getId())
-                .userId(user.getId())
-                .nickname(user.getNickname())
-                .content(recruitmentPostComment.getContent())
-                .createdAt(recruitmentPostComment.getCreatedAt())
-                .build();
-    }
+	public RecruitmentPostCommentResponse createComment(
+		Long recruitmentPostId, Long userId, RecruitmentPostCommentRequest request, MultipartFile image) {
+
+		RecruitmentPost recruitmentPost = recruitmentPostRepository.findById(recruitmentPostId)
+			.orElseThrow(() -> new RecruitmentPostNotFoundException(recruitmentPostId));
+
+		User user = userRepository.findById(userId)
+			.orElseThrow(UserNotFoundException::new);
+
+		RecruitmentPostComment parentComment = null;
+		if (request.getParentCommentId() != null) {
+			Optional<Long> parentCommentIdOptional = Optional.ofNullable(request.getParentCommentId());
+			parentComment = recruitmentPostCommentRepository.findById(parentCommentIdOptional.get())
+				.orElseThrow(CommentNotFoundException::new);
+
+			if (!parentComment.getRecruitmentPost().getId().equals(recruitmentPostId)) {
+				throw new ParentCommentMismatchException();
+			}
+		}
+
+		String imageUrl = null;
+		if (image != null && !image.isEmpty()) {
+			try {
+				imageUrl = imageUploadService.upload(image, "recruitment-comment");
+			} catch (Exception e) {
+				throw new FileUploadFailException();
+			}
+		}
+
+		RecruitmentPostComment recruitmentPostComment = RecruitmentPostComment.builder()
+			.recruitmentPost(recruitmentPost)
+			.user(user)
+			.content(request.getContent())
+			.imageUrl(imageUrl)
+			.parentComment(parentComment)
+			.build();
+
+		recruitmentPostCommentRepository.save(recruitmentPostComment);
+
+		recruitmentPost.increaseCommentCount();
+
+		return RecruitmentPostCommentResponse.builder()
+			.id(recruitmentPostComment.getId())
+			.userId(user.getId())
+			.nickname(user.getNickname())
+			.content(recruitmentPostComment.getContent())
+			.createdAt(recruitmentPostComment.getCreatedAt())
+			.build();
+	}
 }

@@ -5,7 +5,7 @@ import kr.bi.greenmate.exception.ErrorCode;
 
 public class RecruitmentPostNotFoundException extends BusinessException {
 
-    public RecruitmentPostNotFoundException(Long postId) {
-        super(ErrorCode.RECRUITMENT_POST_NOT_FOUND, "Recruitment post with id " + postId + " not found.");
-    }
+	public RecruitmentPostNotFoundException(Long postId) {
+		super(ErrorCode.RECRUITMENT_POST_NOT_FOUND, "Recruitment post with id " + postId + " not found.");
+	}
 }

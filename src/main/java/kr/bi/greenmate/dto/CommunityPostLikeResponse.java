@@ -10,9 +10,9 @@ import lombok.Getter;
 @Builder
 @Schema(description = "좋아요 응답")
 public class CommunityPostLikeResponse {
-    @Schema(description = "좋아요 여부", example = "true")
-    private Boolean isLiked;
+	@Schema(description = "좋아요 여부", example = "true")
+	private Boolean isLiked;
 
-    @Schema(description = "총 좋아요 수", example = "42")
-    private Long likeCount;
+	@Schema(description = "총 좋아요 수", example = "42")
+	private Long likeCount;
 }
