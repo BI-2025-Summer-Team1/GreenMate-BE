@@ -1,6 +1,8 @@
 package kr.bi.greenmate.service;
 
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -229,9 +231,21 @@ public class RecruitmentPostService {
         Page<RecruitmentPostComment> topLevelCommentsPage = recruitmentPostCommentRepository
                 .findByRecruitmentPostIdAndParentCommentIsNull(postId, pageable);
 
+        if (topLevelCommentsPage.isEmpty()) {
+            return Page.empty(pageable);
+        }
+
+        List<Long> topCommentIds = topLevelCommentsPage.getContent().stream()
+                .map(RecruitmentPostComment::getId)
+                .collect(Collectors.toList());
+
+        List<RecruitmentPostComment> allReplies = recruitmentPostCommentRepository.findByParentCommentIdIn(topCommentIds);
+
+        Map<Long, List<RecruitmentPostComment>> repliesByParentId = allReplies.stream()
+                .collect(Collectors.groupingBy(comment -> comment.getParentComment().getId()));
+
         return topLevelCommentsPage.map(topComment -> {
-            List<RecruitmentPostComment> replies = recruitmentPostCommentRepository
-                    .findByParentCommentIdWithUser(topComment.getId());
+            List<RecruitmentPostComment> replies = repliesByParentId.getOrDefault(topComment.getId(), Collections.emptyList());
             
             return mapToCommentResponse(topComment, replies);
         });
@@ -240,9 +254,9 @@ public class RecruitmentPostService {
     private RecruitmentPostCommentResponse mapToCommentResponse(
             RecruitmentPostComment comment, List<RecruitmentPostComment> replies) {
         
-        List<RecruitmentPostCommentResponse> replyResponses = replies.stream()
-                .map(this::mapToCommentResponse)
-                .collect(Collectors.toList());
+        List<RecruitmentPostCommentResponse> replyResponses = replies.stream()  
+                .map(reply -> mapToCommentResponse(reply, java.util.Collections.emptyList()))  
+                .collect(Collectors.toList());  
 
         return RecruitmentPostCommentResponse.builder()
                 .id(comment.getId())
@@ -252,18 +266,6 @@ public class RecruitmentPostService {
                 .imageUrl(comment.getImageUrl() != null ? objectStorageRepository.getDownloadUrl(comment.getImageUrl()) : null)
                 .createdAt(comment.getCreatedAt())
                 .replies(replyResponses)
-                .build();
-    }
-
-    private RecruitmentPostCommentResponse mapToCommentResponse(RecruitmentPostComment comment) {
-        return RecruitmentPostCommentResponse.builder()
-                .id(comment.getId())
-                .userId(comment.getUser().getId())
-                .nickname(comment.getUser().getNickname())
-                .content(comment.getContent())
-                .imageUrl(comment.getImageUrl() != null ? objectStorageRepository.getDownloadUrl(comment.getImageUrl()) : null)
-                .createdAt(comment.getCreatedAt())
-                .replies(null) 
                 .build();
     }
 }

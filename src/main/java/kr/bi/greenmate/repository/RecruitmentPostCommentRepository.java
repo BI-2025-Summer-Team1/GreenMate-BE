@@ -17,6 +17,6 @@ public interface RecruitmentPostCommentRepository extends JpaRepository<Recruitm
     @Query("SELECT c FROM RecruitmentPostComment c JOIN FETCH c.user u WHERE c.recruitmentPost.id = :recruitmentPostId AND c.parentComment IS NULL")
     Page<RecruitmentPostComment> findByRecruitmentPostIdAndParentCommentIsNull(@Param("recruitmentPostId") Long recruitmentPostId, Pageable pageable);
 
-    @Query("SELECT c FROM RecruitmentPostComment c JOIN FETCH c.user u WHERE c.parentComment.id = :parentCommentId")
-    List<RecruitmentPostComment> findByParentCommentIdWithUser(@Param("parentCommentId") Long parentCommentId);
+    @Query("SELECT c FROM RecruitmentPostComment c JOIN FETCH c.user WHERE c.parentComment.id IN :parentIds")
+    List<RecruitmentPostComment> findByParentCommentIdIn(@Param("parentIds") List<Long> parentIds);
 }
