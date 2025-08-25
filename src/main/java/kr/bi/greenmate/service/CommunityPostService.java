@@ -11,11 +11,15 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
 import org.springframework.orm.ObjectOptimisticLockingFailureException;
+import org.springframework.retry.annotation.Backoff;
+import org.springframework.retry.annotation.Retryable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import jakarta.persistence.OptimisticLockException;
+import kr.bi.greenmate.dto.CommunityPostCommentRequest;
+import kr.bi.greenmate.dto.CommunityPostCommentResponse;
 import kr.bi.greenmate.dto.CommunityPostCreateRequest;
 import kr.bi.greenmate.dto.CommunityPostCreateResponse;
 import kr.bi.greenmate.dto.CommunityPostDetailResponse;
@@ -23,13 +27,19 @@ import kr.bi.greenmate.dto.CommunityPostLikeResponse;
 import kr.bi.greenmate.dto.CommunityPostListResponse;
 import kr.bi.greenmate.dto.KeysetSliceResponse;
 import kr.bi.greenmate.entity.CommunityPost;
+import kr.bi.greenmate.entity.CommunityPostComment;
 import kr.bi.greenmate.entity.CommunityPostImage;
 import kr.bi.greenmate.entity.CommunityPostLike;
 import kr.bi.greenmate.entity.User;
+import kr.bi.greenmate.exception.error.FileUploadFailException;
 import kr.bi.greenmate.exception.error.ImageCountExceedException;
 import kr.bi.greenmate.exception.error.ImageSizeExceedException;
+import kr.bi.greenmate.exception.error.InvalidImageTypeException;
 import kr.bi.greenmate.exception.error.OptimisticLockCustomException;
+import kr.bi.greenmate.exception.error.ParentCommentMismatchException;
 import kr.bi.greenmate.exception.error.PostNotFoundException;
+import kr.bi.greenmate.exception.error.CommentNotFoundException;
+import kr.bi.greenmate.repository.CommunityPostCommentRepository;
 import kr.bi.greenmate.repository.CommunityPostImageRepository;
 import kr.bi.greenmate.repository.CommunityPostLikeRepository;
 import kr.bi.greenmate.repository.CommunityPostRepository;
@@ -45,6 +55,7 @@ public class CommunityPostService {
 	private final ObjectStorageRepository objectStorageRepository;
 	private final ImageUploadService imageUploadService;
 	private final ViewCountService viewCountService;
+	private final CommunityPostCommentRepository communityPostCommentRepository;
 
 	@Transactional
 	public CommunityPostCreateResponse createPost(User user, CommunityPostCreateRequest request,
@@ -210,5 +221,83 @@ public class CommunityPostService {
 			.toList();
 
 		return new KeysetSliceResponse<>(content, slice.hasNext());
+	}
+
+	@Transactional
+	@Retryable(
+		retryFor = {OptimisticLockException.class, ObjectOptimisticLockingFailureException.class},
+		maxAttempts = 3,
+		backoff = @Backoff(delay = 50)
+	)
+	public CommunityPostCommentResponse createComment(Long postId, User user,
+		CommunityPostCommentRequest request, MultipartFile image) {
+
+		String imageUrl = processCommentImage(image);
+
+		return doCreateComment(postId, user, request, imageUrl);
+	}
+
+	private String processCommentImage(MultipartFile image) {
+		if (image == null || image.isEmpty()) {
+			return null;
+		}
+
+		final long MAX_IMAGE_SIZE = 1024 * 1024;
+		if (image.getSize() > MAX_IMAGE_SIZE) {
+			throw new ImageSizeExceedException();
+		}
+
+		try {
+			return imageUploadService.upload(image, "community-comment");
+		} catch (Exception e) {
+			throw new FileUploadFailException();
+		}
+	}
+
+	private CommunityPostCommentResponse doCreateComment(Long postId, User user,
+		CommunityPostCommentRequest request, String imageUrl) {
+
+		CommunityPost post = communityPostRepository.findById(postId)
+			.orElseThrow(PostNotFoundException::new);
+
+		CommunityPostComment parentComment = validateParentComment(request.getParentCommentId(), postId);
+
+		CommunityPostComment comment = CommunityPostComment.builder()
+			.parent(post)
+			.user(user)
+			.content(request.getContent())
+			.imageUrl(imageUrl)
+			.communityPostComment(parentComment)
+			.build();
+
+		communityPostCommentRepository.save(comment);
+		post.incrementCommentCount();
+
+		return buildCommentResponse(comment);
+	}
+
+	private CommunityPostComment validateParentComment(Long parentCommentId, Long postId) {
+		if (parentCommentId == null) {
+			return null;
+		}
+
+		CommunityPostComment parentComment = communityPostCommentRepository.findById(parentCommentId)
+			.orElseThrow(CommentNotFoundException::new);
+
+		if (!communityPostCommentRepository.existsByCommentIdAndPostId(parentCommentId, postId)) {
+			throw new ParentCommentMismatchException();
+		}
+
+		return parentComment;
+	}
+
+	private CommunityPostCommentResponse buildCommentResponse(CommunityPostComment comment) {
+		return CommunityPostCommentResponse.builder()
+			.id(comment.getId())
+			.userId(comment.getUser().getId())
+			.nickname(comment.getUser().getNickname())
+			.content(comment.getContent())
+			.createdAt(comment.getCreatedAt())
+			.build();
 	}
 }
