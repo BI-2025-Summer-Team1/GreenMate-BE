@@ -277,18 +277,12 @@ public class CommunityPostService {
 	}
 
 	private CommunityPostComment validateParentComment(Long parentCommentId, Long postId) {
-		if (parentCommentId == null) {
+		if (parentCommentId == null)
 			return null;
-		}
 
-		CommunityPostComment parentComment = communityPostCommentRepository.findById(parentCommentId)
-			.orElseThrow(CommentNotFoundException::new);
-
-		if (!communityPostCommentRepository.existsByCommentIdAndPostId(parentCommentId, postId)) {
-			throw new ParentCommentMismatchException();
-		}
-
-		return parentComment;
+		return communityPostCommentRepository
+			.findByIdAndPostId(parentCommentId, postId)
+			.orElseThrow(ParentCommentMismatchException::new);
 	}
 
 	private CommunityPostCommentResponse buildCommentResponse(CommunityPostComment comment) {
