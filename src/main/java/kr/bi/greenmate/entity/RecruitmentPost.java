@@ -89,4 +89,8 @@ public class RecruitmentPost extends BaseTimeEntity {
     public void increaseCommentCount() {
         this.commentCount++;
     }
+
+    public void decreaseCommentCount() {
+        this.commentCount--;
+    }
 }
