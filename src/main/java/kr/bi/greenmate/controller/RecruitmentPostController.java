@@ -4,6 +4,8 @@ import java.util.List;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Slice;
+import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -13,6 +15,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
@@ -96,5 +99,17 @@ public class RecruitmentPostController {
         RecruitmentPostCommentResponse response = recruitmentPostService.createComment(postId, userId, request, image);
        
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
+    }
+
+    @GetMapping("/{postId}/comments")
+    @Operation(summary = "모집글 댓글 목록 조회", description = "특정 모집글의 댓글 목록을 무한 스크롤로 조회합니다.")
+    public ResponseEntity<Slice<RecruitmentPostCommentResponse>> getComments(
+        @PathVariable Long postId,
+        @RequestParam(required = false) Long lastId,
+        @PageableDefault(sort = "id", direction = Sort.Direction.DESC, size = 10) Pageable pageable) {
+
+        Slice<RecruitmentPostCommentResponse> comments = recruitmentPostService.getComments(postId, lastId, pageable);
+        
+        return ResponseEntity.ok(comments);
     }
 }
