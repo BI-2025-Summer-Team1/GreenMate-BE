@@ -102,10 +102,11 @@ public class RecruitmentPostService {
             throw new AccessDeniedException();
         }
 
+        List<RecruitmentPostImage> images = recruitmentPostImageRepository.findByRecruitmentPostId(postId);
+
         recruitmentPostLikeRepository.deleteByRecruitmentPostId(postId);
         recruitmentPostCommentRepository.deleteByRecruitmentPostId(postId);
-
-        List<RecruitmentPostImage> images = recruitmentPostImageRepository.findByRecruitmentPostId(postId);
+        recruitmentPostRepository.delete(post);
 
         images.forEach(image -> {
             try {
@@ -114,8 +115,6 @@ public class RecruitmentPostService {
                 log.error("Failed to delete file from object storage: {}", image.getImageUrl(), e);
             }
         });
-
-        recruitmentPostRepository.delete(post);
     }
 
     @Transactional(readOnly = true)
