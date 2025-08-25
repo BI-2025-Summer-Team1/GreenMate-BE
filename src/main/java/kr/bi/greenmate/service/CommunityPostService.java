@@ -249,7 +249,7 @@ public class CommunityPostService {
 
 		try {
 			return imageUploadService.upload(image, "community-comment");
-		} catch (Exception e) {
+		} catch (RuntimeException e) {
 			throw new FileUploadFailException();
 		}
 	}
