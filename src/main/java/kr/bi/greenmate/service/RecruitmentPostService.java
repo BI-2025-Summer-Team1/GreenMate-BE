@@ -26,6 +26,7 @@ import kr.bi.greenmate.entity.RecruitmentPostComment;
 import kr.bi.greenmate.entity.RecruitmentPostImage;
 import kr.bi.greenmate.entity.RecruitmentPostLike;
 import kr.bi.greenmate.entity.User;
+import kr.bi.greenmate.exception.error.AccessDeniedException;
 import kr.bi.greenmate.exception.error.CommentNotFoundException;
 import kr.bi.greenmate.exception.error.FileUploadFailException;
 import kr.bi.greenmate.exception.error.ParentCommentMismatchException;
@@ -88,6 +89,32 @@ public class RecruitmentPostService {
                 .title(savedPost.getTitle())
                 .createdAt(savedPost.getCreatedAt())
                 .build();
+    }
+
+    @Transactional
+    public void deleteRecruitmentPost(Long postId, Long userId) {
+        RecruitmentPost post = recruitmentPostRepository.findByIdWithUser(postId)
+                .orElseThrow(() -> new RecruitmentPostNotFoundException(postId));
+
+        if (!post.getUser().getId().equals(userId)) {
+            throw new AccessDeniedException();
+        }
+
+        recruitmentPostLikeRepository.deleteByRecruitmentPostId(postId);
+        recruitmentPostCommentRepository.deleteByRecruitmentPostId(postId);
+
+        List<RecruitmentPostImage> images = recruitmentPostImageRepository.findByRecruitmentPostId(postId);
+        recruitmentPostImageRepository.deleteAll(images);
+
+        images.forEach(image -> {
+            try {
+                objectStorageRepository.delete(image.getImageUrl());
+            } catch (Exception e) {
+                System.err.println("Failed to delete file from object storage: " + image.getImageUrl());
+            }
+        });
+
+        recruitmentPostRepository.delete(post);
     }
 
     @Transactional(readOnly = true)
