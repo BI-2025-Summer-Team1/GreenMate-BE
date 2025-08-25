@@ -10,6 +10,7 @@ import org.springframework.orm.ObjectOptimisticLockingFailureException;
 import org.springframework.retry.annotation.Backoff;
 import org.springframework.retry.annotation.Retryable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -26,6 +27,7 @@ import kr.bi.greenmate.entity.RecruitmentPostComment;
 import kr.bi.greenmate.entity.RecruitmentPostImage;
 import kr.bi.greenmate.entity.RecruitmentPostLike;
 import kr.bi.greenmate.entity.User;
+import kr.bi.greenmate.exception.error.AccessDeniedException;
 import kr.bi.greenmate.exception.error.CommentNotFoundException;
 import kr.bi.greenmate.exception.error.FileUploadFailException;
 import kr.bi.greenmate.exception.error.ParentCommentMismatchException;
@@ -38,7 +40,9 @@ import kr.bi.greenmate.repository.RecruitmentPostLikeRepository;
 import kr.bi.greenmate.repository.RecruitmentPostRepository;
 import kr.bi.greenmate.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 @Transactional
@@ -88,6 +92,35 @@ public class RecruitmentPostService {
                 .title(savedPost.getTitle())
                 .createdAt(savedPost.getCreatedAt())
                 .build();
+    }
+
+    @Transactional
+    public void deleteRecruitmentPost(Long postId, Long userId) {
+        RecruitmentPost post = recruitmentPostRepository.findByIdWithUser(postId)
+                .orElseThrow(() -> new RecruitmentPostNotFoundException(postId));
+
+        if (!post.getUser().getId().equals(userId)) {
+            throw new AccessDeniedException();
+        }
+
+        recruitmentPostLikeRepository.deleteByRecruitmentPostId(postId);
+        recruitmentPostCommentRepository.deleteByRecruitmentPostId(postId);
+        recruitmentPostRepository.delete(post);
+
+        List<RecruitmentPostImage> images = recruitmentPostImageRepository.findByRecruitmentPostId(postId);
+
+        deleteImagesFromObjectStorage(images);
+    }
+
+    @Transactional(propagation = Propagation.NOT_SUPPORTED)
+    public void deleteImagesFromObjectStorage(List<RecruitmentPostImage> images) {
+        images.forEach(image -> {
+            try {
+                objectStorageRepository.delete(image.getImageUrl());
+            } catch (Exception e) {
+                log.error("Failed to delete file from object storage: {}", image.getImageUrl(), e);
+            }
+        });
     }
 
     @Transactional(readOnly = true)

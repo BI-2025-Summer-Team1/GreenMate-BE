@@ -14,6 +14,8 @@ public enum ErrorCode {
 	PARENT_COMMENT_MISMATCH("400-06", "부모 댓글이 해당 게시글에 속하지 않습니다.", HttpStatus.BAD_REQUEST),
 	REQUIRED_AGREEMENT_NOT_ACCEPTED("400-07", "필수 약관에 동의하지 않았습니다.", HttpStatus.BAD_REQUEST),
 
+	ACCESS_DENIED("403-01", "접근 권한이 없습니다.", HttpStatus.FORBIDDEN),
+
 	USER_NOT_FOUND("404-01", "사용자를 찾을 수 없습니다.", HttpStatus.NOT_FOUND),
 	POST_NOT_FOUND("404-02", "게시글을 찾을 수 없습니다.", HttpStatus.NOT_FOUND),
 	RECRUITMENT_POST_NOT_FOUND("404-03", "해당 ID의 모집 게시물을 찾을 수 없습니다.", HttpStatus.NOT_FOUND),

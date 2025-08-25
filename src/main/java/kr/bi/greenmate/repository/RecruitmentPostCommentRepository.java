@@ -7,4 +7,6 @@ import kr.bi.greenmate.entity.RecruitmentPostComment;
 
 @Repository
 public interface RecruitmentPostCommentRepository extends JpaRepository<RecruitmentPostComment, Long> {
+
+    void deleteByRecruitmentPostId(Long postId);
 }

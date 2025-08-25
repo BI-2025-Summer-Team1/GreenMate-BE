@@ -11,4 +11,6 @@ public interface RecruitmentPostLikeRepository extends JpaRepository<Recruitment
     boolean existsByUser_IdAndRecruitmentPost_Id(Long userId, Long recruitmentPostId);
     
     Optional<RecruitmentPostLike> findByUser_IdAndRecruitmentPost_Id(Long userId, Long recruitmentPostId);
+
+    void deleteByRecruitmentPostId(Long postId);
 }
