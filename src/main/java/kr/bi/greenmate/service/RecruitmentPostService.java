@@ -39,7 +39,9 @@ import kr.bi.greenmate.repository.RecruitmentPostLikeRepository;
 import kr.bi.greenmate.repository.RecruitmentPostRepository;
 import kr.bi.greenmate.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 @Transactional
@@ -104,13 +106,12 @@ public class RecruitmentPostService {
         recruitmentPostCommentRepository.deleteByRecruitmentPostId(postId);
 
         List<RecruitmentPostImage> images = recruitmentPostImageRepository.findByRecruitmentPostId(postId);
-        recruitmentPostImageRepository.deleteAll(images);
 
         images.forEach(image -> {
             try {
                 objectStorageRepository.delete(image.getImageUrl());
             } catch (Exception e) {
-                System.err.println("Failed to delete file from object storage: " + image.getImageUrl());
+                log.error("Failed to delete file from object storage: {}", image.getImageUrl(), e);
             }
         });
 
