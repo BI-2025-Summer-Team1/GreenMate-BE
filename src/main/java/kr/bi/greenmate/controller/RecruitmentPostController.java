@@ -64,9 +64,9 @@ public class RecruitmentPostController {
     )
     public ResponseEntity<Void> deleteRecruitmentPost(
             @PathVariable Long postId,
-            @AuthenticationPrincipal Long userId) {
+            @AuthenticationPrincipal User user) {
             
-        recruitmentPostService.deleteRecruitmentPost(postId, userId);
+        recruitmentPostService.deleteRecruitmentPost(postId, user.getId());
 
         return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
     }
