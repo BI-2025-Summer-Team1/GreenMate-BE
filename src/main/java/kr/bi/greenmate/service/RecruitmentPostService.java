@@ -8,6 +8,7 @@ import java.util.stream.Collectors;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Slice;
 import org.springframework.orm.ObjectOptimisticLockingFailureException;
 import org.springframework.retry.annotation.Backoff;
 import org.springframework.retry.annotation.Retryable;
@@ -227,8 +228,8 @@ public class RecruitmentPostService {
     }
 
     @Transactional(readOnly = true)
-    public Page<RecruitmentPostCommentResponse> getComments(Long postId, Pageable pageable) {
-        Page<RecruitmentPostComment> topLevelCommentsPage = recruitmentPostCommentRepository
+    public Slice<RecruitmentPostCommentResponse> getComments(Long postId, Pageable pageable) {
+        Slice<RecruitmentPostComment> topLevelCommentsPage = recruitmentPostCommentRepository
                 .findByRecruitmentPostIdAndParentCommentIsNull(postId, pageable);
 
         if (topLevelCommentsPage.isEmpty()) {

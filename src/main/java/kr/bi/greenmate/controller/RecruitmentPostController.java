@@ -4,6 +4,7 @@ import java.util.List;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Slice;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -100,11 +101,11 @@ public class RecruitmentPostController {
 
     @GetMapping("/{postId}/comments")
     @Operation(summary = "모집글 댓글 목록 조회", description = "특정 모집글의 댓글 목록을 페이징하여 조회합니다.")
-    public ResponseEntity<Page<RecruitmentPostCommentResponse>> getComments(
+    public ResponseEntity<Slice<RecruitmentPostCommentResponse>> getComments(
             @PathVariable Long postId,
             @PageableDefault(page = 0, size = 10) Pageable pageable) {
         
-        Page<RecruitmentPostCommentResponse> comments = recruitmentPostService.getComments(postId, pageable);
+        Slice<RecruitmentPostCommentResponse> comments = recruitmentPostService.getComments(postId, pageable);
         
         return ResponseEntity.ok(comments);
     }
