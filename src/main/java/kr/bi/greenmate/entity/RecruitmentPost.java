@@ -91,6 +91,8 @@ public class RecruitmentPost extends BaseTimeEntity {
     }
 
     public void decreaseCommentCount() {
-        this.commentCount--;
+        if (this.commentCount > 0) {  
+            this.commentCount--;  
+        }
     }
 }
