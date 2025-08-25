@@ -10,6 +10,7 @@ import org.springframework.orm.ObjectOptimisticLockingFailureException;
 import org.springframework.retry.annotation.Backoff;
 import org.springframework.retry.annotation.Retryable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -102,12 +103,17 @@ public class RecruitmentPostService {
             throw new AccessDeniedException();
         }
 
-        List<RecruitmentPostImage> images = recruitmentPostImageRepository.findByRecruitmentPostId(postId);
-
         recruitmentPostLikeRepository.deleteByRecruitmentPostId(postId);
         recruitmentPostCommentRepository.deleteByRecruitmentPostId(postId);
         recruitmentPostRepository.delete(post);
 
+        List<RecruitmentPostImage> images = recruitmentPostImageRepository.findByRecruitmentPostId(postId);
+
+        deleteImagesFromObjectStorage(images);
+    }
+
+    @Transactional(propagation = Propagation.NOT_SUPPORTED)
+    public void deleteImagesFromObjectStorage(List<RecruitmentPostImage> images) {
         images.forEach(image -> {
             try {
                 objectStorageRepository.delete(image.getImageUrl());
