@@ -27,6 +27,9 @@ public class RecruitmentPostCommentResponse {
     @Schema(description = "작성 시간")
     private LocalDateTime createdAt;
 
+    @Schema(description = "댓글 첨부 이미지 URL")
+    private String imageUrl;
+
     @Schema(description = "대댓글 목록")
     private List<RecruitmentPostCommentResponse> replies;
 }
