@@ -5,6 +5,7 @@ import java.util.List;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
+import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -105,7 +106,7 @@ public class RecruitmentPostController {
     public ResponseEntity<Slice<RecruitmentPostCommentResponse>> getComments(
         @PathVariable Long postId,
         @RequestParam(required = false) Long lastId,
-        @PageableDefault(size = 10) Pageable pageable) {
+        @PageableDefault(sort = "id", direction = Sort.Direction.DESC, size = 10) Pageable pageable) {
 
         Slice<RecruitmentPostCommentResponse> comments = recruitmentPostService.getComments(postId, lastId, pageable);
         
