@@ -11,8 +11,6 @@ import kr.bi.greenmate.entity.CommunityPostComment;
 
 public interface CommunityPostCommentRepository extends JpaRepository<CommunityPostComment, Long> {
 
-	boolean existsByIdAndParentId(Long commentId, Long postId);
-
 	Optional<CommunityPostComment> findByIdAndParentId(Long commentId, Long postId);
 
 	@EntityGraph(attributePaths = "user")
