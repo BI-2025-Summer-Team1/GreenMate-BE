@@ -24,6 +24,7 @@ import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.Positive;
 import kr.bi.greenmate.dto.RecruitmentPostCommentRequest;
 import kr.bi.greenmate.dto.RecruitmentPostCommentResponse;
 import kr.bi.greenmate.dto.RecruitmentPostCreationRequest;
@@ -104,8 +105,8 @@ public class RecruitmentPostController {
     @GetMapping("/{postId}/comments")
     @Operation(summary = "모집글 댓글 목록 조회", description = "특정 모집글의 댓글 목록을 무한 스크롤로 조회합니다.")
     public ResponseEntity<Slice<RecruitmentPostCommentResponse>> getComments(
-        @PathVariable Long postId,
-        @RequestParam(required = false) Long lastId,
+        @PathVariable @Positive Long postId,
+        @RequestParam(required = false) @Min(1) Long lastId,
         @RequestParam(defaultValue = "10") @Min(1) int size) {
 
         Slice<RecruitmentPostCommentResponse> comments = recruitmentPostService.getComments(postId, lastId, size);
