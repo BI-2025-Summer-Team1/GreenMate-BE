@@ -91,7 +91,6 @@ public class CommunityPostController {
 	public ResponseEntity<CommunityPostCommentResponse> createComment(
 		@Parameter(description = "댓글을 작성할 커뮤니티 글 ID", example = "123")
 		@PathVariable long postId,
-		@Parameter(description = "인증된 사용자", hidden = true)
 		@AuthenticationPrincipal User user,
 		@Parameter(description = "댓글 작성 요청 본문", required = true)
 		@RequestPart("request") @Valid CommunityPostCommentRequest request,
