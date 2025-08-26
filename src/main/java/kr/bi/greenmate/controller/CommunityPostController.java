@@ -102,4 +102,20 @@ public class CommunityPostController {
 
 		return ResponseEntity.status(HttpStatus.CREATED).body(response);
 	}
+
+	@GetMapping("/{postId}/comments")
+	@Operation(summary = "커뮤니티 글 댓글 목록 조회", description = "특정 커뮤니티 글의 댓글 목록을 무한 스크롤로 조회합니다.")
+	public ResponseEntity<KeysetSliceResponse<CommunityPostCommentResponse>> getComments(
+		@Parameter(description = "댓글을 조회할 커뮤니티 글 ID", example = "123")
+		@PathVariable long postId,
+		@Parameter(description = "마지막으로 조회한 댓글 ID (첫 페이지면 생략)", example = "100")
+		@RequestParam(required = false) Long lastCommentId,
+		@Parameter(description = "한 번에 조회할 댓글 수", example = "10")
+		@RequestParam(defaultValue = "10") int size) {
+
+		KeysetSliceResponse<CommunityPostCommentResponse> response =
+			communityPostService.getComments(postId, lastCommentId, size);
+
+		return ResponseEntity.ok(response);
+	}
 }
