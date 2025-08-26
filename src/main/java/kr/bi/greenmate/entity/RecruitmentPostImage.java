@@ -21,16 +21,16 @@ import lombok.NoArgsConstructor;
 @Builder
 public class RecruitmentPostImage extends BaseCreatedEntity {
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(nullable = false, updatable = false)
-    private Long id;
+	@Id
+	@GeneratedValue(strategy = GenerationType.IDENTITY)
+	@Column(nullable = false, updatable = false)
+	private Long id;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "post_id", nullable = false, updatable = false)
-    private RecruitmentPost recruitmentPost;
+	@ManyToOne(fetch = FetchType.LAZY)
+	@JoinColumn(name = "post_id", nullable = false, updatable = false)
+	private RecruitmentPost recruitmentPost;
 
-    @Column(length = 50, nullable = false, updatable = false)
-    private String imageUrl;
+	@Column(length = 50, nullable = false, updatable = false)
+	private String imageUrl;
 
 }

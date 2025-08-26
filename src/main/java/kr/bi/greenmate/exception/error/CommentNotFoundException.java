@@ -5,7 +5,7 @@ import kr.bi.greenmate.exception.ErrorCode;
 
 public class CommentNotFoundException extends BusinessException {
 
-    public CommentNotFoundException() {
-        super(ErrorCode.COMMENT_NOT_FOUND);
-    }
+	public CommentNotFoundException() {
+		super(ErrorCode.COMMENT_NOT_FOUND);
+	}
 }

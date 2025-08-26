@@ -17,32 +17,32 @@ import lombok.NoArgsConstructor;
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Builder
-public class RecruitmentPostComment extends BaseTimeEntity { 
+public class RecruitmentPostComment extends BaseTimeEntity {
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(nullable = false, updatable = false)
-    private Long id;
+	@Id
+	@GeneratedValue(strategy = GenerationType.IDENTITY)
+	@Column(nullable = false, updatable = false)
+	private Long id;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "parent_comment_id", updatable = false) 
-    private RecruitmentPostComment parentComment;
+	@ManyToOne(fetch = FetchType.LAZY)
+	@JoinColumn(name = "parent_comment_id", updatable = false)
+	private RecruitmentPostComment parentComment;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_id", nullable = false, updatable = false)
-    private User user;
+	@ManyToOne(fetch = FetchType.LAZY)
+	@JoinColumn(name = "user_id", nullable = false, updatable = false)
+	private User user;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "post_id", nullable = false, updatable = false)
-    private RecruitmentPost recruitmentPost;
+	@ManyToOne(fetch = FetchType.LAZY)
+	@JoinColumn(name = "post_id", nullable = false, updatable = false)
+	private RecruitmentPost recruitmentPost;
 
-    @Column(nullable = false, length = 300)
-    private String content;
+	@Column(nullable = false, length = 300)
+	private String content;
 
-    @Column(length = 50) 
-    private String imageUrl;
-
-    @Builder
+	@Column(length = 50)
+	private String imageUrl;
+  
+  @Builder
     public RecruitmentPostComment(RecruitmentPostComment parentComment, User user, RecruitmentPost recruitmentPost, String content, String imageUrl) {
         this.parentComment = parentComment;
         this.user = user;
