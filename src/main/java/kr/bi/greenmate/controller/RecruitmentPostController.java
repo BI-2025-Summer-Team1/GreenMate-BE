@@ -45,10 +45,7 @@ public class RecruitmentPostController {
 	private final RecruitmentPostService recruitmentPostService;
 
 	@PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-	@Operation(
-		summary = "모집글 생성",
-		description = "새로운 환경활동 모집글을 생성합니다."
-	)
+	@Operation(summary = "모집글 생성", description = "새로운 환경활동 모집글을 생성합니다.")
 	public ResponseEntity<RecruitmentPostCreationResponse> createPost(
 		@RequestPart("request") @Valid RecruitmentPostCreationRequest request,
 		@Parameter(description = "모집글에 첨부할 이미지 파일들 (최대 10개, 선택사항)", example = "image1.jpg, image2.png")
@@ -61,6 +58,17 @@ public class RecruitmentPostController {
 		return ResponseEntity.status(HttpStatus.CREATED).body(response);
 	}
 
+  @DeleteMapping("/{postId}")
+  @Operation(summary = "모집글 삭제", description = "특정 ID의 모집글을 삭제합니다.")
+  public ResponseEntity<Void> deleteRecruitmentPost(
+    @PathVariable Long postId,
+    @AuthenticationPrincipal User user) {
+
+    recruitmentPostService.deleteRecruitmentPost(postId, user.getId());
+
+    return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
+  }
+  
 	@GetMapping
 	@Operation(summary = "모집글 목록 조회", description = "환경활동 모집글 목록을 조회합니다.")
 	public ResponseEntity<Page<RecruitmentPostListResponse>> getRecruitmentPostList(
