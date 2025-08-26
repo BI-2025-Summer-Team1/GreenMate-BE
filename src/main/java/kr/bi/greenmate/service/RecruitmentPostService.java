@@ -7,9 +7,11 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
 import org.springframework.data.domain.SliceImpl;
+import org.springframework.data.domain.Sort;
 import org.springframework.orm.ObjectOptimisticLockingFailureException;
 import org.springframework.retry.annotation.Backoff;
 import org.springframework.retry.annotation.Retryable;
@@ -229,9 +231,11 @@ public class RecruitmentPostService {
     }
 
     @Transactional(readOnly = true)
-    public Slice<RecruitmentPostCommentResponse> getComments(Long postId, Long lastId, Pageable pageable) {
+    public Slice<RecruitmentPostCommentResponse> getComments(Long postId, Long lastId, int size) {
         Slice<RecruitmentPostComment> topLevelCommentsPage;
 
+        Pageable pageable = PageRequest.of(0, size, Sort.Direction.DESC, "id");
+       
         if (lastId == null) {
                 topLevelCommentsPage =
                 recruitmentPostCommentRepository.findByRecruitmentPost_IdAndParentCommentIsNullOrderByIdDesc(postId, pageable);

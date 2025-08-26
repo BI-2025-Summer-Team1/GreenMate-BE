@@ -5,7 +5,6 @@ import java.util.List;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
-import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -24,6 +23,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.Min;
 import kr.bi.greenmate.dto.RecruitmentPostCommentRequest;
 import kr.bi.greenmate.dto.RecruitmentPostCommentResponse;
 import kr.bi.greenmate.dto.RecruitmentPostCreationRequest;
@@ -106,9 +106,9 @@ public class RecruitmentPostController {
     public ResponseEntity<Slice<RecruitmentPostCommentResponse>> getComments(
         @PathVariable Long postId,
         @RequestParam(required = false) Long lastId,
-        @PageableDefault(sort = "id", direction = Sort.Direction.DESC, size = 10) Pageable pageable) {
+        @RequestParam(defaultValue = "10") @Min(1) int size) {
 
-        Slice<RecruitmentPostCommentResponse> comments = recruitmentPostService.getComments(postId, lastId, pageable);
+        Slice<RecruitmentPostCommentResponse> comments = recruitmentPostService.getComments(postId, lastId, size);
         
         return ResponseEntity.ok(comments);
     }
