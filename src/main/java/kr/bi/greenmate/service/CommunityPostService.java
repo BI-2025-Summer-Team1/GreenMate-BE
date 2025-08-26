@@ -55,6 +55,7 @@ public class CommunityPostService {
 	private final ObjectStorageRepository objectStorageRepository;
 	private final ImageUploadService imageUploadService;
 	private final ViewCountService viewCountService;
+	private final CommentCreationService commentCreationService;
 	private final CommunityPostCommentRepository communityPostCommentRepository;
 
 	@Transactional
@@ -223,18 +224,12 @@ public class CommunityPostService {
 		return new KeysetSliceResponse<>(content, slice.hasNext());
 	}
 
-	@Transactional
-	@Retryable(
-		retryFor = {OptimisticLockException.class, ObjectOptimisticLockingFailureException.class},
-		maxAttempts = 3,
-		backoff = @Backoff(delay = 50)
-	)
 	public CommunityPostCommentResponse createComment(Long postId, User user,
 		CommunityPostCommentRequest request, MultipartFile image) {
 
 		String imageUrl = processCommentImage(image);
 
-		return doCreateComment(postId, user, request, imageUrl);
+		return commentCreationService.createCommentInTransaction(postId, user, request, imageUrl);
 	}
 
 	private String processCommentImage(MultipartFile image) {
