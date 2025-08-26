@@ -291,7 +291,9 @@ public class CommunityPostService {
 	@Transactional(readOnly = true)
 	public KeysetSliceResponse<CommunityPostCommentResponse> getComments(Long postId, Long lastCommentId, int size) {
 
-		communityPostRepository.findById(postId).orElseThrow(PostNotFoundException::new);
+		if (!communityPostRepository.existsById(postId)) {
+			throw new PostNotFoundException();
+		}
 
 		Pageable pageable = PageRequest.of(0, size + 1);
 		List<CommunityPostComment> results;
