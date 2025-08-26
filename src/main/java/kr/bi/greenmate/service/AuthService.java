@@ -8,6 +8,13 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import org.hibernate.exception.ConstraintViolationException;
+import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
+
 import kr.bi.greenmate.common.enums.ImageType;
 import kr.bi.greenmate.config.JwtProvider;
 import kr.bi.greenmate.dto.LoginRequest;
@@ -31,13 +38,6 @@ import kr.bi.greenmate.repository.AgreementRepository;
 import kr.bi.greenmate.repository.UserAgreementRepository;
 import kr.bi.greenmate.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
-
-import org.hibernate.exception.ConstraintViolationException;
-import org.springframework.dao.DataIntegrityViolationException;
-import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.multipart.MultipartFile;
 
 @Service
 @RequiredArgsConstructor

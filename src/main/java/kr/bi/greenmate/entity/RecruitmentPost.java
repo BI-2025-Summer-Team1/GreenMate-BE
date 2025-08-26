@@ -27,66 +27,66 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor
 @Builder
-public class RecruitmentPost extends BaseTimeEntity { 
+public class RecruitmentPost extends BaseTimeEntity {
 
-    @Id 
-    @GeneratedValue(strategy = GenerationType.IDENTITY) 
-    @Column(nullable = false, updatable = false)
-    private Long id;
-    
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_id", nullable = false, updatable = false)
-    private User user;
+	@Id
+	@GeneratedValue(strategy = GenerationType.IDENTITY)
+	@Column(nullable = false, updatable = false)
+	private Long id;
 
-    @Column(nullable = false, length = 100) // 기존 50에서 communityPost와 유사하게 제목 길이를 통일
-    private String title;
+	@ManyToOne(fetch = FetchType.LAZY)
+	@JoinColumn(name = "user_id", nullable = false, updatable = false)
+	private User user;
 
-    @Lob
-    @Column(nullable = false)
-    private String content;
+	@Column(nullable = false, length = 100) // 기존 50에서 communityPost와 유사하게 제목 길이를 통일
+	private String title;
 
-    @Builder.Default
-    @Column(nullable = false)
-    private Long participantCount = 0L;
+	@Lob
+	@Column(nullable = false)
+	private String content;
 
-    @Builder.Default
-    @Column(nullable = false)
-    private Long likeCount = 0L;
+	@Builder.Default
+	@Column(nullable = false)
+	private Long participantCount = 0L;
 
-    @Builder.Default 
-    @Column(nullable = false)
-    private Long commentCount = 0L;
+	@Builder.Default
+	@Column(nullable = false)
+	private Long likeCount = 0L;
 
-    @Column(nullable = false)
-    private LocalDateTime activityDate;
+	@Builder.Default
+	@Column(nullable = false)
+	private Long commentCount = 0L;
 
-    @Column(nullable = false)
-    private LocalDateTime recruitmentEndDate;
+	@Column(nullable = false)
+	private LocalDateTime activityDate;
 
-    @Version
-    @Column(nullable = false) 
-    private Long version;
+	@Column(nullable = false)
+	private LocalDateTime recruitmentEndDate;
 
-    @OneToMany(mappedBy = "recruitmentPost", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
-    @Builder.Default
-    private List<RecruitmentPostImage> images = new ArrayList<>();
+	@Version
+	@Column(nullable = false)
+	private Long version;
 
-    public void increaseLikeCount() {
-        if (this.likeCount == null) {
-            this.likeCount = 0L;
-        }
-        this.likeCount++;
-    }
+	@OneToMany(mappedBy = "recruitmentPost", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+	@Builder.Default
+	private List<RecruitmentPostImage> images = new ArrayList<>();
 
-    public void decreaseLikeCount() {
-        if (this.likeCount == null || this.likeCount <= 0) {
-            this.likeCount = 0L;
-        } else {
-            this.likeCount--;
-        }
-    }
-    
-    public void increaseCommentCount() {
-        this.commentCount++;
-    }
+	public void increaseLikeCount() {
+		if (this.likeCount == null) {
+			this.likeCount = 0L;
+		}
+		this.likeCount++;
+	}
+
+	public void decreaseLikeCount() {
+		if (this.likeCount == null || this.likeCount <= 0) {
+			this.likeCount = 0L;
+		} else {
+			this.likeCount--;
+		}
+	}
+
+	public void increaseCommentCount() {
+		this.commentCount++;
+	}
 }

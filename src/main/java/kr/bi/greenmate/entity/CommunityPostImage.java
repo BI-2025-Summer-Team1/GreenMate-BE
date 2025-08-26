@@ -19,15 +19,15 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor
 @Builder
-public class CommunityPostImage extends BaseCreatedEntity{
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+public class CommunityPostImage extends BaseCreatedEntity {
+	@Id
+	@GeneratedValue(strategy = GenerationType.IDENTITY)
+	private Long id;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "post_id", nullable = false, updatable = false)
-    private CommunityPost communityPost;
+	@ManyToOne(fetch = FetchType.LAZY)
+	@JoinColumn(name = "post_id", nullable = false, updatable = false)
+	private CommunityPost communityPost;
 
-    @Column(length = 50, nullable = false, updatable = false)
-    private String imageUrl;
+	@Column(length = 50, nullable = false, updatable = false)
+	private String imageUrl;
 }

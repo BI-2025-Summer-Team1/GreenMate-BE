@@ -8,7 +8,7 @@ import kr.bi.greenmate.entity.RecruitmentPostLike;
 
 public interface RecruitmentPostLikeRepository extends JpaRepository<RecruitmentPostLike, Long> {
 
-    boolean existsByUser_IdAndRecruitmentPost_Id(Long userId, Long recruitmentPostId);
-    
-    Optional<RecruitmentPostLike> findByUser_IdAndRecruitmentPost_Id(Long userId, Long recruitmentPostId);
+	boolean existsByUser_IdAndRecruitmentPost_Id(Long userId, Long recruitmentPostId);
+
+	Optional<RecruitmentPostLike> findByUser_IdAndRecruitmentPost_Id(Long userId, Long recruitmentPostId);
 }

@@ -10,6 +10,6 @@ import lombok.Getter;
 @Builder
 @Schema(description = "커뮤니티 게시글 생성 응답")
 public class CommunityPostCreateResponse {
-    @Schema(description = "생성된 게시글 ID", example = "1")
-    private Long postId;
+	@Schema(description = "생성된 게시글 ID", example = "1")
+	private Long postId;
 }

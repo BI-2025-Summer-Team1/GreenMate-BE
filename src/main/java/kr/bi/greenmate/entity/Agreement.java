@@ -19,18 +19,18 @@ import lombok.NoArgsConstructor;
 @Builder
 public class Agreement extends BaseTimeEntity {
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(nullable = false, updatable = false)
-    private Long id;
+	@Id
+	@GeneratedValue(strategy = GenerationType.IDENTITY)
+	@Column(nullable = false, updatable = false)
+	private Long id;
 
-    @Column(nullable = false, length = 100)
-    private String title;
+	@Column(nullable = false, length = 100)
+	private String title;
 
-    @Lob
-    @Column(nullable = false)
-    private String content;
+	@Lob
+	@Column(nullable = false)
+	private String content;
 
-    @Column(nullable = false)
-    private boolean isRequired;
+	@Column(nullable = false)
+	private boolean isRequired;
 }

@@ -8,6 +8,7 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.Version;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -19,26 +20,29 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor
 @Builder
-public class CommunityPostComment extends BaseTimeEntity{
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+public class CommunityPostComment extends BaseTimeEntity {
+	@Id
+	@GeneratedValue(strategy = GenerationType.IDENTITY)
+	private Long id;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "comment_id", updatable = false)
-    private CommunityPostComment communityPostComment;
+	@ManyToOne(fetch = FetchType.LAZY)
+	@JoinColumn(name = "comment_id", updatable = false)
+	private CommunityPostComment communityPostComment;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_id", nullable = false, updatable = false)
-    private User user;
+	@ManyToOne(fetch = FetchType.LAZY)
+	@JoinColumn(name = "user_id", nullable = false, updatable = false)
+	private User user;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "post_id", nullable = false, updatable = false)
-    private CommunityPost parent;
+	@ManyToOne(fetch = FetchType.LAZY)
+	@JoinColumn(name = "post_id", nullable = false, updatable = false)
+	private CommunityPost parent;
 
-    @Column(length = 100, nullable = false)
-    private String content;
+	@Column(length = 100, nullable = false)
+	private String content;
 
-    @Column(length = 50)
-    private String imageUrl;
+	@Column(length = 50)
+	private String imageUrl;
+
+	@Version
+	private Long version;
 }
