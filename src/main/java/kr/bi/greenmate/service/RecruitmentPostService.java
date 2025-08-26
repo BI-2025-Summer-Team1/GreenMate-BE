@@ -1,11 +1,15 @@
 package kr.bi.greenmate.service;
 
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Slice;
+import org.springframework.data.domain.SliceImpl;
 import org.springframework.orm.ObjectOptimisticLockingFailureException;
 import org.springframework.retry.annotation.Backoff;
 import org.springframework.retry.annotation.Retryable;
@@ -43,7 +47,7 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 @Transactional
 public class RecruitmentPostService {
-
+    
 	private final RecruitmentPostRepository recruitmentPostRepository;
 	private final RecruitmentPostImageRepository recruitmentPostImageRepository;
 	private final ObjectStorageRepository objectStorageRepository;
@@ -223,4 +227,56 @@ public class RecruitmentPostService {
 			.createdAt(recruitmentPostComment.getCreatedAt())
 			.build();
 	}
+
+        @Transactional(readOnly = true)
+        public Slice<RecruitmentPostCommentResponse> getComments(Long postId, Long lastId, int size) {
+                Slice<RecruitmentPostComment> topLevelCommentsPage;
+
+                Pageable pageable = Pageable.ofSize(size);
+        
+                if (lastId == null) {
+                        topLevelCommentsPage =
+                        recruitmentPostCommentRepository.findByRecruitmentPost_IdAndParentCommentIsNullOrderByIdDesc(postId, pageable);
+                } else {
+                        topLevelCommentsPage =
+                        recruitmentPostCommentRepository.findByRecruitmentPost_IdAndParentCommentIsNullAndIdLessThanOrderByIdDesc(postId, lastId, pageable);
+                }
+
+                if (topLevelCommentsPage.isEmpty()) {
+                        return new SliceImpl<>(Collections.emptyList(), pageable, false);
+                }
+
+                List<Long> topCommentIds = topLevelCommentsPage.getContent().stream()
+                        .map(RecruitmentPostComment::getId)
+                        .collect(Collectors.toList());
+
+                List<RecruitmentPostComment> allReplies = recruitmentPostCommentRepository.findByParentCommentIdIn(topCommentIds);
+
+                Map<Long, List<RecruitmentPostComment>> repliesByParentId = allReplies.stream()
+                        .collect(Collectors.groupingBy(comment -> comment.getParentComment().getId()));
+
+                return topLevelCommentsPage.map(topComment -> {
+                List<RecruitmentPostComment> replies = repliesByParentId.getOrDefault(topComment.getId(), Collections.emptyList());
+                        
+                return mapToCommentResponse(topComment, replies);
+                });
+        }
+
+        private RecruitmentPostCommentResponse mapToCommentResponse(
+                RecruitmentPostComment comment, List<RecruitmentPostComment> replies) {
+                
+                List<RecruitmentPostCommentResponse> replyResponses = replies.stream()  
+                        .map(reply -> mapToCommentResponse(reply, Collections.emptyList()))  
+                        .collect(Collectors.toList());  
+
+                return RecruitmentPostCommentResponse.builder()
+                        .id(comment.getId())
+                        .userId(comment.getUser().getId())
+                        .nickname(comment.getUser().getNickname())
+                        .content(comment.getContent())
+                        .imageUrl(comment.getImageUrl() != null ? objectStorageRepository.getDownloadUrl(comment.getImageUrl()) : null)
+                        .createdAt(comment.getCreatedAt())
+                        .replies(replyResponses)
+                        .build();
+        }
 }
