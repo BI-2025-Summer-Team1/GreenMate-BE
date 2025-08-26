@@ -9,6 +9,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -16,6 +17,7 @@ import lombok.NoArgsConstructor;
 @Entity
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
+@AllArgsConstructor
 @Builder
 public class RecruitmentPostComment extends BaseTimeEntity {
 
@@ -41,15 +43,6 @@ public class RecruitmentPostComment extends BaseTimeEntity {
 
 	@Column(length = 50)
 	private String imageUrl;
-  
-  @Builder
-    public RecruitmentPostComment(RecruitmentPostComment parentComment, User user, RecruitmentPost recruitmentPost, String content, String imageUrl) {
-        this.parentComment = parentComment;
-        this.user = user;
-        this.recruitmentPost = recruitmentPost;
-        this.content = content;
-        this.imageUrl = imageUrl;
-    }
 
     public void setContent(String content) {
         this.content = content;
