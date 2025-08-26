@@ -230,12 +230,19 @@ public class RecruitmentPostService {
 
     @Transactional(readOnly = true)
     public Slice<RecruitmentPostCommentResponse> getComments(Long postId, Long lastId, Pageable pageable) {
-        Slice<RecruitmentPostComment> topLevelCommentsPage = recruitmentPostCommentRepository
-                .findByRecruitmentPostIdAndParentCommentIsNull(postId, lastId, pageable);
+        Slice<RecruitmentPostComment> topLevelCommentsPage;
+
+        if (lastId == null) {
+                topLevelCommentsPage =
+                recruitmentPostCommentRepository.findByRecruitmentPost_IdAndParentCommentIsNullOrderByIdDesc(postId, pageable);
+        } else {
+                topLevelCommentsPage =
+                recruitmentPostCommentRepository.findByRecruitmentPost_IdAndParentCommentIsNullAndIdLessThanOrderByIdDesc(postId, lastId, pageable);
+        }
 
         if (topLevelCommentsPage.isEmpty()) {
-        return new SliceImpl<>(Collections.emptyList(), pageable, false);
-    }
+                return new SliceImpl<>(Collections.emptyList(), pageable, false);
+        }
 
         List<Long> topCommentIds = topLevelCommentsPage.getContent().stream()
                 .map(RecruitmentPostComment::getId)
@@ -248,7 +255,7 @@ public class RecruitmentPostService {
 
         return topLevelCommentsPage.map(topComment -> {
             List<RecruitmentPostComment> replies = repliesByParentId.getOrDefault(topComment.getId(), Collections.emptyList());
-            
+                
             return mapToCommentResponse(topComment, replies);
         });
     }
