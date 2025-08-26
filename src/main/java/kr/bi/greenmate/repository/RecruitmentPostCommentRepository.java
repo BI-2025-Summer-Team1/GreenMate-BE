@@ -22,4 +22,6 @@ public interface RecruitmentPostCommentRepository extends JpaRepository<Recruitm
             Long recruitmentPostId, Long lastId, Pageable pageable);
 
     List<RecruitmentPostComment> findByParentCommentIdIn(List<Long> parentIds);
+  
+    void deleteByRecruitmentPostId(Long postId);
 }
