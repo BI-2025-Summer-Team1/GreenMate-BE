@@ -281,7 +281,7 @@ public class CommunityPostService {
 			return null;
 
 		return communityPostCommentRepository
-			.findByIdAndPostId(parentCommentId, postId)
+			.findByIdAndParentId(parentCommentId, postId)
 			.orElseThrow(ParentCommentMismatchException::new);
 	}
 
