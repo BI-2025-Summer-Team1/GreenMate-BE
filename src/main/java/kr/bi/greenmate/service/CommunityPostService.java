@@ -284,6 +284,8 @@ public class CommunityPostService {
 			.userId(comment.getUser().getId())
 			.nickname(comment.getUser().getNickname())
 			.content(comment.getContent())
+			.imageUrl(comment.getImageUrl() == null ? null
+				: objectStorageRepository.getDownloadUrl(comment.getImageUrl()))
 			.createdAt(comment.getCreatedAt())
 			.build();
 	}
