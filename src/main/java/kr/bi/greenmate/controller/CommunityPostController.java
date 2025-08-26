@@ -20,6 +20,8 @@ import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Size;
+import kr.bi.greenmate.dto.CommunityPostCommentRequest;
+import kr.bi.greenmate.dto.CommunityPostCommentResponse;
 import kr.bi.greenmate.dto.CommunityPostCreateRequest;
 import kr.bi.greenmate.dto.CommunityPostCreateResponse;
 import kr.bi.greenmate.dto.CommunityPostDetailResponse;
@@ -82,5 +84,22 @@ public class CommunityPostController {
 		CommunityPostDetailResponse response = communityPostService.getPost(postId, user);
 
 		return ResponseEntity.ok(response);
+	}
+
+	@PostMapping(value = "/{postId}/comments", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+	@Operation(summary = "커뮤니티 댓글 작성", description = "특정 커뮤니티 글에 댓글을 작성합니다.")
+	public ResponseEntity<CommunityPostCommentResponse> createComment(
+		@Parameter(description = "댓글을 작성할 커뮤니티 글 ID", example = "123")
+		@PathVariable long postId,
+		@AuthenticationPrincipal User user,
+		@Parameter(description = "댓글 작성 요청 본문", required = true)
+		@RequestPart("request") @Valid CommunityPostCommentRequest request,
+		@Parameter(description = "첨부 이미지 (최대 1개)", example = "comment.jpg")
+		@RequestPart(value = "image", required = false) MultipartFile image) {
+
+		CommunityPostCommentResponse response =
+			communityPostService.createComment(postId, user, request, image);
+
+		return ResponseEntity.status(HttpStatus.CREATED).body(response);
 	}
 }
