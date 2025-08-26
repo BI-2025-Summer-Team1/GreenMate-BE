@@ -11,40 +11,39 @@ import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
-import lombok.NoArgsConstructor; 
+import lombok.NoArgsConstructor;
 
 @Entity
 @Table(name = "users", uniqueConstraints = {
-        @UniqueConstraint(name = "uk_user_email", columnNames = "email"),
-        @UniqueConstraint(name = "uk_user_nickname", columnNames = "nickname")
+	@UniqueConstraint(name = "uk_user_email", columnNames = "email"),
+	@UniqueConstraint(name = "uk_user_nickname", columnNames = "nickname")
 })
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor
 @Builder
-public class User extends BaseTimeEntity { 
+public class User extends BaseTimeEntity {
 
-    @Id 
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(nullable = false) 
-    private Long id;
+	@Id
+	@GeneratedValue(strategy = GenerationType.IDENTITY)
+	@Column(nullable = false)
+	private Long id;
 
-    @Column(nullable = false,length = 100)
-    private String email;
+	@Column(nullable = false, length = 100)
+	private String email;
 
-    @Column(nullable = false, length = 10)
-    private String nickname;
+	@Column(nullable = false, length = 10)
+	private String nickname;
 
-    @Column(nullable = false, length = 60) 
-    private String password;
+	@Column(nullable = false, length = 60)
+	private String password;
 
-    @Column(length = 50) 
-    private String profileImageUrl; 
+	@Column(length = 50)
+	private String profileImageUrl;
 
-    @Column(length = 300)
-    private String selfIntroduction; 
+	@Column(length = 300)
+	private String selfIntroduction;
 
-    // oneToMany 관계 추가 예정
-    
-    
+	// oneToMany 관계 추가 예정
+
 }

@@ -10,6 +10,6 @@ import lombok.Getter;
 @Builder
 public class AgreementsResponse {
 
-    @Schema(description = "전체 약관 목록 (필수/선택 포함)")
-    private List<AgreementResponse> agreements;
+	@Schema(description = "전체 약관 목록 (필수/선택 포함)")
+	private List<AgreementResponse> agreements;
 }
