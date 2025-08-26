@@ -212,7 +212,7 @@ public class RecruitmentPostService {
     }            
     
     public RecruitmentPostCommentResponse createComment(
-            Long recruitmentPostId, Long userId, RecruitmentPostCommentRequest request, MultipartFile image) {
+        Long recruitmentPostId, Long userId, RecruitmentPostCommentRequest request, MultipartFile image) {
 
         RecruitmentPost recruitmentPost = recruitmentPostRepository.findById(recruitmentPostId)
 			.orElseThrow(() -> new RecruitmentPostNotFoundException(recruitmentPostId));
@@ -263,27 +263,27 @@ public class RecruitmentPostService {
 
     @Transactional
     @Retryable(
-      retryFor = {OptimisticLockException.class, ObjectOptimisticLockingFailureException.class},
-      maxAttempts = 3,
-      backoff = @Backoff(delay = 50)
+        retryFor = {OptimisticLockException.class, ObjectOptimisticLockingFailureException.class},
+        maxAttempts = 3,
+        backoff = @Backoff(delay = 50)
     )
     public void deleteComment(Long commentId, Long userId) {
-      RecruitmentPostComment comment = recruitmentPostCommentRepository.findById(commentId)
-        .orElseThrow(() -> new CommentNotFoundException());
+        RecruitmentPostComment comment = recruitmentPostCommentRepository.findById(commentId)
+            .orElseThrow(() -> new CommentNotFoundException());
 
-      if (!comment.getUser().getId().equals(userId)) {
-        throw new AccessDeniedException();
-      }
+        if (!comment.getUser().getId().equals(userId)) {
+            throw new AccessDeniedException();
+        }
 
-      List<RecruitmentPostComment> replies = recruitmentPostCommentRepository.findByParentCommentIdIn(Collections.singletonList(commentId));
-      if (replies.isEmpty()) {
-        comment.getRecruitmentPost().decreaseCommentCount();
-        recruitmentPostCommentRepository.delete(comment);
-      } else {
-        comment.setContent("삭제된 댓글입니다.");
-        comment.setImageUrl(null); 
-        recruitmentPostCommentRepository.save(comment);
-      }
+        List<RecruitmentPostComment> replies = recruitmentPostCommentRepository.findByParentCommentIdIn(Collections.singletonList(commentId));
+        if (replies.isEmpty()) {
+            comment.getRecruitmentPost().decreaseCommentCount();
+            recruitmentPostCommentRepository.delete(comment);
+        } else {
+            comment.setContent("삭제된 댓글입니다.");
+            comment.setImageUrl(null); 
+            recruitmentPostCommentRepository.save(comment);
+        }
     }
   
     @Transactional(readOnly = true)
