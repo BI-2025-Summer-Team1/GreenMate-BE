@@ -225,6 +225,11 @@ public class RecruitmentPostService {
     }
 
     @Transactional
+    @Retryable(
+            retryFor = {OptimisticLockException.class, ObjectOptimisticLockingFailureException.class},
+            maxAttempts = 3,
+            backoff = @Backoff(delay = 50)
+    )
     public void deleteComment(Long commentId, Long userId) {
         RecruitmentPostComment comment = recruitmentPostCommentRepository.findById(commentId)
                 .orElseThrow(() -> new CommentNotFoundException());
@@ -233,8 +238,14 @@ public class RecruitmentPostService {
             throw new AccessDeniedException();
         }
         
-        recruitmentPostCommentRepository.delete(comment);
-        
-        comment.getRecruitmentPost().decreaseCommentCount();
+        List<RecruitmentPostComment> replies = recruitmentPostCommentRepository.findByParentCommentIdIn(Collections.singletonList(commentId));
+        if (replies.isEmpty()) {
+            comment.getRecruitmentPost().decreaseCommentCount();
+            recruitmentPostCommentRepository.delete(comment);
+        } else {
+            comment.setContent("삭제된 댓글입니다.");
+            comment.setImageUrl(null); 
+            recruitmentPostCommentRepository.save(comment);
+        }
     }
 }
