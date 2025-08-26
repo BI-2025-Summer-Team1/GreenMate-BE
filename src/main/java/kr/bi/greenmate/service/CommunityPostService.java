@@ -11,8 +11,6 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
 import org.springframework.orm.ObjectOptimisticLockingFailureException;
-import org.springframework.retry.annotation.Backoff;
-import org.springframework.retry.annotation.Retryable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -34,11 +32,9 @@ import kr.bi.greenmate.entity.User;
 import kr.bi.greenmate.exception.error.FileUploadFailException;
 import kr.bi.greenmate.exception.error.ImageCountExceedException;
 import kr.bi.greenmate.exception.error.ImageSizeExceedException;
-import kr.bi.greenmate.exception.error.InvalidImageTypeException;
 import kr.bi.greenmate.exception.error.OptimisticLockCustomException;
 import kr.bi.greenmate.exception.error.ParentCommentMismatchException;
 import kr.bi.greenmate.exception.error.PostNotFoundException;
-import kr.bi.greenmate.exception.error.CommentNotFoundException;
 import kr.bi.greenmate.repository.CommunityPostCommentRepository;
 import kr.bi.greenmate.repository.CommunityPostImageRepository;
 import kr.bi.greenmate.repository.CommunityPostLikeRepository;
@@ -221,7 +217,9 @@ public class CommunityPostService {
 				.build())
 			.toList();
 
-		return new KeysetSliceResponse<>(content, slice.hasNext());
+		Long newLastId = content.isEmpty() ? null : content.get(content.size() - 1).getPostId();
+
+		return new KeysetSliceResponse<>(content, slice.hasNext(), newLastId);
 	}
 
 	public CommunityPostCommentResponse createComment(Long postId, User user,
@@ -286,7 +284,37 @@ public class CommunityPostService {
 			.userId(comment.getUser().getId())
 			.nickname(comment.getUser().getNickname())
 			.content(comment.getContent())
+			.imageUrl(comment.getImageUrl() == null ? null
+				: objectStorageRepository.getDownloadUrl(comment.getImageUrl()))
 			.createdAt(comment.getCreatedAt())
 			.build();
+	}
+
+	@Transactional(readOnly = true)
+	public KeysetSliceResponse<CommunityPostCommentResponse> getComments(Long postId, Long lastCommentId, int size) {
+
+		if (!communityPostRepository.existsById(postId)) {
+			throw new PostNotFoundException();
+		}
+
+		Pageable pageable = PageRequest.of(0, size + 1);
+		List<CommunityPostComment> results;
+
+		if (lastCommentId == null) {
+			results = communityPostCommentRepository.findByParent_IdOrderByIdDesc(postId, pageable);
+		} else {
+			results = communityPostCommentRepository.findByParent_IdAndIdLessThanOrderByIdDesc(postId, lastCommentId,
+				pageable);
+		}
+
+		boolean hasNext = results.size() > size;
+		List<CommunityPostCommentResponse> content = results.stream()
+			.limit(size)
+			.map(this::buildCommentResponse)
+			.toList();
+
+		Long newLastId = content.isEmpty() ? null : content.get(content.size() - 1).getId();
+
+		return new KeysetSliceResponse<>(content, hasNext, newLastId);
 	}
 }

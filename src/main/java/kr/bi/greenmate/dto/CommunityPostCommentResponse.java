@@ -23,6 +23,9 @@ public class CommunityPostCommentResponse {
 	@Schema(description = "댓글 내용")
 	private String content;
 
+	@Schema(description = "댓글 이미지 URL / nullable")
+	private String imageUrl;
+
 	@Schema(description = "작성 시간")
 	private LocalDateTime createdAt;
 }
