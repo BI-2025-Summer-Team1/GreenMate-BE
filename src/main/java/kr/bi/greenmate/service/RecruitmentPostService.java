@@ -282,7 +282,6 @@ public class RecruitmentPostService {
         } else {
             comment.setContent("삭제된 댓글입니다.");
             comment.setImageUrl(null); 
-            recruitmentPostCommentRepository.save(comment);
         }
     }
   
