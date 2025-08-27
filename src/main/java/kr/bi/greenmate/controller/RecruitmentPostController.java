@@ -122,4 +122,16 @@ public class RecruitmentPostController {
         
         return ResponseEntity.ok(comments);
     }
+
+    @DeleteMapping("/comments/{commentId}")
+    @Operation(
+            summary = "모집글 댓글 삭제",
+            description = "특정 ID의 댓글을 삭제합니다."
+    )
+    public ResponseEntity<Void> deleteComment(
+            @PathVariable Long commentId,
+            @AuthenticationPrincipal Long userId) {
+        recruitmentPostService.deleteComment(commentId, userId);
+        return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
+    }
 }

@@ -43,4 +43,12 @@ public class RecruitmentPostComment extends BaseTimeEntity {
 
 	@Column(length = 50)
 	private String imageUrl;
+
+    public void setContent(String content) {
+        this.content = content;
+    }
+    
+    public void setImageUrl(String imageUrl) {
+        this.imageUrl = imageUrl;
+    }
 }

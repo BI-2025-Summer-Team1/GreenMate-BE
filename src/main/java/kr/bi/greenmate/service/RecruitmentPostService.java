@@ -212,7 +212,7 @@ public class RecruitmentPostService {
     }            
     
     public RecruitmentPostCommentResponse createComment(
-            Long recruitmentPostId, Long userId, RecruitmentPostCommentRequest request, MultipartFile image) {
+        Long recruitmentPostId, Long userId, RecruitmentPostCommentRequest request, MultipartFile image) {
 
         RecruitmentPost recruitmentPost = recruitmentPostRepository.findById(recruitmentPostId)
 			.orElseThrow(() -> new RecruitmentPostNotFoundException(recruitmentPostId));
@@ -261,6 +261,30 @@ public class RecruitmentPostService {
 			.build();
     }
 
+    @Transactional
+    @Retryable(
+        retryFor = {OptimisticLockException.class, ObjectOptimisticLockingFailureException.class},
+        maxAttempts = 3,
+        backoff = @Backoff(delay = 50)
+    )
+    public void deleteComment(Long commentId, Long userId) {
+        RecruitmentPostComment comment = recruitmentPostCommentRepository.findById(commentId)
+            .orElseThrow(() -> new CommentNotFoundException());
+
+        if (!comment.getUser().getId().equals(userId)) {
+            throw new AccessDeniedException();
+        }
+
+        List<RecruitmentPostComment> replies = recruitmentPostCommentRepository.findByParentCommentIdIn(Collections.singletonList(commentId));
+        if (replies.isEmpty()) {
+            comment.getRecruitmentPost().decreaseCommentCount();
+            recruitmentPostCommentRepository.delete(comment);
+        } else {
+            comment.setContent("삭제된 댓글입니다.");
+            comment.setImageUrl(null); 
+        }
+    }
+  
     @Transactional(readOnly = true)
     public Slice<RecruitmentPostCommentResponse> getComments(Long postId, Long lastId, int size) {
         Slice<RecruitmentPostComment> topLevelCommentsPage;
