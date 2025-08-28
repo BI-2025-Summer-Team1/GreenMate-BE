@@ -36,7 +36,7 @@ public class SignUpRequest {
 	private String password;
 
 	@Setter
-	@Schema(description = "프로필 이미지 파일")
+	@Schema(description = "프로필 이미지 파일", hidden = true)
 	private MultipartFile profileImage;
 
 	@Schema(description = "동의한 약관 ID 목록", example = "[1, 2, 3]")
