@@ -3,6 +3,8 @@ package kr.bi.greenmate.controller;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -21,6 +23,7 @@ import kr.bi.greenmate.dto.LoginResponse;
 import kr.bi.greenmate.dto.NicknameDuplicateCheckResponse;
 import kr.bi.greenmate.dto.SignUpRequest;
 import kr.bi.greenmate.dto.SignUpResponse;
+import kr.bi.greenmate.entity.User;
 import kr.bi.greenmate.service.AuthService;
 import lombok.RequiredArgsConstructor;
 
@@ -65,5 +68,13 @@ public class UserController {
 	) {
 		LoginResponse response = authService.login(request);
 		return ResponseEntity.ok(response);
+	}
+
+	@DeleteMapping("/me")
+	@Operation(summary = "회원 탈퇴", description = "현재 로그인한 사용자를 소프트 삭제합니다.")
+	public ResponseEntity<Void> deleteMe(
+		@AuthenticationPrincipal User user) {
+		authService.deleteUser(user);
+		return ResponseEntity.noContent().build();
 	}
 }

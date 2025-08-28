@@ -70,6 +70,10 @@ public class AuthService {
 	public LoginResponse login(LoginRequest request) {
 		User user = userRepository.findByEmail(request.getEmail()).orElseThrow(UserNotFoundException::new);
 
+		if (user.getDeletedAt() != null) {
+			throw new UserNotFoundException();
+		}
+
 		if (!passwordEncoder.matches(request.getPassword(), user.getPassword())) {
 			throw new UserNotFoundException();
 		}
@@ -172,5 +176,13 @@ public class AuthService {
 		}
 
 		userAgreementRepository.saveAll(toSave);
+	}
+
+	@Transactional
+	public void deleteUser(User user) {
+		if (user.getDeletedAt() == null) {
+			user.softDelete();
+			userRepository.save(user);
+		}
 	}
 }

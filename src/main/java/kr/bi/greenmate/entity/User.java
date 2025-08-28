@@ -1,5 +1,7 @@
 package kr.bi.greenmate.entity;
 
+import java.time.LocalDateTime;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -43,6 +45,13 @@ public class User extends BaseTimeEntity {
 
 	@Column(length = 300)
 	private String selfIntroduction;
+
+	@Column
+	private LocalDateTime deletedAt;
+
+	public void softDelete() {
+		this.deletedAt = LocalDateTime.now();
+	}
 
 	// oneToMany 관계 추가 예정
 
