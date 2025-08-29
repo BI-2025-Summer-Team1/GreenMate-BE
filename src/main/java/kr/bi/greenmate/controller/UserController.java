@@ -42,8 +42,7 @@ public class UserController {
 		@Parameter(description = "프로필 이미지 파일 (선택사항)", example = "profile.jpg")
 		@RequestPart(value = "profileImage", required = false) MultipartFile profileImage
 	) {
-		request.setProfileImage(profileImage);
-		SignUpResponse response = authService.signUp(request);
+		SignUpResponse response = authService.signUp(request, profileImage);
 		return ResponseEntity.status(HttpStatus.CREATED).body(response);
 	}
 
