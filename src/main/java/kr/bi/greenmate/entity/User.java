@@ -51,8 +51,13 @@ public class User extends BaseTimeEntity {
 
 	public void softDelete() {
 		this.deletedAt = LocalDateTime.now();
-		this.nickname = "d_" + this.id;
-		this.email = "d_" + this.id;
+		String encoded = Long.toString(this.id, 36);
+		String nick = "d" + encoded;
+		if (nick.length() > 10) {
+			nick = "d" + encoded.substring(encoded.length() - 9);
+		}
+		this.nickname = nick;
+		this.email = "d" + encoded + "@deleted.user";
 	}
 
 	// oneToMany 관계 추가 예정
