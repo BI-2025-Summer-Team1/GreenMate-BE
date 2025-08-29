@@ -330,9 +330,13 @@ public class CommunityPostService {
 			throw new AccessDeniedException();
 		}
 
-		communityPostCommentRepository.delete(comment);
+		int deletedCount = communityPostCommentRepository
+			.deleteByIdAndParentIdAndUserId(commentId, postId, user.getId());
 
-		CommunityPost post = comment.getParent();
-		post.decrementCommentCount();
+		if (deletedCount == 0) {
+			throw new CommentNotFoundException();
+		}
+
+		communityPostRepository.decrementCommentCount(postId);
 	}
 }
