@@ -35,13 +35,11 @@ public interface CommunityPostRepository extends JpaRepository<CommunityPost, Lo
 		""")
 	Slice<CommunityPost> findNextPage(@Param("lastPostId") Long lastPostId, Pageable pageable);
 
-	@Modifying(clearAutomatically = true, flushAutomatically = true)
-	@Query("UPDATE CommunityPost p SET p.viewCount = p.viewCount + :delta WHERE p.id = :postId")
-	int incrementViewCountBy(@Param("postId") Long postId, @Param("delta") long delta);
-
 	@Modifying
 	@Query("update CommunityPost p set p.viewCount = p.viewCount + :delta where p.id = :id")
 	int incrementViewCountBy(@Param("id") long id, @Param("delta") long delta);
 
+	@Modifying(clearAutomatically = true, flushAutomatically = true)
+	@Query("delete from CommunityPost p where p.user.id = :userId")
 	void deletePostsByUserId(Long userId);
 }
