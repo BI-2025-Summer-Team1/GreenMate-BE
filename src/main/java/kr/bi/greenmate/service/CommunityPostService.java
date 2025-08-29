@@ -29,6 +29,8 @@ import kr.bi.greenmate.entity.CommunityPostComment;
 import kr.bi.greenmate.entity.CommunityPostImage;
 import kr.bi.greenmate.entity.CommunityPostLike;
 import kr.bi.greenmate.entity.User;
+import kr.bi.greenmate.exception.error.AccessDeniedException;
+import kr.bi.greenmate.exception.error.CommentNotFoundException;
 import kr.bi.greenmate.exception.error.FileUploadFailException;
 import kr.bi.greenmate.exception.error.ImageCountExceedException;
 import kr.bi.greenmate.exception.error.ImageSizeExceedException;
@@ -316,5 +318,21 @@ public class CommunityPostService {
 		Long newLastId = content.isEmpty() ? null : content.get(content.size() - 1).getId();
 
 		return new KeysetSliceResponse<>(content, hasNext, newLastId);
+	}
+
+	@Transactional
+	public void deleteComment(Long postId, Long commentId, User user) {
+		CommunityPostComment comment = communityPostCommentRepository
+			.findByIdAndParentId(commentId, postId)
+			.orElseThrow(CommentNotFoundException::new);
+
+		if (!comment.getUser().getId().equals(user.getId())) {
+			throw new AccessDeniedException();
+		}
+
+		communityPostCommentRepository.delete(comment);
+
+		CommunityPost post = comment.getParent();
+		post.decrementCommentCount();
 	}
 }

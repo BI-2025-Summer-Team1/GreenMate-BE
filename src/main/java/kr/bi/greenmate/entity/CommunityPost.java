@@ -79,4 +79,8 @@ public class CommunityPost extends BaseTimeEntity {
 	public void incrementCommentCount() {
 		this.commentCount++;
 	}
+
+	public void decrementCommentCount() {
+		this.commentCount--;
+	}
 }
