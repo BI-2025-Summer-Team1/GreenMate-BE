@@ -48,6 +48,7 @@ public class AuthService {
 	private final ImageUploadService imageUploadService;
 	private final AgreementRepository agreementRepository;
 	private final UserAgreementRepository userAgreementRepository;
+	private final CommunityPostCleanupService communityPostCleanupService;
 
 	@Transactional
 	public SignUpResponse signUp(SignUpRequest request) {
@@ -181,6 +182,7 @@ public class AuthService {
 	@Transactional
 	public void deleteUser(User user) {
 		if (user.getDeletedAt() == null) {
+			communityPostCleanupService.deleteAllOfUser(user.getId());
 			user.softDelete();
 			userRepository.save(user);
 		}
