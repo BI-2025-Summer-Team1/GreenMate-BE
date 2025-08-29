@@ -25,7 +25,5 @@ public interface RecruitmentPostCommentRepository extends JpaRepository<Recruitm
 
 	List<RecruitmentPostComment> findByParentCommentIdIn(List<Long> parentIds);
 
-	@Modifying(clearAutomatically = true, flushAutomatically = true)
-	@Query("delete from CommunityPostComment c where c.user.id = :userId")
-	void deleteCommentsByUserId(Long userId);
+	void deleteByRecruitmentPostId(Long postId);
 }

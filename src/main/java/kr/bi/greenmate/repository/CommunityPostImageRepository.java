@@ -14,11 +14,10 @@ public interface CommunityPostImageRepository extends JpaRepository<CommunityPos
 	List<String> findImageUrlsByPostId(@Param("postId") Long postId);
 
 	@Query("""
-		    select i.imageUrl
-		    from CommunityPostImage i
-		    where i.communityPost.id in (
-		        select p.id from CommunityPost p where p.user.id = :userId
-		    )
+		  select i.imageUrl
+		  from CommunityPostImage i
+		  join i.communityPost p
+		  where p.user.id = :userId
 		""")
 	List<String> findImageKeysByOwner(Long userId);
 }

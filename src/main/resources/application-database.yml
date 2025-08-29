@@ -16,3 +16,5 @@ logging:
   level:
     org:
       hibernate: info
+app:
+  default-profile-image-url: "https://test.image.png"
