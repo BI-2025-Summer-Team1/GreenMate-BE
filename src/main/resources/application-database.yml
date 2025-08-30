@@ -16,3 +16,5 @@ logging:
   level:
     org:
       hibernate: info
+app:
+  default-profile-image-url: "https://green-mate-t1-cdn.jayden-bin.cc/profile/default/default-profile.png"
