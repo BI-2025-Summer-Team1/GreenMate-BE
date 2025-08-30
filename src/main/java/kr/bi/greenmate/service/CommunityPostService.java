@@ -29,6 +29,8 @@ import kr.bi.greenmate.entity.CommunityPostComment;
 import kr.bi.greenmate.entity.CommunityPostImage;
 import kr.bi.greenmate.entity.CommunityPostLike;
 import kr.bi.greenmate.entity.User;
+import kr.bi.greenmate.exception.error.AccessDeniedException;
+import kr.bi.greenmate.exception.error.CommentNotFoundException;
 import kr.bi.greenmate.exception.error.FileUploadFailException;
 import kr.bi.greenmate.exception.error.ImageCountExceedException;
 import kr.bi.greenmate.exception.error.ImageSizeExceedException;
@@ -155,7 +157,7 @@ public class CommunityPostService {
 	@Transactional(readOnly = true)
 	public CommunityPostDetailResponse getPost(Long postId, User user) {
 
-		CommunityPost post = communityPostRepository.findByIdWithUserAndImages(postId)
+		CommunityPost post = communityPostRepository.findById(postId)
 			.orElseThrow(PostNotFoundException::new);
 
 		viewCountService.increment(postId);
@@ -189,9 +191,9 @@ public class CommunityPostService {
 
 		Slice<CommunityPost> slice;
 		if (lastPostId == null) {
-			slice = communityPostRepository.findFirstPage(pageable);
+			slice = communityPostRepository.findAllByOrderByIdDesc(pageable);
 		} else {
-			slice = communityPostRepository.findNextPage(lastPostId, pageable);
+			slice = communityPostRepository.findByIdLessThanOrderByIdDesc(lastPostId, pageable);
 		}
 
 		List<CommunityPost> posts = slice.getContent();
@@ -316,5 +318,23 @@ public class CommunityPostService {
 		Long newLastId = content.isEmpty() ? null : content.get(content.size() - 1).getId();
 
 		return new KeysetSliceResponse<>(content, hasNext, newLastId);
+	}
+
+	@Transactional
+	public void deleteComment(Long commentId, User user) {
+		Long postId = communityPostCommentRepository.findParentIdById(commentId)
+			.orElseThrow(CommentNotFoundException::new);
+
+		long deletedCount = communityPostCommentRepository
+			.deleteByIdAndParentIdAndUserId(commentId, postId, user.getId());
+
+		if (deletedCount == 0) {
+			if (!communityPostCommentRepository.existsById(commentId)) {
+				throw new CommentNotFoundException();
+			}
+			throw new AccessDeniedException();
+		}
+
+		communityPostRepository.decrementCommentCount(postId);
 	}
 }

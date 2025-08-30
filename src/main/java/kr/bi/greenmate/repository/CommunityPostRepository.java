@@ -13,33 +13,20 @@ import org.springframework.data.repository.query.Param;
 import kr.bi.greenmate.entity.CommunityPost;
 
 public interface CommunityPostRepository extends JpaRepository<CommunityPost, Long> {
-	@Query("""
-		SELECT p 
-		FROM CommunityPost p
-		JOIN FETCH p.user
-		WHERE p.id = :postId""")
-	Optional<CommunityPost> findByIdWithUserAndImages(@Param("postId") Long postId);
+	@EntityGraph(attributePaths = {"user", "images"})
+	Optional<CommunityPost> findById(Long id);
 
 	@EntityGraph(attributePaths = {"user"})
-	@Query("""
-		SELECT p FROM CommunityPost p
-		ORDER BY p.id DESC
-		""")
-	Slice<CommunityPost> findFirstPage(Pageable pageable);
+	Slice<CommunityPost> findAllByOrderByIdDesc(Pageable pageable);
 
 	@EntityGraph(attributePaths = {"user"})
-	@Query("""
-		SELECT p FROM CommunityPost p
-		WHERE p.id < :lastPostId
-		ORDER BY p.id DESC
-		""")
-	Slice<CommunityPost> findNextPage(@Param("lastPostId") Long lastPostId, Pageable pageable);
-
-	@Modifying(clearAutomatically = true, flushAutomatically = true)
-	@Query("UPDATE CommunityPost p SET p.viewCount = p.viewCount + :delta WHERE p.id = :postId")
-	int incrementViewCountBy(@Param("postId") Long postId, @Param("delta") long delta);
+	Slice<CommunityPost> findByIdLessThanOrderByIdDesc(Long lastPostId, Pageable pageable);
 
 	@Modifying
 	@Query("update CommunityPost p set p.viewCount = p.viewCount + :delta where p.id = :id")
-	int incrementViewCountBy(@Param("id") long id, @Param("delta") long delta);
+	void incrementViewCountBy(@Param("id") long id, @Param("delta") long delta);
+
+	@Modifying
+	@Query("UPDATE CommunityPost p SET p.commentCount = p.commentCount - 1 WHERE p.id = :postId AND p.commentCount > 0")
+	void decrementCommentCount(@Param("postId") Long postId);
 }
