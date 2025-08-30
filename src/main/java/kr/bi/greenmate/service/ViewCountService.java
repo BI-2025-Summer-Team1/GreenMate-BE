@@ -59,7 +59,7 @@ public class ViewCountService {
 	);
 	private final RedissonClient redissonClient;
 	private final CommunityPostRepository communityPostRepository;
-	private final ObjectProvider<ViewCountService> selfProvider;
+	private final ViewCountPersister viewCountPersister;
 
 	public long increment(long postId) {
 		try {
@@ -168,7 +168,7 @@ public class ViewCountService {
 
 				long id = Long.parseLong(idStr);
 				try {
-					selfProvider.getObject().persistOne(id, delta);
+					viewCountPersister.persistOne(id, delta);
 					pending.fastRemove(idStr);
 					success++;
 				} catch (Exception ex) {
@@ -182,16 +182,6 @@ public class ViewCountService {
 		} catch (Exception e) {
 			log.error("조회수 pending 처리 중 예상치 못한 오류 발생 - 원인: {}", e.getMessage());
 			throw new RedisConnectionFailException();
-		}
-	}
-
-	@Transactional(propagation = Propagation.REQUIRES_NEW)
-	public void persistOne(long postId, long delta) {
-		try {
-			communityPostRepository.incrementViewCountBy(postId, delta);
-		} catch (Exception e) {
-			log.error("개별 조회수 DB 반영 실패 - postId: {}, delta: {}, 원인: {}", postId, delta, e.getMessage());
-			throw new ViewCountPersistFailException();
 		}
 	}
 }
