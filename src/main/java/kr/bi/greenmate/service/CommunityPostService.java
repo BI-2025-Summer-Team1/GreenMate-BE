@@ -157,7 +157,7 @@ public class CommunityPostService {
 	@Transactional(readOnly = true)
 	public CommunityPostDetailResponse getPost(Long postId, User user) {
 
-		CommunityPost post = communityPostRepository.findByIdWithUserAndImages(postId)
+		CommunityPost post = communityPostRepository.findById(postId)
 			.orElseThrow(PostNotFoundException::new);
 
 		viewCountService.increment(postId);
@@ -191,9 +191,9 @@ public class CommunityPostService {
 
 		Slice<CommunityPost> slice;
 		if (lastPostId == null) {
-			slice = communityPostRepository.findFirstPage(pageable);
+			slice = communityPostRepository.findAllByOrderByIdDesc(pageable);
 		} else {
-			slice = communityPostRepository.findNextPage(lastPostId, pageable);
+			slice = communityPostRepository.findByIdLessThanOrderByIdDesc(lastPostId, pageable);
 		}
 
 		List<CommunityPost> posts = slice.getContent();
@@ -322,19 +322,14 @@ public class CommunityPostService {
 
 	@Transactional
 	public void deleteComment(Long postId, Long commentId, User user) {
-		CommunityPostComment comment = communityPostCommentRepository
-			.findByIdAndParentId(commentId, postId)
-			.orElseThrow(CommentNotFoundException::new);
-
-		if (!comment.getUser().getId().equals(user.getId())) {
-			throw new AccessDeniedException();
-		}
-
 		int deletedCount = communityPostCommentRepository
-			.deleteByIdAndParentIdAndUserId(commentId, postId, user.getId());
+			.deleteByIdAndParent_IdAndUser_Id(commentId, postId, user.getId());
 
 		if (deletedCount == 0) {
-			throw new CommentNotFoundException();
+			if (!communityPostCommentRepository.existsById(commentId)) {
+				throw new CommentNotFoundException();
+			}
+			throw new AccessDeniedException();
 		}
 
 		communityPostRepository.decrementCommentCount(postId);
