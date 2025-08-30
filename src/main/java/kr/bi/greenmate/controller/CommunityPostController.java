@@ -120,16 +120,14 @@ public class CommunityPostController {
 		return ResponseEntity.ok(response);
 	}
 
-	@DeleteMapping("/{postId}/comments/{commentId}")
+	@DeleteMapping("/comments/{commentId}")
 	@Operation(summary = "커뮤니티 댓글 삭제", description = "특정 커뮤니티 글의 댓글을 삭제합니다.")
 	public ResponseEntity<Void> deleteComment(
-		@Parameter(description = "댓글을 삭제할 커뮤니티 글 ID", example = "123")
-		@PathVariable long postId,
 		@Parameter(description = "삭제할 댓글 ID", example = "456")
 		@PathVariable long commentId,
 		@AuthenticationPrincipal User user) {
 
-		communityPostService.deleteComment(postId, commentId, user);
+		communityPostService.deleteComment(commentId, user);
 		return ResponseEntity.noContent().build();
 	}
 }

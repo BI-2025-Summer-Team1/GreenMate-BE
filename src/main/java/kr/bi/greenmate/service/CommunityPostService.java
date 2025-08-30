@@ -321,11 +321,14 @@ public class CommunityPostService {
 	}
 
 	@Transactional
-	public void deleteComment(Long postId, Long commentId, User user) {
-		long deleted = communityPostCommentRepository
-			.deleteByIdAndParent_IdAndUser_Id(commentId, postId, user.getId());
+	public void deleteComment(Long commentId, User user) {
+		Long postId = communityPostCommentRepository.findParentIdById(commentId)
+			.orElseThrow(CommentNotFoundException::new);
 
-		if (deleted == 0) {
+		long deletedCount = communityPostCommentRepository
+			.deleteByIdAndParentIdAndUserId(commentId, postId, user.getId());
+
+		if (deletedCount == 0) {
 			if (!communityPostCommentRepository.existsById(commentId)) {
 				throw new CommentNotFoundException();
 			}
