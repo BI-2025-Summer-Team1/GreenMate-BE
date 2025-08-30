@@ -39,7 +39,5 @@ public interface CommunityPostRepository extends JpaRepository<CommunityPost, Lo
 	@Query("update CommunityPost p set p.viewCount = p.viewCount + :delta where p.id = :id")
 	int incrementViewCountBy(@Param("id") long id, @Param("delta") long delta);
 
-	@Modifying(clearAutomatically = true, flushAutomatically = true)
-	@Query("delete from CommunityPost p where p.user.id = :userId")
-	void deletePostsByUserId(Long userId);
+	void deleteByUser_Id(Long userId);
 }

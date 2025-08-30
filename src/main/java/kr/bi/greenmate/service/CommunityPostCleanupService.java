@@ -23,9 +23,9 @@ public class CommunityPostCleanupService {
 	public void deleteAllOfUser(Long userId) {
 		List<String> imageKeys = communityPostImageRepository.findImageKeysByOwner(userId);
 
-		communityPostCommentRepository.deleteCommentsByUserId(userId);
+		communityPostCommentRepository.deleteByUser_Id(userId);
 
-		communityPostRepository.deletePostsByUserId(userId);
+		communityPostRepository.deleteByUser_Id(userId);
 
 		if (!imageKeys.isEmpty()) {
 			publisher.publishEvent(new ImagesToDeleteEvent(imageKeys));
