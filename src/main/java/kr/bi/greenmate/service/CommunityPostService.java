@@ -322,10 +322,10 @@ public class CommunityPostService {
 
 	@Transactional
 	public void deleteComment(Long postId, Long commentId, User user) {
-		int deletedCount = communityPostCommentRepository
+		long deleted = communityPostCommentRepository
 			.deleteByIdAndParent_IdAndUser_Id(commentId, postId, user.getId());
 
-		if (deletedCount == 0) {
+		if (deleted == 0) {
 			if (!communityPostCommentRepository.existsById(commentId)) {
 				throw new CommentNotFoundException();
 			}

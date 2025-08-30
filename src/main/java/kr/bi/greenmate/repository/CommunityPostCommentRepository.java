@@ -22,5 +22,5 @@ public interface CommunityPostCommentRepository extends JpaRepository<CommunityP
 	@EntityGraph(attributePaths = "user")
 	List<CommunityPostComment> findByParent_IdAndIdLessThanOrderByIdDesc(Long postId, Long lastId, Pageable pageable);
 
-	int deleteByIdAndParent_IdAndUser_Id(Long commentId, Long postId, Long userId);
+	long deleteByIdAndParent_IdAndUser_Id(Long commentId, Long postId, Long userId);
 }
