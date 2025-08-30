@@ -31,7 +31,8 @@ public enum ErrorCode {
 
 	VIEW_COUNT_FLUSH_FAIL("500-03", "조회수 동기화 처리 중 오류가 발생했습니다.", HttpStatus.INTERNAL_SERVER_ERROR),
 	VIEW_COUNT_PERSIST_FAIL("500-04", "조회수 데이터베이스 반영 중 오류가 발생했습니다.", HttpStatus.INTERNAL_SERVER_ERROR),
-	REDIS_CONNECTION_FAIL("500-05", "Redis 연결에 실패했습니다.", HttpStatus.INTERNAL_SERVER_ERROR);
+	REDIS_CONNECTION_FAIL("500-05", "Redis 연결에 실패했습니다.", HttpStatus.INTERNAL_SERVER_ERROR),
+	POST_DELETION_FAILED("500-06", "게시글 삭제 처리 중 오류가 발생했습니다.", HttpStatus.INTERNAL_SERVER_ERROR);
 
 	private final String code;
 	private final String message;

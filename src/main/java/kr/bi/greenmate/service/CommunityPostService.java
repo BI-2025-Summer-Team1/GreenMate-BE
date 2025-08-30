@@ -7,6 +7,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
@@ -55,6 +56,7 @@ public class CommunityPostService {
 	private final ViewCountService viewCountService;
 	private final CommentCreationService commentCreationService;
 	private final CommunityPostCommentRepository communityPostCommentRepository;
+	private final ApplicationEventPublisher publisher;
 
 	@Transactional
 	public CommunityPostCreateResponse createPost(User user, CommunityPostCreateRequest request,
@@ -318,6 +320,23 @@ public class CommunityPostService {
 		Long newLastId = content.isEmpty() ? null : content.get(content.size() - 1).getId();
 
 		return new KeysetSliceResponse<>(content, hasNext, newLastId);
+	}
+
+	@Transactional
+	public void deletePost(Long postId, User user) {
+
+		List<String> imageUrls = communityPostImageRepository.findImageUrlsByPostId(postId);
+
+		long deleted = communityPostRepository.deleteByIdAndUser_Id(postId, user.getId());
+		if (deleted == 0) {
+			if (!communityPostRepository.existsById(postId))
+				throw new PostNotFoundException();
+			throw new AccessDeniedException();
+		}
+
+		if (!imageUrls.isEmpty()) {
+			publisher.publishEvent(new ImagesToDeleteEvent(imageUrls));
+		}
 	}
 
 	@Transactional

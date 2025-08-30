@@ -120,6 +120,17 @@ public class CommunityPostController {
 		return ResponseEntity.ok(response);
 	}
 
+	@DeleteMapping("/{postId}")
+	@Operation(summary = "커뮤니티 글 삭제", description = "특정 커뮤니티 글을 삭제합니다.")
+	public ResponseEntity<Void> deletePost(
+		@Parameter(description = "삭제할 게시글 ID", example = "123")
+		@PathVariable long postId,
+		@AuthenticationPrincipal User user) {
+
+		communityPostService.deletePost(postId, user);
+		return ResponseEntity.noContent().build();
+	}
+
 	@DeleteMapping("/comments/{commentId}")
 	@Operation(summary = "커뮤니티 댓글 삭제", description = "특정 커뮤니티 글의 댓글을 삭제합니다.")
 	public ResponseEntity<Void> deleteComment(

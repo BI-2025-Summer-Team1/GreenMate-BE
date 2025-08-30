@@ -29,4 +29,6 @@ public interface CommunityPostRepository extends JpaRepository<CommunityPost, Lo
 	@Modifying
 	@Query("UPDATE CommunityPost p SET p.commentCount = p.commentCount - 1 WHERE p.id = :postId AND p.commentCount > 0")
 	void decrementCommentCount(@Param("postId") Long postId);
+
+	long deleteByIdAndUser_Id(Long postId, Long id);
 }
