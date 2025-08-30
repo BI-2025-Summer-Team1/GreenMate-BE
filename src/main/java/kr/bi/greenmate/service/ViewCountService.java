@@ -5,13 +5,14 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.TimeUnit;
 
 import org.redisson.api.RLock;
 import org.redisson.api.RMap;
 import org.redisson.api.RScript;
 import org.redisson.api.RedissonClient;
-import org.redisson.client.codec.LongCodec;
 import org.redisson.client.codec.StringCodec;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
@@ -58,6 +59,7 @@ public class ViewCountService {
 	);
 	private final RedissonClient redissonClient;
 	private final CommunityPostRepository communityPostRepository;
+	private final ViewCountPersister viewCountPersister;
 
 	public long increment(long postId) {
 		try {
@@ -90,7 +92,7 @@ public class ViewCountService {
 		RLock lock = redissonClient.getLock(FLUSH_LOCK_KEY);
 		boolean locked = false;
 		try {
-			locked = lock.tryLock();
+			locked = lock.tryLock(0, 15, TimeUnit.SECONDS);
 			if (!locked)
 				return;
 
@@ -142,24 +144,31 @@ public class ViewCountService {
 
 	private int persistPendingToDatabase() {
 		try {
-			RMap<String, Long> pending = redissonClient.getMap(PENDING_HASH_KEY, LongCodec.INSTANCE);
+			RMap<String, String> pending = redissonClient.getMap(PENDING_HASH_KEY, StringCodec.INSTANCE);
 
-			Set<Map.Entry<String, Long>> entries = pending.readAllEntrySet();
+			Set<Map.Entry<String, String>> entries = pending.readAllEntrySet();
 			if (entries.isEmpty())
 				return 0;
 
 			int success = 0;
-			for (Map.Entry<String, Long> e : entries) {
+			for (Map.Entry<String, String> e : entries) {
 				String idStr = e.getKey();
-				Long delta = e.getValue();
-				if (delta == null || delta <= 0L) {
+				String deltaStr = e.getValue();
+				Long delta;
+				try {
+					delta = Long.parseLong(deltaStr);
+				} catch (NumberFormatException nfe) {
+					pending.fastRemove(idStr);
+					continue;
+				}
+				if (delta <= 0L) {
 					pending.fastRemove(idStr);
 					continue;
 				}
 
 				long id = Long.parseLong(idStr);
 				try {
-					persistOne(id, delta);
+					viewCountPersister.persistOne(id, delta);
 					pending.fastRemove(idStr);
 					success++;
 				} catch (Exception ex) {
@@ -173,16 +182,6 @@ public class ViewCountService {
 		} catch (Exception e) {
 			log.error("조회수 pending 처리 중 예상치 못한 오류 발생 - 원인: {}", e.getMessage());
 			throw new RedisConnectionFailException();
-		}
-	}
-
-	@Transactional(propagation = Propagation.REQUIRES_NEW)
-	public void persistOne(long postId, long delta) {
-		try {
-			communityPostRepository.incrementViewCountBy(postId, delta);
-		} catch (Exception e) {
-			log.error("개별 조회수 DB 반영 실패 - postId: {}, delta: {}, 원인: {}", postId, delta, e.getMessage());
-			throw new ViewCountPersistFailException();
 		}
 	}
 }
