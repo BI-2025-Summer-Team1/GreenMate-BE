@@ -51,9 +51,9 @@ public class AuthService {
 	private final CommunityPostCleanupService communityPostCleanupService;
 
 	@Transactional
-	public SignUpResponse signUp(SignUpRequest request) {
+	public SignUpResponse signUp(SignUpRequest request, MultipartFile profileImage) {
 
-		String profileImageUrl = uploadProfileImage(request.getProfileImage());
+		String profileImageUrl = uploadProfileImage(profileImage);
 
 		User user = createUser(request, profileImageUrl);
 

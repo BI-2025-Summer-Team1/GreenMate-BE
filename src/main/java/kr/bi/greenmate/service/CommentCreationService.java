@@ -38,9 +38,7 @@ public class CommentCreationService {
 		CommunityPost post = communityPostRepository.findById(postId)
 			.orElseThrow(PostNotFoundException::new);
 
-		CommunityPostComment parent = communityPostCommentRepository
-			.findByIdAndParentId(request.getParentCommentId(), postId)
-			.orElseThrow(ParentCommentMismatchException::new);
+		CommunityPostComment parent = validateParentComment(request.getParentCommentId(), postId);
 
 		CommunityPostComment comment = CommunityPostComment.builder()
 			.parent(post).user(user).content(request.getContent())
