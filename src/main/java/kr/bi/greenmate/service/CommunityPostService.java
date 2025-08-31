@@ -53,6 +53,7 @@ public class CommunityPostService {
 	private final ViewCountService viewCountService;
 	private final CommentCreationService commentCreationService;
 	private final CommunityPostCommentRepository communityPostCommentRepository;
+	private final UserDisplayService userDisplayService;
 
 	@Transactional
 	public CommunityPostCreateResponse createPost(User user, CommunityPostCreateRequest request,
@@ -173,7 +174,7 @@ public class CommunityPostService {
 			.title(post.getTitle())
 			.content(post.getContent())
 			.imageUrls(imageUrls)
-			.authorNickname(post.getUser().getNickname())
+			.authorNickname(userDisplayService.displayName(post.getUser()))
 			.isLikedByUser(isLikedByUser)
 			.likeCount(post.getLikeCount())
 			.viewCount(displayViewCount)
@@ -208,7 +209,7 @@ public class CommunityPostService {
 			.map(post -> CommunityPostListResponse.builder()
 				.postId(post.getId())
 				.title(post.getTitle())
-				.authorNickname(post.getUser().getNickname())
+				.authorNickname(userDisplayService.displayName(post.getUser()))
 				.createdAt(post.getCreatedAt())
 				.isLikedByUser(likedPostIds.contains(post.getId()))
 				.likeCount(post.getLikeCount())
@@ -282,7 +283,7 @@ public class CommunityPostService {
 		return CommunityPostCommentResponse.builder()
 			.id(comment.getId())
 			.userId(comment.getUser().getId())
-			.nickname(comment.getUser().getNickname())
+			.nickname(userDisplayService.displayName(comment.getUser()))
 			.content(comment.getContent())
 			.imageUrl(comment.getImageUrl() == null ? null
 				: objectStorageRepository.getDownloadUrl(comment.getImageUrl()))

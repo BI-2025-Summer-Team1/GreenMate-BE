@@ -24,6 +24,7 @@ public class CommentCreationService {
 
 	private final CommunityPostRepository communityPostRepository;
 	private final CommunityPostCommentRepository communityPostCommentRepository;
+	private final UserDisplayService userDisplayService;
 
 	@Transactional
 	@Retryable(
@@ -61,7 +62,7 @@ public class CommentCreationService {
 		return CommunityPostCommentResponse.builder()
 			.id(comment.getId())
 			.userId(comment.getUser().getId())
-			.nickname(comment.getUser().getNickname())
+			.nickname(userDisplayService.displayName(comment.getUser()))
 			.content(comment.getContent())
 			.createdAt(comment.getCreatedAt())
 			.build();
