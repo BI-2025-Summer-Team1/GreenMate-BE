@@ -7,10 +7,13 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
 import org.springframework.orm.ObjectOptimisticLockingFailureException;
+import org.springframework.retry.annotation.Backoff;
+import org.springframework.retry.annotation.Retryable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -29,12 +32,14 @@ import kr.bi.greenmate.entity.CommunityPostComment;
 import kr.bi.greenmate.entity.CommunityPostImage;
 import kr.bi.greenmate.entity.CommunityPostLike;
 import kr.bi.greenmate.entity.User;
+import kr.bi.greenmate.exception.error.AccessDeniedException;
 import kr.bi.greenmate.exception.error.FileUploadFailException;
 import kr.bi.greenmate.exception.error.ImageCountExceedException;
 import kr.bi.greenmate.exception.error.ImageSizeExceedException;
 import kr.bi.greenmate.exception.error.OptimisticLockCustomException;
 import kr.bi.greenmate.exception.error.ParentCommentMismatchException;
 import kr.bi.greenmate.exception.error.PostNotFoundException;
+import kr.bi.greenmate.exception.error.CommentNotFoundException;
 import kr.bi.greenmate.repository.CommunityPostCommentRepository;
 import kr.bi.greenmate.repository.CommunityPostImageRepository;
 import kr.bi.greenmate.repository.CommunityPostLikeRepository;
@@ -54,6 +59,7 @@ public class CommunityPostService {
 	private final CommentCreationService commentCreationService;
 	private final CommunityPostCommentRepository communityPostCommentRepository;
 	private final UserDisplayService userDisplayService;
+	private final ApplicationEventPublisher publisher;
 
 	@Transactional
 	public CommunityPostCreateResponse createPost(User user, CommunityPostCreateRequest request,
@@ -317,5 +323,37 @@ public class CommunityPostService {
 		Long newLastId = content.isEmpty() ? null : content.get(content.size() - 1).getId();
 
 		return new KeysetSliceResponse<>(content, hasNext, newLastId);
+	}
+
+	@Transactional
+	@Retryable(
+		retryFor = {OptimisticLockException.class, ObjectOptimisticLockingFailureException.class},
+		maxAttempts = 3,
+		backoff = @Backoff(delay = 50)
+	)
+	public void deleteComment(Long commentId, User user) {
+
+		CommunityPostComment comment = communityPostCommentRepository.findById(commentId)
+			.orElseThrow(CommentNotFoundException::new);
+
+		if (!comment.getUser().getId().equals(user.getId())) {
+			throw new AccessDeniedException();
+		}
+
+		boolean hasReplies = communityPostCommentRepository.existsByCommunityPostCommentId(commentId);
+
+		String imageKeyToDelete = comment.getImageUrl();
+
+		if (!hasReplies) {
+			comment.getParent().decrementCommentCount();
+			communityPostCommentRepository.delete(comment);
+		} else {
+			comment.setContent("삭제된 댓글입니다.");
+			comment.setImageUrl(null);
+		}
+
+		if (imageKeyToDelete != null) {
+			publisher.publishEvent(new ImagesToDeleteEvent(Collections.singletonList(imageKeyToDelete)));
+		}
 	}
 }
