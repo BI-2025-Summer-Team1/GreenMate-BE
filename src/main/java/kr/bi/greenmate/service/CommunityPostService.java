@@ -353,8 +353,7 @@ public class CommunityPostService {
 			comment.getParent().decrementCommentCount();
 			communityPostCommentRepository.delete(comment);
 		} else {
-			comment.setContent("삭제된 댓글입니다.");
-			comment.setImageUrl(null);
+			comment.markAsDeleted();
 		}
 
 		if (imageKeyToDelete != null) {
