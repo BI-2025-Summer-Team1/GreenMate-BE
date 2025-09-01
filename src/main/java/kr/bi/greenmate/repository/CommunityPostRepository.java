@@ -6,10 +6,12 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import jakarta.persistence.LockModeType;
 import kr.bi.greenmate.entity.CommunityPost;
 
 public interface CommunityPostRepository extends JpaRepository<CommunityPost, Long> {
@@ -40,4 +42,7 @@ public interface CommunityPostRepository extends JpaRepository<CommunityPost, Lo
 	int incrementViewCountBy(@Param("id") long id, @Param("delta") long delta);
 
 	void deleteByUser_Id(Long userId);
+
+	@Lock(LockModeType.PESSIMISTIC_WRITE)
+	Optional<CommunityPost> findWithLockById(Long postId);
 }
