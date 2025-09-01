@@ -35,13 +35,13 @@ import kr.bi.greenmate.entity.CommunityPostImage;
 import kr.bi.greenmate.entity.CommunityPostLike;
 import kr.bi.greenmate.entity.User;
 import kr.bi.greenmate.exception.error.AccessDeniedException;
+import kr.bi.greenmate.exception.error.CommentNotFoundException;
 import kr.bi.greenmate.exception.error.FileUploadFailException;
 import kr.bi.greenmate.exception.error.ImageCountExceedException;
 import kr.bi.greenmate.exception.error.ImageSizeExceedException;
 import kr.bi.greenmate.exception.error.OptimisticLockCustomException;
 import kr.bi.greenmate.exception.error.ParentCommentMismatchException;
 import kr.bi.greenmate.exception.error.PostNotFoundException;
-import kr.bi.greenmate.exception.error.CommentNotFoundException;
 import kr.bi.greenmate.repository.CommunityPostCommentRepository;
 import kr.bi.greenmate.repository.CommunityPostImageRepository;
 import kr.bi.greenmate.repository.CommunityPostLikeRepository;
@@ -349,8 +349,9 @@ public class CommunityPostService {
 
 		String imageKeyToDelete = comment.getImageUrl();
 
+		comment.getParent().decrementCommentCount();
+
 		if (!hasReplies) {
-			comment.getParent().decrementCommentCount();
 			communityPostCommentRepository.delete(comment);
 		} else {
 			comment.markAsDeleted();
