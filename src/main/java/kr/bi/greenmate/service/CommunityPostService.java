@@ -18,7 +18,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
+import jakarta.persistence.LockTimeoutException;
 import jakarta.persistence.OptimisticLockException;
+import jakarta.persistence.PessimisticLockException;
 import kr.bi.greenmate.dto.CommunityPostCommentRequest;
 import kr.bi.greenmate.dto.CommunityPostCommentResponse;
 import kr.bi.greenmate.dto.CommunityPostCreateRequest;
@@ -327,7 +329,10 @@ public class CommunityPostService {
 
 	@Transactional
 	@Retryable(
-		retryFor = {OptimisticLockException.class, ObjectOptimisticLockingFailureException.class},
+		retryFor = {
+			PessimisticLockException.class,
+			LockTimeoutException.class
+		},
 		maxAttempts = 3,
 		backoff = @Backoff(delay = 50)
 	)

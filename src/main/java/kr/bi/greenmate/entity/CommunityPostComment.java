@@ -44,7 +44,4 @@ public class CommunityPostComment extends BaseTimeEntity {
 
 	@Column(length = 50)
 	private String imageUrl;
-
-	@Version
-	private Long version;
 }
