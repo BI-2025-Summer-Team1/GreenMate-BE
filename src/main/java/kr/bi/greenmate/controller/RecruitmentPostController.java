@@ -134,4 +134,14 @@ public class RecruitmentPostController {
         recruitmentPostService.deleteComment(commentId, userId);
         return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
     }
+
+	@GetMapping("/participated")
+    @Operation(summary = "사용자가 참여 신청한 모집글 목록 조회", description = "현재 로그인된 사용자가 참여 신청한 환경활동 모집글 목록을 조회합니다.")
+    public ResponseEntity<List<RecruitmentPostListResponse>> getParticipatedPosts(
+        @AuthenticationPrincipal User user) {
+
+        List<RecruitmentPostListResponse> posts = recruitmentPostService.getParticipatedPostsByUserId(user.getId());
+		
+        return ResponseEntity.ok(posts);
+    }
 }

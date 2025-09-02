@@ -343,4 +343,18 @@ public class RecruitmentPostService {
 			.replies(replyResponses)
 			.build();
 	}
+
+	@Transactional(readOnly = true)
+    public List<RecruitmentPostListResponse> getParticipatedPostsByUserId(Long userId) {
+        List<RecruitmentPost> posts = recruitmentPostRepository.findParticipatedPostsByUserId(userId);
+        return posts.stream()
+            .map(post -> RecruitmentPostListResponse.builder()
+                .postId(post.getId())
+                .title(post.getTitle())
+                .authorNickname(userDisplayService.displayName(post.getUser()))
+                .activityDate(post.getActivityDate())
+                .createdAt(post.getCreatedAt())
+                .build())
+            .collect(Collectors.toList());
+    }
 }
