@@ -51,6 +51,10 @@ public class RecruitmentPost extends BaseTimeEntity {
 
 	@Builder.Default
 	@Column(nullable = false)
+	private Long viewCount = 0L;
+
+	@Builder.Default
+	@Column(nullable = false)
 	private Long likeCount = 0L;
 
 	@Builder.Default
@@ -70,6 +74,10 @@ public class RecruitmentPost extends BaseTimeEntity {
 	@OneToMany(mappedBy = "recruitmentPost", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
 	@Builder.Default
 	private List<RecruitmentPostImage> images = new ArrayList<>();
+
+	public void incrementViewCount() {
+	    this.viewCount++;
+	}
 
 	public void increaseLikeCount() {
 		if (this.likeCount == null) {

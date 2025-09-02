@@ -139,8 +139,20 @@ public class RecruitmentPostService {
 					.build());
     }
 
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    @Retryable(
+        retryFor = { OptimisticLockException.class, ObjectOptimisticLockingFailureException.class },
+        maxAttempts = 3,
+        backoff = @Backoff(delay = 50)
+    )
+    public void incrementViewCount(Long postId) {
+        recruitmentPostRepository.incrementViewCount(postId);
+    }
+    
     @Transactional(readOnly = true)
     public RecruitmentPostDetailResponse getPostDetail(Long postId) {
+        incrementViewCount(postId);
+
         RecruitmentPost post = recruitmentPostRepository.findByIdWithUser(postId)
 			.orElseThrow(() -> new RecruitmentPostNotFoundException(postId));
 
