@@ -14,7 +14,6 @@ import org.springframework.orm.ObjectOptimisticLockingFailureException;
 import org.springframework.retry.annotation.Backoff;
 import org.springframework.retry.annotation.Retryable;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -57,6 +56,7 @@ public class RecruitmentPostService {
     private final ObjectStorageRepository objectStorageRepository;
     private final UserRepository userRepository;
     private final ImageUploadService imageUploadService;
+    private final ImageDeleteService imageDeleteService;
     private final RecruitmentPostLikeRepository recruitmentPostLikeRepository;
     private final RecruitmentPostCommentRepository recruitmentPostCommentRepository;
 
@@ -112,19 +112,9 @@ public class RecruitmentPostService {
         recruitmentPostRepository.delete(post);
 
         List<RecruitmentPostImage> images = recruitmentPostImageRepository.findByRecruitmentPostId(postId);
+        
+        images.forEach(image -> imageDeleteService.deleteImage(image.getImageUrl()));
 
-        deleteImagesFromObjectStorage(images);
-    }
-
-    @Transactional(propagation = Propagation.NOT_SUPPORTED)
-    public void deleteImagesFromObjectStorage(List<RecruitmentPostImage> images) {
-        images.forEach(image -> {
-            try {
-                objectStorageRepository.delete(image.getImageUrl());
-            } catch (Exception e) {
-                log.error("Failed to delete file from object storage: {}", image.getImageUrl(), e);
-            }
-        });
     }
 
     @Transactional(readOnly = true)
