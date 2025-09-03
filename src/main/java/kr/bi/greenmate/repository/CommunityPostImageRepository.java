@@ -4,6 +4,7 @@ import java.util.List;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Lock;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
@@ -24,5 +25,8 @@ public interface CommunityPostImageRepository extends JpaRepository<CommunityPos
 	List<String> findImageKeysByOwner(Long userId);
 
 	@Lock(LockModeType.PESSIMISTIC_WRITE)
-	List<CommunityPostImage> findByCommunityPostId(Long postId);
+	List<CommunityPostImage> findAllByCommunityPostId(Long postId);
+
+	@Modifying(clearAutomatically = true)
+	void deleteByCommunityPostId(Long postId);
 }

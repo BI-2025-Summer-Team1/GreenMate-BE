@@ -1,5 +1,6 @@
 package kr.bi.greenmate.service;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
@@ -8,6 +9,10 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.dao.CannotSerializeTransactionException;
+import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.dao.DeadlockLoserDataAccessException;
+import org.springframework.dao.PessimisticLockingFailureException;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
@@ -15,6 +20,7 @@ import org.springframework.orm.ObjectOptimisticLockingFailureException;
 import org.springframework.retry.annotation.Backoff;
 import org.springframework.retry.annotation.Retryable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -326,33 +332,43 @@ public class CommunityPostService {
 		return new KeysetSliceResponse<>(content, hasNext, newLastId);
 	}
 
-	@Transactional
+	@Transactional(isolation = Isolation.REPEATABLE_READ)
 	@Retryable(
 		retryFor = {
 			PessimisticLockException.class,
-			LockTimeoutException.class
+			LockTimeoutException.class,
+			PessimisticLockingFailureException.class,
+			DeadlockLoserDataAccessException.class
 		},
 		maxAttempts = 3,
 		backoff = @Backoff(delay = 50)
 	)
 	public void deletePost(Long postId, User user) {
-
-		CommunityPost post = communityPostRepository.findWithLockById(postId)
+		CommunityPost post = communityPostRepository.findById(postId)
 			.orElseThrow(PostNotFoundException::new);
 
 		if (!post.getUser().getId().equals(user.getId())) {
 			throw new AccessDeniedException();
 		}
 
-		List<CommunityPostImage> images = communityPostImageRepository.findByCommunityPostId(postId);
-		List<String> imageKeysToDelete = images.stream()
-			.map(CommunityPostImage::getImageUrl)
-			.collect(Collectors.toList());
+		List<String> postImageKeys = communityPostImageRepository.findImageUrlsByPostId(postId);
+		List<String> commentImageKeys = communityPostCommentRepository.findImageUrlsByPostId(postId);
+		List<String> allImageKeys = new ArrayList<>(postImageKeys.size() + commentImageKeys.size());
+		allImageKeys.addAll(postImageKeys);
+		allImageKeys.addAll(commentImageKeys);
+
+		communityPostCommentRepository.findAllByParentId(postId);
+		communityPostImageRepository.findAllByCommunityPostId(postId);
+		communityPostLikeRepository.findAllByCommunityPostId(postId);
+
+		communityPostCommentRepository.deleteByParentId(postId);
+		communityPostLikeRepository.deleteByCommunityPostId(postId);
+		communityPostImageRepository.deleteByCommunityPostId(postId);
 
 		communityPostRepository.delete(post);
 
-		if (!imageKeysToDelete.isEmpty()) {
-			publisher.publishEvent(new ImagesToDeleteEvent(imageKeysToDelete));
+		if (!allImageKeys.isEmpty()) {
+			publisher.publishEvent(new ImagesToDeleteEvent(allImageKeys));
 		}
 	}
 }
