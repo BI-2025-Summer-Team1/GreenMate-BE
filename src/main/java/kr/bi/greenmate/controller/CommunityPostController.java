@@ -118,4 +118,21 @@ public class CommunityPostController {
 
 		return ResponseEntity.ok(response);
 	}
+
+	@GetMapping("/{userId}/posts")
+	@Operation(summary = "사용자 작성 커뮤니티 글 목록 조회", description = "특정 사용자가 작성한 커뮤니티 글 목록을 조회합니다.")
+	public ResponseEntity<KeysetSliceResponse<CommunityPostListResponse>> getUserPosts(
+		@AuthenticationPrincipal User user,
+		@Parameter(description = "조회할 사용자 ID", example = "123")
+		@PathVariable Long userId,
+		@Parameter(description = "마지막으로 조회한 게시글 ID (첫 페이지 조회 시 생략 가능)", example = "100")
+		@RequestParam(required = false) Long lastPostId,
+		@Parameter(description = "한 번에 조회할 게시글 개수", example = "10")
+		@RequestParam(defaultValue = "10") int size) {
+
+		KeysetSliceResponse<CommunityPostListResponse> response =
+			communityPostService.getUserPosts(user, userId, lastPostId, size);
+		
+		return ResponseEntity.ok(response);
+	}
 }
