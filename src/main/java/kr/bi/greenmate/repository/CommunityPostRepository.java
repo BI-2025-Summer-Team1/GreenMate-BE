@@ -42,4 +42,7 @@ public interface CommunityPostRepository extends JpaRepository<CommunityPost, Lo
 	int incrementViewCountBy(@Param("id") long id, @Param("delta") long delta);
 
 	void deleteByUser_Id(Long userId);
+
+	@Lock(LockModeType.PESSIMISTIC_WRITE)
+	Optional<CommunityPost> findWithLockById(Long postId);
 }

@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.dao.CannotSerializeTransactionException;
@@ -344,7 +345,7 @@ public class CommunityPostService {
 		backoff = @Backoff(delay = 50)
 	)
 	public void deletePost(Long postId, User user) {
-		CommunityPost post = communityPostRepository.findById(postId)
+		CommunityPost post = communityPostRepository.findWithLockById(postId)
 			.orElseThrow(PostNotFoundException::new);
 
 		if (!post.getUser().getId().equals(user.getId())) {
@@ -353,18 +354,14 @@ public class CommunityPostService {
 
 		List<String> postImageKeys = communityPostImageRepository.findImageUrlsByPostId(postId);
 		List<String> commentImageKeys = communityPostCommentRepository.findImageUrlsByPostId(postId);
-		List<String> allImageKeys = new ArrayList<>(postImageKeys.size() + commentImageKeys.size());
-		allImageKeys.addAll(postImageKeys);
-		allImageKeys.addAll(commentImageKeys);
-
-		communityPostCommentRepository.findAllByParentId(postId);
-		communityPostImageRepository.findAllByCommunityPostId(postId);
-		communityPostLikeRepository.findAllByCommunityPostId(postId);
+		List<String> allImageKeys = Stream.concat(
+			postImageKeys.stream(),
+			commentImageKeys.stream()
+		).collect(Collectors.toList());
 
 		communityPostCommentRepository.deleteByParentId(postId);
 		communityPostLikeRepository.deleteByCommunityPostId(postId);
 		communityPostImageRepository.deleteByCommunityPostId(postId);
-
 		communityPostRepository.delete(post);
 
 		if (!allImageKeys.isEmpty()) {
