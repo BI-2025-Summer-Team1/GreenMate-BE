@@ -8,6 +8,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
@@ -345,15 +346,12 @@ public class CommunityPostService {
 			throw new AccessDeniedException();
 		}
 
-		boolean hasReplies = communityPostCommentRepository.existsByCommunityPostCommentId(commentId);
-
 		String imageKeyToDelete = comment.getImageUrl();
-
 		comment.getParent().decrementCommentCount();
 
-		if (!hasReplies) {
+		try {
 			communityPostCommentRepository.delete(comment);
-		} else {
+		} catch (DataIntegrityViolationException e) {
 			comment.markAsDeleted();
 		}
 

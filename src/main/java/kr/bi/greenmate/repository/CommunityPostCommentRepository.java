@@ -28,6 +28,4 @@ public interface CommunityPostCommentRepository extends JpaRepository<CommunityP
 
 	@Lock(LockModeType.PESSIMISTIC_WRITE)
 	Optional<CommunityPostComment> findById(Long commentId);
-
-	boolean existsByCommunityPostCommentId(Long parentCommentId);
 }
