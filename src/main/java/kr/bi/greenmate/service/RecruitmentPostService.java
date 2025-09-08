@@ -59,6 +59,7 @@ public class RecruitmentPostService {
     private final ImageUploadService imageUploadService;
     private final RecruitmentPostLikeRepository recruitmentPostLikeRepository;
     private final RecruitmentPostCommentRepository recruitmentPostCommentRepository;
+    private final RecruitmentPostViewCountService recruitmentPostViewCountService;
 
     public RecruitmentPostCreationResponse createRecruitmentPost(
 		RecruitmentPostCreationRequest request, List<MultipartFile> images, Long userId) {
@@ -139,20 +140,10 @@ public class RecruitmentPostService {
 					.build());
     }
 
-    @Transactional(propagation = Propagation.REQUIRES_NEW)
-    @Retryable(
-        retryFor = { OptimisticLockException.class, ObjectOptimisticLockingFailureException.class },
-        maxAttempts = 3,
-        backoff = @Backoff(delay = 50)
-    )
-    public void incrementViewCount(Long postId) {
-        recruitmentPostRepository.incrementViewCount(postId);
-    }
-    
     @Transactional(readOnly = true)
     public RecruitmentPostDetailResponse getPostDetail(Long postId) {
-        incrementViewCount(postId);
-
+        recruitmentPostViewCountService.increment(postId);
+        
         RecruitmentPost post = recruitmentPostRepository.findByIdWithUser(postId)
 			.orElseThrow(() -> new RecruitmentPostNotFoundException(postId));
 
