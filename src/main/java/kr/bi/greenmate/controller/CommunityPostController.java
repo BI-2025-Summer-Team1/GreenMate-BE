@@ -118,4 +118,5 @@ public class CommunityPostController {
 
 		return ResponseEntity.ok(response);
 	}
+
 }
