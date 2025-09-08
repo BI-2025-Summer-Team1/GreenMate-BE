@@ -23,6 +23,6 @@ public interface RecruitmentPostRepository extends JpaRepository<RecruitmentPost
 	Optional<RecruitmentPost> findByIdWithUser(@Param("id") Long id);
 	
 	@Modifying
-    @Query("UPDATE RecruitmentPost p SET p.viewCount = p.viewCount + 1 WHERE p.id = :id")
-    void incrementViewCount(@Param("id") Long id);
+    @Query("UPDATE RecruitmentPost p SET p.viewCount = p.viewCount + :delta WHERE p.id = :id")
+    void incrementViewCountBy(@Param("id") Long id, @Param("delta") long delta);
 }
