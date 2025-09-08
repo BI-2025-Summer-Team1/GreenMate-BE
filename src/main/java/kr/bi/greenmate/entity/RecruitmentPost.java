@@ -75,10 +75,6 @@ public class RecruitmentPost extends BaseTimeEntity {
 	@Builder.Default
 	private List<RecruitmentPostImage> images = new ArrayList<>();
 
-	public void incrementViewCount() {
-	    this.viewCount++;
-	}
-
 	public void increaseLikeCount() {
 		if (this.likeCount == null) {
 			this.likeCount = 0L;
