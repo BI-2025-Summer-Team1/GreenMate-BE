@@ -6,6 +6,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -119,4 +120,14 @@ public class CommunityPostController {
 		return ResponseEntity.ok(response);
 	}
 
+	@DeleteMapping("/comments/{commentId}")
+	@Operation(summary = "커뮤니티 댓글 삭제", description = "특정 커뮤니티 글의 댓글을 삭제합니다.")
+	public ResponseEntity<Void> deleteComment(
+		@Parameter(description = "삭제할 댓글 ID", example = "456")
+		@PathVariable long commentId,
+		@AuthenticationPrincipal User user) {
+
+		communityPostService.deleteComment(commentId, user);
+		return ResponseEntity.noContent().build();
+	}
 }
