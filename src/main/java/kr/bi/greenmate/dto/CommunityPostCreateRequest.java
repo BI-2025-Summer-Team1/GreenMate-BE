@@ -24,3 +24,4 @@ public class CommunityPostCreateRequest {
 	@Schema(description = "게시글 내용", example = "오늘 환경 보호에 대한 생각을 나누고 싶습니다.", maxLength = 500)
 	private String content;
 }
+
