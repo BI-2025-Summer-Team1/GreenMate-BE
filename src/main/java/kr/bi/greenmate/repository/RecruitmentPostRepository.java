@@ -21,6 +21,7 @@ public interface RecruitmentPostRepository extends JpaRepository<RecruitmentPost
 	@Query("SELECT r FROM RecruitmentPost r JOIN FETCH r.user WHERE r.id = :id")
 	Optional<RecruitmentPost> findByIdWithUser(@Param("id") Long id);
 
-	@Query("SELECT ra.recruitmentPost FROM RecruitmentApplication ra WHERE ra.user.id = :userId")
+    @Query(value = "SELECT ra.recruitmentPost FROM RecruitmentApplication ra JOIN FETCH ra.recruitmentPost.user WHERE ra.user.id = :userId",
+           countQuery = "SELECT count(ra) FROM RecruitmentApplication ra WHERE ra.user.id = :userId")
     Page<RecruitmentPost> findParticipatedPostsByUserId(@Param("userId") Long userId, Pageable pageable);
 }
