@@ -111,7 +111,7 @@ public class RecruitmentPostViewCountService {
                 tried++;
                 String counterKey = VIEW_KEY_PREFIX + idStr;
 
-                Long moved = redissonClient.getScript(StringCodec.INSTANCE).eval(
+                redissonClient.getScript(StringCodec.INSTANCE).eval(
                     RScript.Mode.READ_WRITE,
                     LUA_MOVE_COUNTER_TO_PENDING,
                     RScript.ReturnType.INTEGER,
