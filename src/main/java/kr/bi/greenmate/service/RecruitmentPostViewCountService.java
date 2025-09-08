@@ -10,11 +10,15 @@ import org.redisson.api.RScript;
 import org.redisson.api.RedissonClient;
 import org.redisson.client.codec.LongCodec;
 import org.redisson.client.codec.StringCodec;
+import org.springframework.orm.ObjectOptimisticLockingFailureException;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
+import jakarta.persistence.OptimisticLockException;
+import kr.bi.greenmate.entity.RecruitmentPost;
+import kr.bi.greenmate.exception.error.RecruitmentPostNotFoundException;
 import kr.bi.greenmate.exception.error.RedisConnectionFailException;
 import kr.bi.greenmate.exception.error.ViewCountFlushFailException;
 import kr.bi.greenmate.exception.error.ViewCountPersistFailException;
@@ -165,7 +169,14 @@ public class RecruitmentPostViewCountService {
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void persistOne(long postId, long delta) {
         try {
-            recruitmentPostRepository.incrementViewCountBy(postId, delta);
+        RecruitmentPost post = recruitmentPostRepository.findById(postId)
+            .orElseThrow(() -> new RecruitmentPostNotFoundException(postId));
+        
+        post.incrementViewCountBy(delta);
+            
+        } catch (OptimisticLockException | ObjectOptimisticLockingFailureException e) {
+            log.warn("낙관적 락 충돌 발생: postId={}, delta={}", postId, delta);
+            throw new ViewCountPersistFailException();
         } catch (Exception e) {
             log.error("개별 조회수 DB 반영 실패 - postId: {}, delta: {}, 원인: {}", postId, delta, e.getMessage());
             throw new ViewCountPersistFailException();
