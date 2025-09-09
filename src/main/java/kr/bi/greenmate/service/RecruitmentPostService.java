@@ -59,6 +59,7 @@ public class RecruitmentPostService {
 	private final ImageUploadService imageUploadService;
 	private final RecruitmentPostLikeRepository recruitmentPostLikeRepository;
 	private final RecruitmentPostCommentRepository recruitmentPostCommentRepository;
+  private final RecruitmentPostViewCountService recruitmentPostViewCountService;
 	private final UserDisplayService userDisplayService;
 
 	public RecruitmentPostCreationResponse createRecruitmentPost(

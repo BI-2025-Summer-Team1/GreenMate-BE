@@ -51,6 +51,10 @@ public class RecruitmentPost extends BaseTimeEntity {
 
 	@Builder.Default
 	@Column(nullable = false)
+	private Long viewCount = 0L;
+
+	@Builder.Default
+	@Column(nullable = false)
 	private Long likeCount = 0L;
 
 	@Builder.Default
@@ -95,4 +99,11 @@ public class RecruitmentPost extends BaseTimeEntity {
         this.commentCount--;  
     }
   }
+
+  public void incrementViewCountBy(long delta) {
+        if (this.viewCount == null) {
+            this.viewCount = 0L;
+        }
+        this.viewCount += delta;
+    }
 }

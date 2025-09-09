@@ -5,6 +5,7 @@ import java.util.Optional;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
@@ -20,4 +21,8 @@ public interface RecruitmentPostRepository extends JpaRepository<RecruitmentPost
 
 	@Query("SELECT r FROM RecruitmentPost r JOIN FETCH r.user WHERE r.id = :id")
 	Optional<RecruitmentPost> findByIdWithUser(@Param("id") Long id);
+	
+	@Modifying
+    @Query("UPDATE RecruitmentPost p SET p.viewCount = p.viewCount + :delta WHERE p.id = :id")
+    void incrementViewCountBy(@Param("id") Long id, @Param("delta") long delta);
 }
