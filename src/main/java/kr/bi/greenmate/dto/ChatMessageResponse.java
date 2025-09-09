@@ -12,6 +12,9 @@ import lombok.Getter;
 @Schema(description = "챗봇 메시지 응답")
 public class ChatMessageResponse {
 
+	@Schema(description = "세션 ID", example = "1")
+	private Long sessionId;
+
 	@Schema(description = "메시지 내용", example = "프링글스 통은 복합 재질로 되어 있어 분리수거가 중요합니다.")
 	private String content;
 
@@ -20,6 +23,7 @@ public class ChatMessageResponse {
 
 	public static ChatMessageResponse from(ChatMessage message) {
 		return ChatMessageResponse.builder()
+			.sessionId(message.getSessionId())
 			.content(message.getContent())
 			.type(message.getType())
 			.build();

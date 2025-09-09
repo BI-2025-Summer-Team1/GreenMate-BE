@@ -30,7 +30,7 @@ public class ChatService {
 
 	@Transactional
 	public ChatMessageResponse sendMessage(User user, ChatMessageRequest request) {
-		Long sessionId = getOrCreateSessionId(user.getId());
+		Long sessionId = getOrCreateAndRefreshSessionId(user.getId());
 
 		ChatMessage userMessage = ChatMessage.builder()
 			.sessionId(sessionId)
@@ -43,7 +43,7 @@ public class ChatService {
 		chatRedisService.addMessageToHistory(user.getId(), sessionId, savedUserMessage);
 
 		try {
-			List<ChatMessage> history = chatRedisService.getChatHistory(user.getId(), sessionId);
+			List<ChatMessage> history = getChatHistorySafely(user.getId(), sessionId);
 			String response = geminiApiService.generateResponse(history);
 
 			ChatMessage assistantMessage = ChatMessage.builder()
@@ -72,7 +72,6 @@ public class ChatService {
 			return ChatMessageResponse.from(savedErrorMessage);
 		}
 	}
-
 
 	public ChatHistoryResponse getChatHistory(User user, Long sessionId, Long cursor) {
 		List<ChatMessage> messages;
@@ -105,14 +104,25 @@ public class ChatService {
 			.build();
 	}
 
-	private Long getOrCreateSessionId(Long userId) {
-		Long sessionId = chatRedisService.getCurrentSessionId(userId);
+	private Long getOrCreateAndRefreshSessionId(Long userId) {
+		Long sessionId = chatRedisService.getSessionId(userId);
 
 		if (sessionId == null) {
 			sessionId = sessionIdGenerator.getAndIncrement();
-			chatRedisService.setCurrentSessionId(userId, sessionId);
 		}
 
+		chatRedisService.saveOrRefreshSessionId(userId, sessionId);
+
 		return sessionId;
+	}
+
+	private List<ChatMessage> getChatHistorySafely(Long userId, Long sessionId) {
+		try {
+			return chatRedisService.getChatHistory(userId, sessionId);
+		} catch (Exception e) {
+			log.warn("Redis 직렬화 문제로 채팅 히스토리 조회 실패. 빈 히스토리를 반환합니다. userId={}, sessionId={}", userId, sessionId, e);
+			
+			return List.of();
+		}
 	}
 }
