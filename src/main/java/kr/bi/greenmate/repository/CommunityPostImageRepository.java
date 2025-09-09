@@ -3,9 +3,12 @@ package kr.bi.greenmate.repository;
 import java.util.List;
 
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Lock;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import jakarta.persistence.LockModeType;
 import kr.bi.greenmate.entity.CommunityPostImage;
 
 public interface CommunityPostImageRepository extends JpaRepository<CommunityPostImage, Long> {
@@ -20,4 +23,10 @@ public interface CommunityPostImageRepository extends JpaRepository<CommunityPos
 		  where p.user.id = :userId
 		""")
 	List<String> findImageKeysByOwner(Long userId);
+
+	@Lock(LockModeType.PESSIMISTIC_WRITE)
+	List<CommunityPostImage> findAllByCommunityPostId(Long postId);
+
+	@Modifying(clearAutomatically = true)
+	void deleteByCommunityPostId(Long postId);
 }
