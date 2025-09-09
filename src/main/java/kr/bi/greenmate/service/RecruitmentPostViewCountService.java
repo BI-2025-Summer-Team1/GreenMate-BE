@@ -1,15 +1,13 @@
 package kr.bi.greenmate.service;
 
-import java.util.Arrays;
 import java.util.Map;
 import java.util.Set;
 
+import org.redisson.api.RAtomicLong;
 import org.redisson.api.RLock;
 import org.redisson.api.RMap;
-import org.redisson.api.RScript;
 import org.redisson.api.RedissonClient;
 import org.redisson.client.codec.LongCodec;
-import org.redisson.client.codec.StringCodec;
 import org.springframework.orm.ObjectOptimisticLockingFailureException;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
@@ -32,47 +30,32 @@ import lombok.extern.slf4j.Slf4j;
 public class RecruitmentPostViewCountService {
 
     private static final String VIEW_KEY_PREFIX = "recruitment:view:";
-    private static final String DIRTY_SET_KEY = "recruitment:view:dirty";
-    private static final String FLUSH_LOCK_KEY = "recruitment:view:flush:lock";
     private static final String PENDING_HASH_KEY = "recruitment:view:pending";
-
-    private static final String LUA_INCREMENT_AND_MARK_DIRTY = String.join("\n",
-        "local v = redis.call('INCR', KEYS[1])",
-        "if (v == 1) then",
-        "  redis.call('SADD', KEYS[2], ARGV[1])",
-        "end",
-        "return v"
-    );
-
-    private static final String LUA_MOVE_COUNTER_TO_PENDING = String.join("\n",
-        "local v = tonumber(redis.call('GET', KEYS[1]) or '0')",
-        "if (v > 0) then",
-        "  redis.call('SET', KEYS[1], 0)",
-        "  redis.call('HINCRBY', KEYS[2], ARGV[1], v)",
-        "end",
-        "local cur = tonumber(redis.call('GET', KEYS[1]) or '0')",
-        "if (cur == 0) then",
-        "  redis.call('SREM', KEYS[3], ARGV[1])",
-        "end",
-        "return v"
-    );
+    private static final String FLUSH_LOCK_KEY = "recruitment:view:flush:lock";
 
     private final RedissonClient redissonClient;
     private final RecruitmentPostRepository recruitmentPostRepository;
 
     public long increment(long postId) {
         try {
-            String counterKey = VIEW_KEY_PREFIX + postId;
-            Long newValue = redissonClient.getScript(StringCodec.INSTANCE).eval(
-                RScript.Mode.READ_WRITE,
-                LUA_INCREMENT_AND_MARK_DIRTY,
-                RScript.ReturnType.INTEGER,
-                Arrays.asList(counterKey, DIRTY_SET_KEY),
-                String.valueOf(postId)
-            );
-            return newValue != null ? newValue : 0L;
+            RAtomicLong counter = redissonClient.getAtomicLong(VIEW_KEY_PREFIX + postId);
+            long newValue = counter.incrementAndGet();
+
+            RMap<String, Long> pending = redissonClient.getMap(PENDING_HASH_KEY, LongCodec.INSTANCE);
+            pending.addAndGet(String.valueOf(postId), 0L); // 존재하지 않으면 초기화
+
+            return newValue;
         } catch (Exception e) {
             log.error("조회수 증가 처리 실패 - postId: {}, 원인: {}", postId, e.getMessage());
+            throw new RedisConnectionFailException();
+        }
+    }
+
+    public long getDelta(long postId) {
+        try {
+            return redissonClient.getAtomicLong(VIEW_KEY_PREFIX + postId).get();
+        } catch (Exception e) {
+            log.error("조회수 조회 실패 - postId: {}, 원인: {}", postId, e.getMessage());
             throw new RedisConnectionFailException();
         }
     }
@@ -83,10 +66,9 @@ public class RecruitmentPostViewCountService {
         boolean locked = false;
         try {
             locked = lock.tryLock();
-            if (!locked)
-                return;
+            if (!locked) return;
 
-            int moved = moveDirtyCountersToPending();
+            int moved = moveCountersToPending();
             int persisted = persistPendingToDatabase();
 
             log.debug("View flush: moved={}, persisted={}", moved, persisted);
@@ -95,37 +77,29 @@ public class RecruitmentPostViewCountService {
             throw new ViewCountFlushFailException();
         } finally {
             if (locked) {
-                try {
-                    lock.unlock();
-                } catch (Exception ignore) {
-                }
+                try { lock.unlock(); } catch (Exception ignore) {}
             }
         }
     }
 
-    private int moveDirtyCountersToPending() {
+    private int moveCountersToPending() {
         try {
-            Set<Object> idObjects = redissonClient.getSet(DIRTY_SET_KEY, StringCodec.INSTANCE).readAll();
-            if (idObjects.isEmpty())
-                return 0;
+            RMap<String, Long> pending = redissonClient.getMap(PENDING_HASH_KEY, LongCodec.INSTANCE);
+            Set<String> keys = pending.readAllKeySet();
+            int count = 0;
 
-            int tried = 0;
-            for (Object idObj : idObjects) {
-                String idStr = idObj.toString();
-                tried++;
-                String counterKey = VIEW_KEY_PREFIX + idStr;
+            for (String postIdStr : keys) {
+                count++;
+                RAtomicLong counter = redissonClient.getAtomicLong(VIEW_KEY_PREFIX + postIdStr);
+                long delta = counter.getAndSet(0);
 
-                redissonClient.getScript(StringCodec.INSTANCE).eval(
-                    RScript.Mode.READ_WRITE,
-                    LUA_MOVE_COUNTER_TO_PENDING,
-                    RScript.ReturnType.INTEGER,
-                    Arrays.asList(counterKey, PENDING_HASH_KEY, DIRTY_SET_KEY),
-                    idStr
-                );
+                if (delta > 0) {
+                    pending.addAndGet(postIdStr, delta);
+                }
             }
-            return tried;
+            return count;
         } catch (Exception e) {
-            log.error("조회수 pending 이동 처리 실패 - 원인: {}", e.getMessage());
+            log.error("조회수 pending 이동 실패 - 원인: {}", e.getMessage());
             throw new RedisConnectionFailException();
         }
     }
@@ -133,10 +107,9 @@ public class RecruitmentPostViewCountService {
     private int persistPendingToDatabase() {
         try {
             RMap<String, Long> pending = redissonClient.getMap(PENDING_HASH_KEY, LongCodec.INSTANCE);
-
             Set<Map.Entry<String, Long>> entries = pending.readAllEntrySet();
-            if (entries.isEmpty())
-                return 0;
+
+            if (entries.isEmpty()) return 0;
 
             int success = 0;
             for (Map.Entry<String, Long> e : entries) {
@@ -169,11 +142,11 @@ public class RecruitmentPostViewCountService {
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void persistOne(long postId, long delta) {
         try {
-        RecruitmentPost post = recruitmentPostRepository.findById(postId)
-            .orElseThrow(() -> new RecruitmentPostNotFoundException(postId));
-        
-        post.incrementViewCountBy(delta);
-            
+            RecruitmentPost post = recruitmentPostRepository.findById(postId)
+                .orElseThrow(() -> new RecruitmentPostNotFoundException(postId));
+
+            post.incrementViewCountBy(delta);
+
         } catch (OptimisticLockException | ObjectOptimisticLockingFailureException e) {
             log.warn("낙관적 락 충돌 발생: postId={}, delta={}", postId, delta);
             throw new ViewCountPersistFailException();
