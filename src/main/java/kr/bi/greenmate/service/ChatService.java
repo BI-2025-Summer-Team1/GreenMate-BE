@@ -37,7 +37,6 @@ public class ChatService {
 			.userId(user.getId())
 			.content(request.getMessage())
 			.type(ChatMessage.MessageType.USER)
-			.status("COMPLETED")
 			.build();
 
 		ChatMessage savedUserMessage = chatMessageRepository.save(userMessage);
@@ -52,7 +51,6 @@ public class ChatService {
 				.userId(user.getId())
 				.content(response)
 				.type(ChatMessage.MessageType.ASSISTANT)
-				.status("COMPLETED")
 				.build();
 
 			ChatMessage savedAssistantMessage = chatMessageRepository.save(assistantMessage);
@@ -68,7 +66,6 @@ public class ChatService {
 				.userId(user.getId())
 				.content("죄송합니다. 일시적인 오류가 발생했습니다. 잠시 후 다시 시도해주세요.")
 				.type(ChatMessage.MessageType.ASSISTANT)
-				.status("FAILED")
 				.build();
 
 			ChatMessage savedErrorMessage = chatMessageRepository.save(errorMessage);
