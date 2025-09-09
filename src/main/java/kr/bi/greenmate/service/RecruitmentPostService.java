@@ -140,7 +140,7 @@ public class RecruitmentPostService {
 					.build());
     }
 
-    @Transactional(readOnly = true)
+    @Transactional
     public RecruitmentPostDetailResponse getPostDetail(Long postId) {
         recruitmentPostViewCountService.increment(postId);
         
