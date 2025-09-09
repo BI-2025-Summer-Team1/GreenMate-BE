@@ -20,7 +20,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor
 @Builder
-public class ChatMessage extends BaseTimeEntity {
+public class ChatMessage extends BaseCreatedEntity {
 
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -38,9 +38,6 @@ public class ChatMessage extends BaseTimeEntity {
 	@Enumerated(EnumType.STRING)
 	@Column(nullable = false)
 	private MessageType type;
-
-	@Column
-	private String status;
 
 	public enum MessageType {
 		USER, ASSISTANT
