@@ -4,6 +4,7 @@ import java.util.Optional;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Slice;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -21,7 +22,6 @@ public interface RecruitmentPostRepository extends JpaRepository<RecruitmentPost
 	@Query("SELECT r FROM RecruitmentPost r JOIN FETCH r.user WHERE r.id = :id")
 	Optional<RecruitmentPost> findByIdWithUser(@Param("id") Long id);
 
-    @Query(value = "SELECT ra.recruitmentPost FROM RecruitmentApplication ra JOIN FETCH ra.recruitmentPost.user WHERE ra.user.id = :userId",
-           countQuery = "SELECT count(ra) FROM RecruitmentApplication ra WHERE ra.user.id = :userId")
-    Page<RecruitmentPost> findParticipatedPostsByUserId(@Param("userId") Long userId, Pageable pageable);
+	@Query("SELECT ra.recruitmentPost FROM RecruitmentApplication ra JOIN FETCH ra.recruitmentPost.user WHERE ra.user.id = :userId")
+	Slice<RecruitmentPost> findParticipatedPostsByUserId(@Param("userId") Long userId, Pageable pageable);
 }
