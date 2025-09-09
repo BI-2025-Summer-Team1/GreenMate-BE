@@ -45,4 +45,10 @@ public interface CommunityPostRepository extends JpaRepository<CommunityPost, Lo
 
 	@Lock(LockModeType.PESSIMISTIC_WRITE)
 	Optional<CommunityPost> findWithLockById(Long postId);
+
+	@EntityGraph(attributePaths = {"user"})
+	Slice<CommunityPost> findByUserIdOrderByIdDesc(Long userId, Pageable pageable);
+
+	@EntityGraph(attributePaths = {"user"})
+	Slice<CommunityPost> findByUserIdAndIdLessThanOrderByIdDesc(Long userId, Long lastPostId, Pageable pageable);
 }
