@@ -40,4 +40,10 @@ public interface CommunityPostRepository extends JpaRepository<CommunityPost, Lo
 	int incrementViewCountBy(@Param("id") long id, @Param("delta") long delta);
 
 	void deleteByUser_Id(Long userId);
+
+	@EntityGraph(attributePaths = {"user"})
+	Slice<CommunityPost> findByUserIdOrderByIdDesc(Long userId, Pageable pageable);
+
+	@EntityGraph(attributePaths = {"user"})
+	Slice<CommunityPost> findByUserIdAndIdLessThanOrderByIdDesc(Long userId, Long lastPostId, Pageable pageable);
 }

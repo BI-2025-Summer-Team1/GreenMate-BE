@@ -7,15 +7,21 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
 import org.springframework.orm.ObjectOptimisticLockingFailureException;
+import org.springframework.retry.annotation.Backoff;
+import org.springframework.retry.annotation.Retryable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
+import jakarta.persistence.LockTimeoutException;
 import jakarta.persistence.OptimisticLockException;
+import jakarta.persistence.PessimisticLockException;
 import kr.bi.greenmate.dto.CommunityPostCommentRequest;
 import kr.bi.greenmate.dto.CommunityPostCommentResponse;
 import kr.bi.greenmate.dto.CommunityPostCreateRequest;
@@ -29,6 +35,8 @@ import kr.bi.greenmate.entity.CommunityPostComment;
 import kr.bi.greenmate.entity.CommunityPostImage;
 import kr.bi.greenmate.entity.CommunityPostLike;
 import kr.bi.greenmate.entity.User;
+import kr.bi.greenmate.exception.error.AccessDeniedException;
+import kr.bi.greenmate.exception.error.CommentNotFoundException;
 import kr.bi.greenmate.exception.error.FileUploadFailException;
 import kr.bi.greenmate.exception.error.ImageCountExceedException;
 import kr.bi.greenmate.exception.error.ImageSizeExceedException;
@@ -54,6 +62,7 @@ public class CommunityPostService {
 	private final CommentCreationService commentCreationService;
 	private final CommunityPostCommentRepository communityPostCommentRepository;
 	private final UserDisplayService userDisplayService;
+	private final ApplicationEventPublisher publisher;
 
 	@Transactional
 	public CommunityPostCreateResponse createPost(User user, CommunityPostCreateRequest request,
@@ -317,5 +326,78 @@ public class CommunityPostService {
 		Long newLastId = content.isEmpty() ? null : content.get(content.size() - 1).getId();
 
 		return new KeysetSliceResponse<>(content, hasNext, newLastId);
+	}
+
+	@Transactional
+	@Retryable(
+		retryFor = {
+			PessimisticLockException.class,
+			LockTimeoutException.class
+		},
+		maxAttempts = 3,
+		backoff = @Backoff(delay = 50)
+	)
+	public void deleteComment(Long commentId, User user) {
+
+		CommunityPostComment comment = communityPostCommentRepository.findById(commentId)
+			.orElseThrow(CommentNotFoundException::new);
+
+		if (!comment.getUser().getId().equals(user.getId())) {
+			throw new AccessDeniedException();
+		}
+
+		String imageKeyToDelete = comment.getImageUrl();
+		comment.getParent().decrementCommentCount();
+
+		try {
+			communityPostCommentRepository.delete(comment);
+		} catch (DataIntegrityViolationException e) {
+			comment.markAsDeleted();
+		}
+
+		if (imageKeyToDelete != null) {
+			publisher.publishEvent(new ImagesToDeleteEvent(Collections.singletonList(imageKeyToDelete)));
+		}
+	}
+
+	@Transactional(readOnly = true)
+	public KeysetSliceResponse<CommunityPostListResponse> getUserPosts(User currentUser, Long userId, Long lastPostId,
+		int size) {
+
+		Pageable pageable = PageRequest.of(0, size);
+
+		Slice<CommunityPost> slice;
+		if (lastPostId == null) {
+			slice = communityPostRepository.findByUserIdOrderByIdDesc(userId, pageable);
+		} else {
+			slice = communityPostRepository.findByUserIdAndIdLessThanOrderByIdDesc(userId, lastPostId, pageable);
+		}
+
+		List<CommunityPost> posts = slice.getContent();
+
+		Set<Long> likedPostIds;
+		if (currentUser != null && !posts.isEmpty()) {
+			likedPostIds = new HashSet<>(
+				communityPostLikeRepository.findLikedPostIdsByUserIdAndPosts(currentUser.getId(), posts));
+		} else {
+			likedPostIds = Collections.emptySet();
+		}
+
+		List<CommunityPostListResponse> content = posts.stream()
+			.map(post -> CommunityPostListResponse.builder()
+				.postId(post.getId())
+				.title(post.getTitle())
+				.authorNickname(userDisplayService.displayName(post.getUser()))
+				.createdAt(post.getCreatedAt())
+				.isLikedByUser(likedPostIds.contains(post.getId()))
+				.likeCount(post.getLikeCount())
+				.viewCount(post.getViewCount())
+				.commentCount(post.getCommentCount())
+				.build())
+			.toList();
+
+		Long newLastId = content.isEmpty() ? null : content.get(content.size() - 1).getPostId();
+
+		return new KeysetSliceResponse<>(content, slice.hasNext(), newLastId);
 	}
 }
