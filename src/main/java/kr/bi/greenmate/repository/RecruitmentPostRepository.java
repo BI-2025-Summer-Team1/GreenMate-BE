@@ -15,8 +15,7 @@ import kr.bi.greenmate.entity.RecruitmentPost;
 @Repository
 public interface RecruitmentPostRepository extends JpaRepository<RecruitmentPost, Long> {
 
-	@Query(value = "SELECT rp FROM RecruitmentPost rp JOIN FETCH rp.user",
-		countQuery = "SELECT count(rp) FROM RecruitmentPost rp")
+	@Query(value = "SELECT rp FROM RecruitmentPost rp JOIN FETCH rp.user", countQuery = "SELECT count(rp) FROM RecruitmentPost rp")
 	Page<RecruitmentPost> findAllWithUser(Pageable pageable);
 
 	@Query("SELECT r FROM RecruitmentPost r JOIN FETCH r.user WHERE r.id = :id")

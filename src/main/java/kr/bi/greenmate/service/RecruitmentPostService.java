@@ -345,8 +345,8 @@ public class RecruitmentPostService {
 	}
 
 	@Transactional(readOnly = true)
-    public Page<RecruitmentPostListResponse> getParticipatedPostsByUserId(Long userId, Pageable pageable) {
-        Page<RecruitmentPost> posts = recruitmentPostRepository.findParticipatedPostsByUserId(userId, pageable);
+    public Slice<RecruitmentPostListResponse> getParticipatedPostsByUserId(Long userId, Pageable pageable) {
+        Slice<RecruitmentPost> posts = recruitmentPostRepository.findParticipatedPostsByUserId(userId, pageable);
 
         return posts.map(post -> RecruitmentPostListResponse.builder()
             .postId(post.getId())
