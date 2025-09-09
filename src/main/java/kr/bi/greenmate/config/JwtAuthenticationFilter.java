@@ -35,9 +35,11 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 			if (jwtProvider.validateToken(token)) {
 				Long userId = jwtProvider.getUserId(token);
 				userRepository.findById(userId).ifPresent(user -> {
-					var auth = new UsernamePasswordAuthenticationToken(user, null, List.of());
-					auth.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
-					SecurityContextHolder.getContext().setAuthentication(auth);
+					if (user.getDeletedAt() == null) {
+						var auth = new UsernamePasswordAuthenticationToken(user, null, List.of());
+						auth.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+						SecurityContextHolder.getContext().setAuthentication(auth);
+					}
 				});
 			}
 		}

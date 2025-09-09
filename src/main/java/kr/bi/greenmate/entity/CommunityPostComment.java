@@ -14,6 +14,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 @Entity
 @Getter
@@ -43,6 +44,8 @@ public class CommunityPostComment extends BaseTimeEntity {
 	@Column(length = 50)
 	private String imageUrl;
 
-	@Version
-	private Long version;
+	public void markAsDeleted() {
+		this.content = "삭제된 댓글입니다.";
+		this.imageUrl = null;
+	}
 }

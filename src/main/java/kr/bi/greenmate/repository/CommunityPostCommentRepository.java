@@ -6,7 +6,12 @@ import java.util.Optional;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Lock;
+import org.springframework.data.jpa.repository.Modifying;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
+import jakarta.persistence.LockModeType;
 import kr.bi.greenmate.entity.CommunityPostComment;
 
 public interface CommunityPostCommentRepository extends JpaRepository<CommunityPostComment, Long> {
@@ -18,4 +23,9 @@ public interface CommunityPostCommentRepository extends JpaRepository<CommunityP
 
 	@EntityGraph(attributePaths = "user")
 	List<CommunityPostComment> findByParent_IdAndIdLessThanOrderByIdDesc(Long postId, Long lastId, Pageable pageable);
+
+	void deleteByUser_Id(Long userId);
+
+	@Lock(LockModeType.PESSIMISTIC_WRITE)
+	Optional<CommunityPostComment> findById(Long commentId);
 }

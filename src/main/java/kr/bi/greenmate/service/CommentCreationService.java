@@ -24,6 +24,7 @@ public class CommentCreationService {
 
 	private final CommunityPostRepository communityPostRepository;
 	private final CommunityPostCommentRepository communityPostCommentRepository;
+	private final UserDisplayService userDisplayService;
 
 	@Transactional
 	@Retryable(
@@ -37,9 +38,7 @@ public class CommentCreationService {
 		CommunityPost post = communityPostRepository.findById(postId)
 			.orElseThrow(PostNotFoundException::new);
 
-		CommunityPostComment parent = communityPostCommentRepository
-			.findByIdAndParentId(request.getParentCommentId(), postId)
-			.orElseThrow(ParentCommentMismatchException::new);
+		CommunityPostComment parent = validateParentComment(request.getParentCommentId(), postId);
 
 		CommunityPostComment comment = CommunityPostComment.builder()
 			.parent(post).user(user).content(request.getContent())
@@ -63,7 +62,7 @@ public class CommentCreationService {
 		return CommunityPostCommentResponse.builder()
 			.id(comment.getId())
 			.userId(comment.getUser().getId())
-			.nickname(comment.getUser().getNickname())
+			.nickname(userDisplayService.displayName(comment.getUser()))
 			.content(comment.getContent())
 			.createdAt(comment.getCreatedAt())
 			.build();
