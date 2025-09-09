@@ -137,11 +137,11 @@ public class RecruitmentPostController {
 
 	@GetMapping("/participated")
     @Operation(summary = "사용자가 참여 신청한 모집글 목록 조회", description = "현재 로그인된 사용자가 참여 신청한 환경활동 모집글 목록을 조회합니다.")
-    public ResponseEntity<Page<RecruitmentPostListResponse>> getParticipatedPosts( 
+    public ResponseEntity<Slice<RecruitmentPostListResponse>> getParticipatedPosts( 
         @AuthenticationPrincipal User user,
         @PageableDefault(page = 0, size = 10) Pageable pageable) {
 
-        Page<RecruitmentPostListResponse> posts = recruitmentPostService.getParticipatedPostsByUserId(user.getId(), pageable); 
+        Slice<RecruitmentPostListResponse> posts = recruitmentPostService.getParticipatedPostsByUserId(user.getId(), pageable); 
         
         return ResponseEntity.ok(posts);
     }
