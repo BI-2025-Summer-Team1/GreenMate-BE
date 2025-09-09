@@ -21,6 +21,9 @@ public interface RecruitmentPostRepository extends JpaRepository<RecruitmentPost
 	@Query("SELECT r FROM RecruitmentPost r JOIN FETCH r.user WHERE r.id = :id")
 	Optional<RecruitmentPost> findByIdWithUser(@Param("id") Long id);
 
-	@Query("SELECT ra.recruitmentPost FROM RecruitmentApplication ra JOIN FETCH ra.recruitmentPost.user WHERE ra.user.id = :userId")
-	Slice<RecruitmentPost> findParticipatedPostsByUserId(@Param("userId") Long userId, Pageable pageable);
+	@Query("SELECT ra.recruitmentPost FROM RecruitmentApplication ra JOIN FETCH ra.recruitmentPost.user WHERE ra.user.id = :userId ORDER BY ra.recruitmentPost.id DESC")
+    Slice<RecruitmentPost> findFirstParticipatedPostsByUserId(@Param("userId") Long userId, Pageable pageable);
+    
+    @Query("SELECT ra.recruitmentPost FROM RecruitmentApplication ra JOIN FETCH ra.recruitmentPost.user WHERE ra.user.id = :userId AND ra.recruitmentPost.id < :lastId ORDER BY ra.recruitmentPost.id DESC")
+    Slice<RecruitmentPost> findParticipatedPostsByUserIdAndIdLessThan(@Param("userId") Long userId, @Param("lastId") Long lastId, Pageable pageable);
 }

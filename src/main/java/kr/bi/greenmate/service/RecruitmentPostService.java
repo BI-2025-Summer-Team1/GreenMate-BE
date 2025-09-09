@@ -345,8 +345,13 @@ public class RecruitmentPostService {
 	}
 
 	@Transactional(readOnly = true)
-    public Slice<RecruitmentPostListResponse> getParticipatedPostsByUserId(Long userId, Pageable pageable) {
-        Slice<RecruitmentPost> posts = recruitmentPostRepository.findParticipatedPostsByUserId(userId, pageable);
+    public Slice<RecruitmentPostListResponse> getParticipatedPostsByUserId(Long userId, Long lastId, Pageable pageable) {
+        Slice<RecruitmentPost> posts;
+        if (lastId == null) {
+            posts = recruitmentPostRepository.findFirstParticipatedPostsByUserId(userId, pageable);
+        } else {
+            posts = recruitmentPostRepository.findParticipatedPostsByUserIdAndIdLessThan(userId, lastId, pageable);
+        }
 
         return posts.map(post -> RecruitmentPostListResponse.builder()
             .postId(post.getId())
