@@ -48,11 +48,12 @@ public class AuthService {
 	private final ImageUploadService imageUploadService;
 	private final AgreementRepository agreementRepository;
 	private final UserAgreementRepository userAgreementRepository;
+	private final CommunityPostCleanupService communityPostCleanupService;
 
 	@Transactional
-	public SignUpResponse signUp(SignUpRequest request) {
+	public SignUpResponse signUp(SignUpRequest request, MultipartFile profileImage) {
 
-		String profileImageUrl = uploadProfileImage(request.getProfileImage());
+		String profileImageUrl = uploadProfileImage(profileImage);
 
 		User user = createUser(request, profileImageUrl);
 
@@ -69,6 +70,10 @@ public class AuthService {
 	@Transactional(readOnly = true)
 	public LoginResponse login(LoginRequest request) {
 		User user = userRepository.findByEmail(request.getEmail()).orElseThrow(UserNotFoundException::new);
+
+		if (user.getDeletedAt() != null) {
+			throw new UserNotFoundException();
+		}
 
 		if (!passwordEncoder.matches(request.getPassword(), user.getPassword())) {
 			throw new UserNotFoundException();
@@ -172,5 +177,13 @@ public class AuthService {
 		}
 
 		userAgreementRepository.saveAll(toSave);
+	}
+
+	@Transactional
+	public void deleteUser(User user) {
+		int affected = userRepository.markDeletedIfNotYet(user.getId());
+		if (affected == 0)
+			return;
+		communityPostCleanupService.deleteAllOfUser(user.getId());
 	}
 }
