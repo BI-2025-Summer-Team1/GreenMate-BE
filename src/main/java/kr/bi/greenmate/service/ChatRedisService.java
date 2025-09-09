@@ -23,12 +23,12 @@ public class ChatRedisService {
 	private static final Duration SESSION_TTL = Duration.ofHours(24);
 	private static final Duration HISTORY_TTL = Duration.ofHours(24);
 
-	public void setCurrentSessionId(Long userId, Long sessionId) {
+	public void saveOrRefreshSessionId(Long userId, Long sessionId) {
 		String key = SESSION_KEY_PREFIX + userId;
 		redissonClient.getBucket(key).set(sessionId, SESSION_TTL);
 	}
 
-	public Long getCurrentSessionId(Long userId) {
+	public Long getSessionId(Long userId) {
 		String key = SESSION_KEY_PREFIX + userId;
 		return (Long)redissonClient.getBucket(key).get();
 	}
@@ -49,4 +49,5 @@ public class ChatRedisService {
 		RList<ChatMessage> list = redissonClient.getList(key);
 		return list.readAll();
 	}
+
 }
