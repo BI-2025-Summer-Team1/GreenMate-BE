@@ -1,17 +1,32 @@
 package kr.bi.greenmate.service;
 
-import kr.bi.greenmate.entity.ChatMessage;
-import kr.bi.greenmate.exception.error.GeminiApiFailException;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
+import java.io.IOException;
+import java.time.Duration;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.List;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.concurrent.TimeoutException;
+import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpStatusCode;
 import org.springframework.retry.annotation.Backoff;
 import org.springframework.retry.annotation.Retryable;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
+import org.springframework.web.reactive.function.client.WebClientRequestException;
+import org.springframework.web.reactive.function.client.WebClientResponseException;
 
-import java.util.List;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
+import kr.bi.greenmate.dto.GeminiRequest;
+import kr.bi.greenmate.dto.GeminiResponse;
+import kr.bi.greenmate.entity.ChatMessage;
+import kr.bi.greenmate.exception.error.GeminiApiFailException;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 @Service
 @RequiredArgsConstructor
@@ -21,102 +36,115 @@ public class GeminiApiService {
 	@Value("${gemini.api.key}")
 	private String apiKey;
 
-	private final WebClient webClient;
+	private final WebClient geminiWebClient;
+	private final ObjectMapper objectMapper;
+
+	private static final int MAX_CONTEXT_MESSAGES = 8;
 
 	@Retryable(
-		retryFor = {Exception.class},
+		retryFor = {
+			IOException.class,
+			TimeoutException.class,
+			WebClientRequestException.class // DNS/연결/타임아웃 등 클라이언트 IO 오류
+		},
+		exclude = {WebClientResponseException.class}, // 4xx/5xx는 onStatus에서 별도 변환
 		maxAttempts = 3,
-		backoff = @Backoff(delay = 1000, multiplier = 2)
+		backoff = @Backoff(delay = 1000, multiplier = 2.0, random = true)
 	)
 	public String generateResponse(List<ChatMessage> history) {
 		try {
-			StringBuilder prompt = new StringBuilder();
-			prompt.append("당신은 사용자가 환경 보호를 쉽게 실천하도록 돕는 친절한 가이드 'Green mAlt'입니다.\n");
-			prompt.append("규칙:\n");
-			prompt.append("1. 환경 보호, 재활용, 분리수거, 친환경 생활/제품, 자원순환 정책, 폐기물 처리 등의 환경 주제에만 답변합니다.\n");
-			prompt.append("2. 환경과 무관한 질문에는 정확히 다음 문장만 답합니다: 환경 관련 질문만 답변드릴 수 있습니다\n");
-			prompt.append("3. 답변은 순수 텍스트로만 작성합니다. 마크다운과 서식 기호(예: *, **, -, #, >, `, [], (), 번호 목록)를 사용하지 않습니다.\n");
-			prompt.append("4. 출력에 \\n 같은 이스케이프 문자열을 넣지 말고 실제 줄바꿈을 사용합니다. 이모지와 특수문자도 사용하지 않습니다.\n");
-			prompt.append("5. 답변은 간결하고 실용적으로, 2~5문장 범위에서 핵심만 전달합니다. 지역별 기준이 다를 수 있으면 확인을 권고합니다.\n");
-			prompt.append("6. 한국어로만 답변합니다. 모호하거나 정보가 부족하면 추가 확인이 필요하다고 말하고, 가능한 범위에서 실천 팁을 제공합니다.\n");
-			prompt.append("7. 링크, 표, 목록, 코드, 인용구를 출력하지 않습니다.\n");
-			prompt.append("\n");
-			prompt.append("예시:\n");
-			prompt.append("사용자: 배달용 플라스틱 용기는 어떻게 버려야 하나요?\n");
-			prompt.append(
-				"어시스턴트: 남은 음식물을 비우고 물로 한번 헹군 뒤 라벨과 이물질을 제거합니다. 깨끗하게 비워지면 플라스틱류로 분리 배출할 수 있습니다. 기름때가 심해 세척이 어려우면 일반 쓰레기로 버리는 편이 안전합니다. 거주 지역의 세부 기준을 확인해 최종 배출 방법을 결정하세요.\n");
-			prompt.append("\n");
-			prompt.append("사용자: 오늘 주식 시장 어때?\n");
-			prompt.append("어시스턴트: 환경 관련 질문만 답변드릴 수 있습니다\n");
-			prompt.append("\n");
-			prompt.append("사용자: 종이 빨대가 정말 환경에 더 좋은가요?\n");
-			prompt.append(
-				"어시스턴트: 종이 빨대는 일반적으로 분해가 더 빠르고 재활용 체계에 더 잘 맞는 편이지만, 코팅 여부와 오염도에 따라 달라질 수 있습니다. 일회용 사용을 줄이는 것이 가장 효과적이며 가능한 경우 다회용 제품으로 대체하는 방법을 권장합니다. 지역 기준을 확인해 올바른 배출 방법을 선택하세요.\n");
-			prompt.append("\n");
+			String systemPrompt = buildSystemPrompt();
+			String conversation = buildConversation(history);
+			String finalPrompt = systemPrompt + "\n" + conversation;
 
-			String lastUserMessage = history.stream()
-				.filter(msg -> msg.getType() == ChatMessage.MessageType.USER)
-				.findFirst()
-				.map(ChatMessage::getContent)
-				.orElse("");
+			GeminiRequest.Part part = new GeminiRequest.Part(finalPrompt);
+			GeminiRequest.Content content = new GeminiRequest.Content(List.of(part));
+			GeminiRequest.GenerationConfig config = new GeminiRequest.GenerationConfig(1000, 0.7);
+			GeminiRequest req = new GeminiRequest(List.of(content), config);
 
-			prompt.append("질문: ").append(lastUserMessage);
-
-			String url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent";
-
-			String requestBody = String.format("""
-				{
-					"contents": [{
-						"parts": [{
-							"text": "%s"
-						}]
-					}],
-					"generationConfig": {
-						"maxOutputTokens": 1000,
-						"temperature": 0.7
-					}
-				}
-				""", prompt.toString().replace("\"", "\\\""));
-
-			String response = webClient.post()
-				.uri(url)
-				.header("Content-Type", "application/json")
-				.header("X-goog-api-key", apiKey)
-				.bodyValue(requestBody)
+			GeminiResponse res = geminiWebClient.post()
+				.uri(uriBuilder -> uriBuilder
+					.path("/models/gemini-2.0-flash:generateContent")
+					.queryParam("key", apiKey)
+					.build())
+				.bodyValue(req)
 				.retrieve()
-				.bodyToMono(String.class)
+				.onStatus(HttpStatusCode::is4xxClientError, r -> r.bodyToMono(String.class)
+					.map(msg -> new IllegalArgumentException("Gemini 4xx: " + msg)))
+				.onStatus(HttpStatusCode::is5xxServerError, r -> r.bodyToMono(String.class)
+					.map(msg -> new IllegalStateException("Gemini 5xx: " + msg)))
+				.bodyToMono(GeminiResponse.class)
+				.timeout(Duration.ofSeconds(12))
 				.block();
 
-			log.info("Gemini API 응답: {}", response);
-			return extractTextFromResponse(response);
-
+			String answer = extractPrimaryText(res);
+			log.debug("Gemini 응답 텍스트 길이: {}", answer != null ? answer.length() : 0);
+			return answer;
+		} catch (IllegalArgumentException | IllegalStateException e) {
+			log.error("Gemini API 응답 에러: {}", e.getMessage());
+			throw new GeminiApiFailException(e.getMessage());
 		} catch (Exception e) {
-			log.error("Gemini API 호출 중 오류 발생", e);
-			throw new GeminiApiFailException();
+			log.error("Gemini API 호출 중 예외", e);
+			throw new GeminiApiFailException(e.getMessage());
 		}
 	}
 
-	private String extractTextFromResponse(String response) {
-		try {
-			log.info("파싱할 응답: {}", response);
+	private String buildSystemPrompt() {
+		return String.join("\n",
+			"당신은 사용자가 환경 보호를 쉽게 실천하도록 돕는 친절한 가이드 'Green mAlt'입니다.",
+			"규칙:",
+			"1. 환경 보호, 재활용, 분리수거, 친환경 생활/제품, 자원순환 정책, 폐기물 처리 등의 환경 주제에만 답변합니다.",
+			"2. 환경과 무관한 질문에는 정확히 다음 문장만 답합니다: 환경 관련 질문만 답변드릴 수 있습니다",
+			"3. 답변은 순수 텍스트로만 작성합니다. 마크다운과 서식 기호(예: *, **, -, #, >, `, [], (), 번호 목록)를 사용하지 않습니다.",
+			"4. 출력에 \\n 같은 이스케이프 문자열을 넣지 말고 실제 줄바꿈을 사용합니다. 이모지와 특수문자도 사용하지 않습니다.",
+			"5. 답변은 간결하고 실용적으로, 2~5문장 범위에서 핵심만 전달합니다. 지역별 기준이 다를 수 있으면 확인을 권고합니다.",
+			"6. 한국어로만 답변합니다. 모호하거나 정보가 부족하면 추가 확인이 필요하다고 말하고, 가능한 범위에서 실천 팁을 제공합니다.",
+			"7. 링크, 표, 목록, 코드, 인용구를 출력하지 않습니다."
+		);
+	}
 
-			if (response.contains("\"candidates\"")) {
-				int textStart = response.indexOf("\"text\": \"") + 9;
-				if (textStart > 8) {
-					int textEnd = response.indexOf("\"", textStart);
-					if (textEnd > textStart) {
-						String extractedText = response.substring(textStart, textEnd);
-						return extractedText.replace("\\n", " ").replace("\\\"", "\"").trim();
-					}
-				}
-			}
+	private String buildConversation(List<ChatMessage> history) {
+		if (history == null || history.isEmpty())
+			return "";
+		List<ChatMessage> sorted = history.stream()
+			.filter(Objects::nonNull)
+			.sorted(Comparator.comparing(ChatMessage::getCreatedAt))
+			.collect(Collectors.toList());
 
-			log.warn("응답에서 텍스트를 찾을 수 없습니다. 응답: {}", response);
-			return "응답을 파싱할 수 없습니다.";
+		int fromIndex = Math.max(0, sorted.size() - MAX_CONTEXT_MESSAGES);
+		List<ChatMessage> recent = sorted.subList(fromIndex, sorted.size());
 
-		} catch (Exception e) {
-			log.error("응답 파싱 중 오류 발생: {}", e.getMessage(), e);
-			return "응답을 파싱할 수 없습니다.";
+		List<String> lines = new ArrayList<>();
+		for (ChatMessage m : recent) {
+			String prefix = m.getType() == ChatMessage.MessageType.USER ? "사용자: " : "어시스턴트: ";
+			String content = Optional.ofNullable(m.getContent()).orElse("")
+				.replace("\r", " ")
+				.replace("\n\n", "\n")
+				.trim();
+			lines.add(prefix + content);
 		}
+		return String.join("\n", lines);
+	}
+
+	private String extractPrimaryText(GeminiResponse res) {
+		if (res == null || res.getCandidates() == null || res.getCandidates().isEmpty()) {
+			throw new GeminiApiFailException("빈 응답(candidates 없음)");
+		}
+		GeminiResponse.Candidate first = res.getCandidates().get(0);
+		if (first.getContent() == null || first.getContent().getParts() == null) {
+			throw new GeminiApiFailException("응답에 content.parts 없음");
+		}
+		if (first.getFinishReason() != null && first.getFinishReason().equalsIgnoreCase("SAFETY")) {
+			throw new GeminiApiFailException("Safety 차단됨");
+		}
+		String text = first.getContent().getParts().stream()
+			.map(GeminiResponse.Part::getText)
+			.filter(Objects::nonNull)
+			.collect(Collectors.joining("\n"))
+			.trim();
+		if (text.isBlank()) {
+			throw new GeminiApiFailException("텍스트 후보 없음");
+		}
+		return text;
 	}
 }
