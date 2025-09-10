@@ -344,4 +344,22 @@ public class RecruitmentPostService {
 			.replies(replyResponses)
 			.build();
 	}
+
+	@Transactional(readOnly = true)
+    public Slice<RecruitmentPostListResponse> getParticipatedPostsByUserId(Long userId, Long lastId, Pageable pageable) {
+        Slice<RecruitmentPost> posts;
+        if (lastId == null) {
+            posts = recruitmentPostRepository.findFirstParticipatedPostsByUserId(userId, pageable);
+        } else {
+            posts = recruitmentPostRepository.findParticipatedPostsByUserIdAndIdLessThan(userId, lastId, pageable);
+        }
+
+        return posts.map(post -> RecruitmentPostListResponse.builder()
+            .postId(post.getId())
+            .title(post.getTitle())
+            .authorNickname(userDisplayService.displayName(post.getUser()))
+            .activityDate(post.getActivityDate())
+            .createdAt(post.getCreatedAt())
+            .build());
+    }
 }
