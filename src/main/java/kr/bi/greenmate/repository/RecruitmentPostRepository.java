@@ -6,6 +6,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
@@ -19,11 +20,11 @@ public interface RecruitmentPostRepository extends JpaRepository<RecruitmentPost
 	Page<RecruitmentPost> findAllWithUser(Pageable pageable);
 
 	@Query("SELECT r FROM RecruitmentPost r JOIN FETCH r.user WHERE r.id = :id")
-	Optional<RecruitmentPost> findByIdWithUser(@Param("id") Long id);
-
-	@Query("SELECT ra.recruitmentPost FROM RecruitmentApplication ra JOIN FETCH ra.recruitmentPost.user WHERE ra.user.id = :userId ORDER BY ra.recruitmentPost.id DESC")
-    Slice<RecruitmentPost> findFirstParticipatedPostsByUserId(@Param("userId") Long userId, Pageable pageable);
+	Optional<RecruitmentPost> findByIdWithUser(@Param("id") Long id)
     
-    @Query("SELECT ra.recruitmentPost FROM RecruitmentApplication ra JOIN FETCH ra.recruitmentPost.user WHERE ra.user.id = :userId AND ra.recruitmentPost.id < :lastId ORDER BY ra.recruitmentPost.id DESC")
-    Slice<RecruitmentPost> findParticipatedPostsByUserIdAndIdLessThan(@Param("userId") Long userId, @Param("lastId") Long lastId, Pageable pageable);
+	@Query("SELECT ra.recruitmentPost FROM RecruitmentApplication ra JOIN FETCH ra.recruitmentPost.user WHERE ra.user.id = :userId ORDER BY ra.recruitmentPost.id DESC")
+  Slice<RecruitmentPost> findFirstParticipatedPostsByUserId(@Param("userId") Long userId, Pageable pageable);
+    
+  @Query("SELECT ra.recruitmentPost FROM RecruitmentApplication ra JOIN FETCH ra.recruitmentPost.user WHERE ra.user.id = :userId AND ra.recruitmentPost.id < :lastId ORDER BY ra.recruitmentPost.id DESC")
+  Slice<RecruitmentPost> findParticipatedPostsByUserIdAndIdLessThan(@Param("userId") Long userId, @Param("lastId") Long lastId, Pageable pageable);
 }

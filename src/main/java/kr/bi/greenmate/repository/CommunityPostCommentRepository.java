@@ -26,6 +26,15 @@ public interface CommunityPostCommentRepository extends JpaRepository<CommunityP
 
 	void deleteByUser_Id(Long userId);
 
+	@Query("select c.imageUrl from CommunityPostComment c where c.parent.id = :postId and c.imageUrl is not null")
+	List<String> findImageUrlsByPostId(Long postId);
+
+	@Lock(LockModeType.PESSIMISTIC_WRITE)
+	List<CommunityPostComment> findAllByParentId(Long postId);
+
+	@Modifying(clearAutomatically = true)
+	void deleteByParentId(Long postId);
+
 	@Lock(LockModeType.PESSIMISTIC_WRITE)
 	Optional<CommunityPostComment> findById(Long commentId);
 }
