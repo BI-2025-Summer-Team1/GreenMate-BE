@@ -121,7 +121,7 @@ public class ChatService {
 			return chatRedisService.getChatHistory(userId, sessionId);
 		} catch (Exception e) {
 			log.warn("Redis 직렬화 문제로 채팅 히스토리 조회 실패. 빈 히스토리를 반환합니다. userId={}, sessionId={}", userId, sessionId, e);
-			
+
 			return List.of();
 		}
 	}
