@@ -78,8 +78,9 @@ public class GeminiApiService {
 				.block();
 
 			String answer = extractPrimaryText(res);
-			log.debug("Gemini 응답 텍스트 길이: {}", answer != null ? answer.length() : 0);
-			return answer;
+			String sanitized = sanitizeAssistantText(answer);
+			log.debug("Gemini 응답 텍스트 길이: {}", sanitized != null ? sanitized.length() : 0);
+			return sanitized;
 		} catch (IllegalArgumentException | IllegalStateException e) {
 			log.error("Gemini API 응답 에러: {}", e.getMessage());
 			throw new GeminiApiFailException(e.getMessage());
@@ -87,6 +88,24 @@ public class GeminiApiService {
 			log.error("Gemini API 호출 중 예외", e);
 			throw new GeminiApiFailException(e.getMessage());
 		}
+	}
+
+	private String sanitizeAssistantText(String text) {
+		if (text == null) {
+			return "";
+		}
+		String sanitized = text
+			// literal escape sequences first
+			.replace("\\r\\n", " ")
+			.replace("\\n", " ")
+			.replace("\\r", " ")
+			// actual control characters
+			.replace("\r", " ")
+			.replace("\n", " ");
+
+		sanitized = sanitized.replaceAll("\\s+", " ").trim();
+		sanitized = sanitized.replaceFirst("^(?i)(어시스턴트|assistant|모델|model)\\s*:\\s*", "");
+		return sanitized;
 	}
 
 	private String buildSystemPrompt() {
