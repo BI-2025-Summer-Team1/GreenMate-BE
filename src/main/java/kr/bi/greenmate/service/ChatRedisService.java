@@ -1,10 +1,14 @@
 package kr.bi.greenmate.service;
 
 import java.time.Duration;
+import java.util.Arrays;
 import java.util.List;
 
+import org.redisson.api.RBucket;
 import org.redisson.api.RList;
+import org.redisson.api.RScript;
 import org.redisson.api.RedissonClient;
+import org.redisson.client.codec.StringCodec;
 import org.springframework.stereotype.Service;
 
 import kr.bi.greenmate.entity.ChatMessage;
@@ -20,17 +24,83 @@ public class ChatRedisService {
 
 	private static final String SESSION_KEY_PREFIX = "chat:session:";
 	private static final String HISTORY_KEY_PREFIX = "chat:history:";
+	private static final String SESSION_COUNTER_KEY = "chat:global:sessionId";
 	private static final Duration SESSION_TTL = Duration.ofHours(24);
 	private static final Duration HISTORY_TTL = Duration.ofHours(24);
 
-	public void saveOrRefreshSessionId(Long userId, Long sessionId) {
-		String key = SESSION_KEY_PREFIX + userId;
-		redissonClient.getBucket(key).set(sessionId, SESSION_TTL);
+	public Long getOrCreateAndRefreshSessionId(Long userId) {
+		final String key = SESSION_KEY_PREFIX + userId;
+		final RBucket<Object> bucket = redissonClient.getBucket(key);
+
+		Long existing = getSessionIdSafely(bucket);
+		if (existing != null) {
+			bucket.expire(SESSION_TTL);
+			return existing;
+		}
+
+		for (int i = 0; i < 3; i++) {
+			final Long newId = redissonClient.getScript(StringCodec.INSTANCE)
+				.eval(RScript.Mode.READ_WRITE,
+					"return redis.call('INCR', KEYS[1])",
+					RScript.ReturnType.INTEGER,
+					Arrays.asList(SESSION_COUNTER_KEY)
+				);
+
+			final boolean success = bucket.setIfAbsent(newId, SESSION_TTL);
+			if (success)
+				return newId;
+
+			final Long other = getSessionIdSafely(bucket);
+			if (other != null) {
+				bucket.expire(SESSION_TTL);
+				return other;
+			}
+		}
+
+		final Long last = getSessionIdSafely(bucket);
+		if (last != null) {
+			bucket.expire(SESSION_TTL);
+			return last;
+		}
+		final Long newId = redissonClient.getScript(StringCodec.INSTANCE)
+			.eval(RScript.Mode.READ_WRITE,
+				"return redis.call('INCR', KEYS[1])",
+				RScript.ReturnType.INTEGER,
+				Arrays.asList(SESSION_COUNTER_KEY)
+			);
+		bucket.setIfAbsent(newId, SESSION_TTL);
+		return newId;
+	}
+
+	private Long getSessionIdSafely(RBucket<Object> bucket) {
+		try {
+			Object value = bucket.get();
+			if (value == null)
+				return null;
+
+			if (value instanceof Long) {
+				return (Long)value;
+			}
+
+			if (value instanceof String) {
+				return Long.valueOf((String)value);
+			}
+
+			if (value instanceof Number) {
+				return ((Number)value).longValue();
+			}
+
+			return null;
+		} catch (Exception e) {
+			log.warn("세션 ID 읽기 실패, null 반환: {}", e.getMessage());
+			return null;
+		}
 	}
 
 	public Long getSessionId(Long userId) {
 		String key = SESSION_KEY_PREFIX + userId;
-		return (Long)redissonClient.getBucket(key).get();
+		RBucket<Object> bucket = redissonClient.getBucket(key);
+		return getSessionIdSafely(bucket);
 	}
 
 	public void addMessageToHistory(Long userId, Long sessionId, ChatMessage message) {

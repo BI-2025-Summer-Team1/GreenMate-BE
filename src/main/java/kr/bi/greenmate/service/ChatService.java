@@ -1,7 +1,6 @@
 package kr.bi.greenmate.service;
 
 import java.util.List;
-import java.util.concurrent.atomic.AtomicLong;
 
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
@@ -25,8 +24,6 @@ public class ChatService {
 	private final ChatMessageRepository chatMessageRepository;
 	private final ChatRedisService chatRedisService;
 	private final GeminiApiService geminiApiService;
-
-	private static final AtomicLong sessionIdGenerator = new AtomicLong(1);
 
 	@Transactional
 	public ChatMessageResponse sendMessage(User user, ChatMessageRequest request) {
@@ -105,15 +102,7 @@ public class ChatService {
 	}
 
 	private Long getOrCreateAndRefreshSessionId(Long userId) {
-		Long sessionId = chatRedisService.getSessionId(userId);
-
-		if (sessionId == null) {
-			sessionId = sessionIdGenerator.getAndIncrement();
-		}
-
-		chatRedisService.saveOrRefreshSessionId(userId, sessionId);
-
-		return sessionId;
+		return chatRedisService.getOrCreateAndRefreshSessionId(userId);
 	}
 
 	private List<ChatMessage> getChatHistorySafely(Long userId, Long sessionId) {
