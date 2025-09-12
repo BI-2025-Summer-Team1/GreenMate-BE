@@ -19,8 +19,6 @@ import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.reactive.function.client.WebClientRequestException;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-
 import kr.bi.greenmate.dto.GeminiRequest;
 import kr.bi.greenmate.dto.GeminiResponse;
 import kr.bi.greenmate.entity.ChatMessage;
@@ -37,7 +35,6 @@ public class GeminiApiService {
 	private String apiKey;
 
 	private final WebClient geminiWebClient;
-	private final ObjectMapper objectMapper;
 
 	private static final int MAX_CONTEXT_MESSAGES = 8;
 
