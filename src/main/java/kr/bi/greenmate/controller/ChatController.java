@@ -17,7 +17,6 @@ import kr.bi.greenmate.dto.ChatHistoryResponse;
 import kr.bi.greenmate.dto.ChatMessageRequest;
 import kr.bi.greenmate.dto.ChatMessageResponse;
 import kr.bi.greenmate.entity.User;
-import kr.bi.greenmate.service.ChatRedisService;
 import kr.bi.greenmate.service.ChatService;
 import lombok.RequiredArgsConstructor;
 
@@ -28,7 +27,6 @@ import lombok.RequiredArgsConstructor;
 public class ChatController {
 
 	private final ChatService chatService;
-	private final ChatRedisService chatRedisService;
 
 	@PostMapping("/message")
 	@Operation(summary = "메시지 전송", description = "챗봇에게 메시지를 전송합니다.")
@@ -43,7 +41,7 @@ public class ChatController {
 	@GetMapping("/current-session")
 	@Operation(summary = "현재 세션 조회", description = "사용자의 현재 활성 세션 ID를 조회합니다.")
 	public ResponseEntity<Long> getCurrentSessionId(@AuthenticationPrincipal User user) {
-		Long sessionId = chatRedisService.getSessionId(user.getId());
+		Long sessionId = chatService.getCurrentSessionId(user.getId());
 		return ResponseEntity.ok(sessionId);
 	}
 

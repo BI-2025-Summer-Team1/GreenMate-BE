@@ -114,4 +114,8 @@ public class ChatService {
 			return List.of();
 		}
 	}
+
+	public Long getCurrentSessionId(Long userId) {
+		return chatRedisService.getSessionId(userId);
+	}
 }
