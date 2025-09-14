@@ -18,7 +18,6 @@ import org.springframework.orm.ObjectOptimisticLockingFailureException;
 import org.springframework.retry.annotation.Backoff;
 import org.springframework.retry.annotation.Retryable;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -357,7 +356,6 @@ public class CommunityPostService {
 			commentImageKeys.stream()
 		).collect(Collectors.toList());
 
-		// 댓글 계층적 하드 삭제: 대댓글(자식) → 최상위(부모)
 		communityPostCommentRepository.deleteByParent_IdAndCommunityPostCommentIsNotNull(postId);
 		communityPostCommentRepository.deleteByParent_IdAndCommunityPostCommentIsNull(postId);
 		communityPostLikeRepository.deleteByCommunityPostId(postId);
@@ -389,7 +387,6 @@ public class CommunityPostService {
 			throw new AccessDeniedException();
 		}
 
-		// 멱등성 가드: 이미 삭제된 경우 no-op
 		if (comment.isDeleted()) {
 			return;
 		}
