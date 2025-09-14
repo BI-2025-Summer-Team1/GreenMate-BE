@@ -110,7 +110,9 @@ public class RecruitmentPostService {
 		}
 
 		recruitmentPostLikeRepository.deleteByRecruitmentPostId(postId);
-		recruitmentPostCommentRepository.deleteByRecruitmentPostId(postId);
+		// 계층적 삭제: 자식 댓글 먼저, 그 다음 부모 댓글
+		recruitmentPostCommentRepository.deleteByRecruitmentPost_IdAndParentCommentIsNotNull(postId);
+		recruitmentPostCommentRepository.deleteByRecruitmentPost_IdAndParentCommentIsNull(postId);
 		recruitmentPostRepository.delete(post);
 
 		List<RecruitmentPostImage> images = recruitmentPostImageRepository.findByRecruitmentPostId(postId);

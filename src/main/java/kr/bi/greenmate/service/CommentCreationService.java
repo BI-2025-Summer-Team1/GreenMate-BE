@@ -54,7 +54,7 @@ public class CommentCreationService {
 			return null;
 
 		return communityPostCommentRepository
-			.findByIdAndParentId(parentCommentId, postId)
+			.findByIdAndParentIdAndDeletedFalse(parentCommentId, postId)
 			.orElseThrow(ParentCommentMismatchException::new);
 	}
 

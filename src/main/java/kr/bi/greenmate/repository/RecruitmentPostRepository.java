@@ -1,5 +1,6 @@
 package kr.bi.greenmate.repository;
 
+import java.util.List;
 import java.util.Optional;
 
 import org.springframework.data.domain.Page;
@@ -20,6 +21,9 @@ public interface RecruitmentPostRepository extends JpaRepository<RecruitmentPost
 
 	@Query("SELECT r FROM RecruitmentPost r JOIN FETCH r.user WHERE r.id = :id")
 	Optional<RecruitmentPost> findByIdWithUser(@Param("id") Long id);
+
+	@Query("SELECT r.id FROM RecruitmentPost r WHERE r.user.id = :userId")
+	List<Long> findIdsByUserId(@Param("userId") Long userId);
     
 	@Query("SELECT ra.recruitmentPost FROM RecruitmentApplication ra JOIN FETCH ra.recruitmentPost.user WHERE ra.user.id = :userId ORDER BY ra.recruitmentPost.id DESC")
 	Slice<RecruitmentPost> findFirstParticipatedPostsByUserId(@Param("userId") Long userId, Pageable pageable);

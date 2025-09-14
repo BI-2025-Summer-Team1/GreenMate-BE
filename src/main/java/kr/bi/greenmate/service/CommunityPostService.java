@@ -1,6 +1,5 @@
 package kr.bi.greenmate.service;
 
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
@@ -10,8 +9,6 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import org.springframework.context.ApplicationEventPublisher;
-import org.springframework.dao.CannotSerializeTransactionException;
-import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.dao.DeadlockLoserDataAccessException;
 import org.springframework.dao.PessimisticLockingFailureException;
 import org.springframework.data.domain.PageRequest;
@@ -334,7 +331,7 @@ public class CommunityPostService {
 		return new KeysetSliceResponse<>(content, hasNext, newLastId);
 	}
 
-	@Transactional(isolation = Isolation.REPEATABLE_READ)
+	@Transactional
 	@Retryable(
 		retryFor = {
 			PessimisticLockException.class,
@@ -360,7 +357,9 @@ public class CommunityPostService {
 			commentImageKeys.stream()
 		).collect(Collectors.toList());
 
-		communityPostCommentRepository.deleteByParentId(postId);
+		// 댓글 계층적 하드 삭제: 대댓글(자식) → 최상위(부모)
+		communityPostCommentRepository.deleteByParent_IdAndCommunityPostCommentIsNotNull(postId);
+		communityPostCommentRepository.deleteByParent_IdAndCommunityPostCommentIsNull(postId);
 		communityPostLikeRepository.deleteByCommunityPostId(postId);
 		communityPostImageRepository.deleteByCommunityPostId(postId);
 		communityPostRepository.delete(post);
@@ -374,7 +373,9 @@ public class CommunityPostService {
 	@Retryable(
 		retryFor = {
 			PessimisticLockException.class,
-			LockTimeoutException.class
+			LockTimeoutException.class,
+			OptimisticLockException.class,
+			ObjectOptimisticLockingFailureException.class
 		},
 		maxAttempts = 3,
 		backoff = @Backoff(delay = 50)
@@ -388,14 +389,14 @@ public class CommunityPostService {
 			throw new AccessDeniedException();
 		}
 
+		// 멱등성 가드: 이미 삭제된 경우 no-op
+		if (comment.isDeleted()) {
+			return;
+		}
+
 		String imageKeyToDelete = comment.getImageUrl();
 		comment.getParent().decrementCommentCount();
-
-		try {
-			communityPostCommentRepository.delete(comment);
-		} catch (DataIntegrityViolationException e) {
-			comment.markAsDeleted();
-		}
+		comment.markAsDeleted();
 
 		if (imageKeyToDelete != null) {
 			publisher.publishEvent(new ImagesToDeleteEvent(Collections.singletonList(imageKeyToDelete)));

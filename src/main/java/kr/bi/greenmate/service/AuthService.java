@@ -49,6 +49,7 @@ public class AuthService {
 	private final AgreementRepository agreementRepository;
 	private final UserAgreementRepository userAgreementRepository;
 	private final CommunityPostCleanupService communityPostCleanupService;
+	private final RecruitmentPostCleanupService recruitmentPostCleanupService;
 
 	@Transactional
 	public SignUpResponse signUp(SignUpRequest request, MultipartFile profileImage) {
@@ -185,5 +186,6 @@ public class AuthService {
 		if (affected == 0)
 			return;
 		communityPostCleanupService.deleteAllOfUser(user.getId());
+		recruitmentPostCleanupService.deleteAllOfUser(user.getId());
 	}
 }
