@@ -9,7 +9,6 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import org.springframework.context.ApplicationEventPublisher;
-import org.springframework.dao.DeadlockLoserDataAccessException;
 import org.springframework.dao.PessimisticLockingFailureException;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -335,8 +334,7 @@ public class CommunityPostService {
 		retryFor = {
 			PessimisticLockException.class,
 			LockTimeoutException.class,
-			PessimisticLockingFailureException.class,
-			DeadlockLoserDataAccessException.class
+			PessimisticLockingFailureException.class
 		},
 		maxAttempts = 3,
 		backoff = @Backoff(delay = 50)

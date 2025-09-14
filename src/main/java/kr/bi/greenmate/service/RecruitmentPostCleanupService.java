@@ -27,7 +27,6 @@ public class RecruitmentPostCleanupService {
 	public void deleteAllOfUser(Long userId) {
 		List<String> imageKeys = new ArrayList<>();
 
-		// 1) 사용자가 작성한 모집글을 계층적으로 하드 삭제
 		List<Long> postIds = recruitmentPostRepository.findIdsByUserId(userId);
 		for (Long postId : postIds) {
 			List<String> postImageKeys = recruitmentPostImageRepository.findImageUrlsByPostId(postId);
@@ -36,13 +35,13 @@ public class RecruitmentPostCleanupService {
 			recruitmentPostCommentRepository.deleteByRecruitmentPost_IdAndParentCommentIsNotNull(postId);
 			recruitmentPostCommentRepository.deleteByRecruitmentPost_IdAndParentCommentIsNull(postId);
 			recruitmentPostLikeRepository.deleteByRecruitmentPostId(postId);
-			// 이미지 엔티티 삭제 + 게시글 삭제
-			recruitmentPostImageRepository.findByRecruitmentPostId(postId).forEach(img -> {});
+
+			recruitmentPostImageRepository.findByRecruitmentPostId(postId).forEach(img -> {
+			});
 			recruitmentPostImageRepository.deleteAll(recruitmentPostImageRepository.findByRecruitmentPostId(postId));
 			recruitmentPostRepository.deleteById(postId);
 		}
 
-		// 2) 타인의 모집글에 남긴 사용자의 댓글 soft delete
 		recruitmentPostCommentRepository.softDeleteByUserId(userId);
 
 		if (!imageKeys.isEmpty()) {
