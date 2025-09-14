@@ -8,6 +8,7 @@ import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import kr.bi.greenmate.entity.RecruitmentPostComment;
@@ -28,7 +29,8 @@ public interface RecruitmentPostCommentRepository extends JpaRepository<Recruitm
 	void deleteByRecruitmentPost_IdAndParentCommentIsNotNull(Long postId);
 
 	void deleteByRecruitmentPost_IdAndParentCommentIsNull(Long postId);
-	
+
+	@Modifying
 	@Query(value = "update /*+ NO_PARALLEL(c) */ recruitment_post_comment c set c.content = '삭제된 댓글입니다.', c.image_url = null where c.user_id = :userId", nativeQuery = true)
-	void softDeleteByUserId(Long userId);
+	void softDeleteByUserId(@Param("userId") Long userId);
 }
