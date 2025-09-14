@@ -14,7 +14,6 @@ import org.springframework.orm.ObjectOptimisticLockingFailureException;
 import org.springframework.retry.annotation.Backoff;
 import org.springframework.retry.annotation.Retryable;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -51,12 +50,13 @@ import lombok.extern.slf4j.Slf4j;
 @RequiredArgsConstructor
 @Transactional
 public class RecruitmentPostService {
-
+  
 	private final RecruitmentPostRepository recruitmentPostRepository;
 	private final RecruitmentPostImageRepository recruitmentPostImageRepository;
 	private final ObjectStorageRepository objectStorageRepository;
 	private final UserRepository userRepository;
 	private final ImageUploadService imageUploadService;
+  private final ImageDeleteService imageDeleteService;
 	private final RecruitmentPostLikeRepository recruitmentPostLikeRepository;
 	private final RecruitmentPostCommentRepository recruitmentPostCommentRepository;
   private final RecruitmentPostViewCountService recruitmentPostViewCountService;
@@ -109,24 +109,13 @@ public class RecruitmentPostService {
 			throw new AccessDeniedException();
 		}
 
-		recruitmentPostLikeRepository.deleteByRecruitmentPostId(postId);
-		recruitmentPostCommentRepository.deleteByRecruitmentPostId(postId);
-		recruitmentPostRepository.delete(post);
+		List<RecruitmentPostImage> imagesToDelete = recruitmentPostImageRepository.findByRecruitmentPostId(postId);
 
-		List<RecruitmentPostImage> images = recruitmentPostImageRepository.findByRecruitmentPostId(postId);
+    recruitmentPostLikeRepository.deleteByRecruitmentPostId(postId);
+    recruitmentPostCommentRepository.deleteByRecruitmentPostId(postId);
+    recruitmentPostRepository.delete(post);
 
-		deleteImagesFromObjectStorage(images);
-	}
-
-	@Transactional(propagation = Propagation.NOT_SUPPORTED)
-	public void deleteImagesFromObjectStorage(List<RecruitmentPostImage> images) {
-		images.forEach(image -> {
-			try {
-				objectStorageRepository.delete(image.getImageUrl());
-			} catch (Exception e) {
-				log.error("Failed to delete file from object storage: {}", image.getImageUrl(), e);
-			}
-		});
+    imageDeleteService.deleteImages(imagesToDelete);
 	}
 
 	@Transactional(readOnly = true)
