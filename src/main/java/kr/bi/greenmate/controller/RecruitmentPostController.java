@@ -58,17 +58,17 @@ public class RecruitmentPostController {
 		return ResponseEntity.status(HttpStatus.CREATED).body(response);
 	}
 
-  @DeleteMapping("/{postId}")
-  @Operation(summary = "모집글 삭제", description = "특정 ID의 모집글을 삭제합니다.")
-  public ResponseEntity<Void> deleteRecruitmentPost(
-    @PathVariable Long postId,
-    @AuthenticationPrincipal User user) {
+	@DeleteMapping("/{postId}")
+	@Operation(summary = "모집글 삭제", description = "특정 ID의 모집글을 삭제합니다.")
+	public ResponseEntity<Void> deleteRecruitmentPost(
+		@PathVariable Long postId,
+		@AuthenticationPrincipal User user) {
 
-    recruitmentPostService.deleteRecruitmentPost(postId, user.getId());
+		recruitmentPostService.deleteRecruitmentPost(postId, user.getId());
 
-    return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
-  }
-  
+		return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
+	}
+
 	@GetMapping
 	@Operation(summary = "모집글 목록 조회", description = "환경활동 모집글 목록을 조회합니다.")
 	public ResponseEntity<Page<RecruitmentPostListResponse>> getRecruitmentPostList(
@@ -91,9 +91,9 @@ public class RecruitmentPostController {
 	@Operation(summary = "모집글 좋아요 토글", description = "모집글에 좋아요를 누르거나 취소합니다.")
 	public ResponseEntity<RecruitmentPostLikeResponse> toggleLike(
 		@PathVariable Long postId,
-		@AuthenticationPrincipal Long userId) {
+		@AuthenticationPrincipal User user) {
 
-		RecruitmentPostLikeResponse response = recruitmentPostService.toggleLike(postId, userId);
+		RecruitmentPostLikeResponse response = recruitmentPostService.toggleLike(postId, user.getId());
 
 		return ResponseEntity.ok(response);
 	}
@@ -104,46 +104,48 @@ public class RecruitmentPostController {
 		@PathVariable Long postId,
 		@RequestPart @Valid RecruitmentPostCommentRequest request,
 		@RequestPart(required = false) MultipartFile image,
-		@AuthenticationPrincipal Long userId) {
+		@AuthenticationPrincipal User user) {
 
-		RecruitmentPostCommentResponse response = recruitmentPostService.createComment(postId, userId, request, image);
+		RecruitmentPostCommentResponse response = recruitmentPostService.createComment(postId, user.getId(), request,
+			image);
 
 		return ResponseEntity.status(HttpStatus.CREATED).body(response);
 	}
 
-    @GetMapping("/{postId}/comments")
-    @Operation(summary = "모집글 댓글 목록 조회", description = "특정 모집글의 댓글 목록을 무한 스크롤로 조회합니다.")
-    public ResponseEntity<Slice<RecruitmentPostCommentResponse>> getComments(
-        @PathVariable @Min(1) Long postId,
-        @RequestParam(required = false) @Min(1) Long lastId,
-        @RequestParam(defaultValue = "10") @Min(1) int size) {
+	@GetMapping("/{postId}/comments")
+	@Operation(summary = "모집글 댓글 목록 조회", description = "특정 모집글의 댓글 목록을 무한 스크롤로 조회합니다.")
+	public ResponseEntity<Slice<RecruitmentPostCommentResponse>> getComments(
+		@PathVariable @Min(1) Long postId,
+		@RequestParam(required = false) @Min(1) Long lastId,
+		@RequestParam(defaultValue = "10") @Min(1) int size) {
 
-        Slice<RecruitmentPostCommentResponse> comments = recruitmentPostService.getComments(postId, lastId, size);
-        
-        return ResponseEntity.ok(comments);
-    }
+		Slice<RecruitmentPostCommentResponse> comments = recruitmentPostService.getComments(postId, lastId, size);
 
-    @DeleteMapping("/comments/{commentId}")
-    @Operation(
-            summary = "모집글 댓글 삭제",
-            description = "특정 ID의 댓글을 삭제합니다."
-    )
-    public ResponseEntity<Void> deleteComment(
-            @PathVariable Long commentId,
-            @AuthenticationPrincipal Long userId) {
-        recruitmentPostService.deleteComment(commentId, userId);
-        return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
-    }
+		return ResponseEntity.ok(comments);
+	}
+
+	@DeleteMapping("/comments/{commentId}")
+	@Operation(
+		summary = "모집글 댓글 삭제",
+		description = "특정 ID의 댓글을 삭제합니다."
+	)
+	public ResponseEntity<Void> deleteComment(
+		@PathVariable Long commentId,
+		@AuthenticationPrincipal User user) {
+		recruitmentPostService.deleteComment(commentId, user.getId());
+		return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
+	}
 
 	@GetMapping("/participated")
-    @Operation(summary = "사용자가 참여 신청한 모집글 목록 조회", description = "현재 로그인된 사용자가 참여 신청한 환경활동 모집글 목록을 조회합니다.")
-    public ResponseEntity<Slice<RecruitmentPostListResponse>> getParticipatedPosts(
-        @AuthenticationPrincipal User user,
-        @RequestParam(required = false) Long lastId,
-        @PageableDefault(page = 0, size = 10) Pageable pageable) {
+	@Operation(summary = "사용자가 참여 신청한 모집글 목록 조회", description = "현재 로그인된 사용자가 참여 신청한 환경활동 모집글 목록을 조회합니다.")
+	public ResponseEntity<Slice<RecruitmentPostListResponse>> getParticipatedPosts(
+		@AuthenticationPrincipal User user,
+		@RequestParam(required = false) Long lastId,
+		@PageableDefault(page = 0, size = 10) Pageable pageable) {
 
-        Slice<RecruitmentPostListResponse> posts = recruitmentPostService.getParticipatedPostsByUserId(user.getId(), lastId, pageable);
-        
-        return ResponseEntity.ok(posts);
-    }
+		Slice<RecruitmentPostListResponse> posts = recruitmentPostService.getParticipatedPostsByUserId(user.getId(),
+			lastId, pageable);
+
+		return ResponseEntity.ok(posts);
+	}
 }
