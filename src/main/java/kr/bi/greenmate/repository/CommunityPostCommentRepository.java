@@ -7,7 +7,6 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Lock;
-import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
@@ -26,26 +25,17 @@ public interface CommunityPostCommentRepository extends JpaRepository<CommunityP
 	@EntityGraph(attributePaths = "user")
 	List<CommunityPostComment> findByParent_IdAndIdLessThanOrderByIdDesc(Long postId, Long lastId, Pageable pageable);
 
-	void deleteByUser_Id(Long userId);
-
 	@Query("select c.imageUrl from CommunityPostComment c where c.parent.id = :postId and c.imageUrl is not null")
 	List<String> findImageUrlsByPostId(@Param("postId") Long postId);
 
 	@Query("select c.imageUrl from CommunityPostComment c where c.user.id = :userId and c.imageUrl is not null")
 	List<String> findImageUrlsByUserId(@Param("userId") Long userId);
 
-	@Modifying(clearAutomatically = true)
-	@Query("update CommunityPostComment c set c.deleted = true, c.deletedAt = CURRENT_TIMESTAMP, c.content = '삭제된 댓글입니다.', c.imageUrl = null where c.parent.id = :postId")
-	void softDeleteByParentId(@Param("postId") Long postId);
-
-	@Modifying(clearAutomatically = true)
 	@Query(value = "update /*+ NO_PARALLEL(c) */ community_post_comment c set c.deleted = 1, c.deleted_at = SYSTIMESTAMP, c.content = '삭제된 댓글입니다.', c.image_url = null where c.user_id = :userId and c.deleted = 0", nativeQuery = true)
 	void softDeleteByUserId(@Param("userId") Long userId);
-
-	@Modifying(clearAutomatically = true)
+	
 	void deleteByParent_IdAndCommunityPostCommentIsNotNull(Long postId);
 
-	@Modifying(clearAutomatically = true)
 	void deleteByParent_IdAndCommunityPostCommentIsNull(Long postId);
 
 	@Lock(LockModeType.PESSIMISTIC_WRITE)

@@ -16,17 +16,6 @@ public interface CommunityPostImageRepository extends JpaRepository<CommunityPos
 	@Query("SELECT cpi.imageUrl FROM CommunityPostImage cpi WHERE cpi.communityPost.id = :postId")
 	List<String> findImageUrlsByPostId(@Param("postId") Long postId);
 
-	@Query("""
-		  select i.imageUrl
-		  from CommunityPostImage i
-		  join i.communityPost p
-		  where p.user.id = :userId
-		""")
-	List<String> findImageKeysByOwner(Long userId);
-
-	@Lock(LockModeType.PESSIMISTIC_WRITE)
-	List<CommunityPostImage> findAllByCommunityPostId(Long postId);
-
 	@Modifying(clearAutomatically = true)
 	void deleteByCommunityPostId(Long postId);
 }

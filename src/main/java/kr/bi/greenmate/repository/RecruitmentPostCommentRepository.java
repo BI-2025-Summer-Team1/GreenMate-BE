@@ -25,13 +25,10 @@ public interface RecruitmentPostCommentRepository extends JpaRepository<Recruitm
 
 	List<RecruitmentPostComment> findByParentCommentIdIn(List<Long> parentIds);
 
-	@Modifying(clearAutomatically = true)
 	void deleteByRecruitmentPost_IdAndParentCommentIsNotNull(Long postId);
 
-	@Modifying(clearAutomatically = true)
 	void deleteByRecruitmentPost_IdAndParentCommentIsNull(Long postId);
-
-	@Modifying(clearAutomatically = true)
+	
 	@Query(value = "update /*+ NO_PARALLEL(c) */ recruitment_post_comment c set c.content = '삭제된 댓글입니다.', c.image_url = null where c.user_id = :userId", nativeQuery = true)
 	void softDeleteByUserId(Long userId);
 }
