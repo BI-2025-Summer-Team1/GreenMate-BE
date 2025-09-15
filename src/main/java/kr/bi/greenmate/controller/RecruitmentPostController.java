@@ -91,9 +91,9 @@ public class RecruitmentPostController {
 	@Operation(summary = "모집글 좋아요 토글", description = "모집글에 좋아요를 누르거나 취소합니다.")
 	public ResponseEntity<RecruitmentPostLikeResponse> toggleLike(
 		@PathVariable Long postId,
-		@AuthenticationPrincipal Long userId) {
+		@AuthenticationPrincipal User user) {
 
-		RecruitmentPostLikeResponse response = recruitmentPostService.toggleLike(postId, userId);
+		RecruitmentPostLikeResponse response = recruitmentPostService.toggleLike(postId, user.getId());
 
 		return ResponseEntity.ok(response);
 	}
@@ -104,9 +104,9 @@ public class RecruitmentPostController {
 		@PathVariable Long postId,
 		@RequestPart @Valid RecruitmentPostCommentRequest request,
 		@RequestPart(required = false) MultipartFile image,
-		@AuthenticationPrincipal Long userId) {
+		@AuthenticationPrincipal User user) {
 
-		RecruitmentPostCommentResponse response = recruitmentPostService.createComment(postId, userId, request, image);
+		RecruitmentPostCommentResponse response = recruitmentPostService.createComment(postId, user.getId(), request, image);
 
 		return ResponseEntity.status(HttpStatus.CREATED).body(response);
 	}
@@ -130,8 +130,8 @@ public class RecruitmentPostController {
     )
     public ResponseEntity<Void> deleteComment(
             @PathVariable Long commentId,
-            @AuthenticationPrincipal Long userId) {
-        recruitmentPostService.deleteComment(commentId, userId);
+            @AuthenticationPrincipal User user) {
+        recruitmentPostService.deleteComment(commentId, user.getId());
         return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
     }
 
