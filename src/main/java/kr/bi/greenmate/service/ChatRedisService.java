@@ -8,6 +8,7 @@ import org.redisson.api.RBucket;
 import org.redisson.api.RList;
 import org.redisson.api.RScript;
 import org.redisson.api.RedissonClient;
+import org.redisson.client.codec.LongCodec;
 import org.redisson.client.codec.StringCodec;
 import org.springframework.stereotype.Service;
 
@@ -30,7 +31,7 @@ public class ChatRedisService {
 
 	public Long getOrCreateAndRefreshSessionId(Long userId) {
 		final String key = SESSION_KEY_PREFIX + userId;
-		final RBucket<Object> bucket = redissonClient.getBucket(key);
+		final RBucket<Long> bucket = redissonClient.getBucket(key, LongCodec.INSTANCE);
 
 		Long existing = getSessionIdSafely(bucket);
 		if (existing != null) {
@@ -74,7 +75,7 @@ public class ChatRedisService {
 
 	public Long createNewSession(Long userId) {
 		final String sessionKey = SESSION_KEY_PREFIX + userId;
-		final RBucket<Object> bucket = redissonClient.getBucket(sessionKey);
+		final RBucket<Long> bucket = redissonClient.getBucket(sessionKey, LongCodec.INSTANCE);
 
 		Long old = getSessionIdSafely(bucket);
 		if (old != null) {
@@ -95,25 +96,9 @@ public class ChatRedisService {
 		return newId;
 	}
 
-	private Long getSessionIdSafely(RBucket<Object> bucket) {
+	private Long getSessionIdSafely(RBucket<Long> bucket) {
 		try {
-			Object value = bucket.get();
-			if (value == null)
-				return null;
-
-			if (value instanceof Long) {
-				return (Long)value;
-			}
-
-			if (value instanceof String) {
-				return Long.valueOf((String)value);
-			}
-
-			if (value instanceof Number) {
-				return ((Number)value).longValue();
-			}
-
-			return null;
+			return bucket.get();
 		} catch (Exception e) {
 			log.warn("세션 ID 읽기 실패, null 반환: {}", e.getMessage());
 			return null;
@@ -122,7 +107,7 @@ public class ChatRedisService {
 
 	public Long getSessionId(Long userId) {
 		String key = SESSION_KEY_PREFIX + userId;
-		RBucket<Object> bucket = redissonClient.getBucket(key);
+		RBucket<Long> bucket = redissonClient.getBucket(key, LongCodec.INSTANCE);
 		return getSessionIdSafely(bucket);
 	}
 
