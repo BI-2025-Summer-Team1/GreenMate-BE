@@ -9,7 +9,7 @@ import org.springframework.transaction.annotation.Transactional;
 import kr.bi.greenmate.dto.ChatHistoryResponse;
 import kr.bi.greenmate.dto.ChatMessageRequest;
 import kr.bi.greenmate.dto.ChatMessageResponse;
-import kr.bi.greenmate.entity.ChatMessage;
+import kr.bi.greenmate.entity.ChatMessages;
 import kr.bi.greenmate.entity.User;
 import kr.bi.greenmate.repository.ChatMessageRepository;
 import lombok.RequiredArgsConstructor;
@@ -29,28 +29,28 @@ public class ChatService {
 	public ChatMessageResponse sendMessage(User user, ChatMessageRequest request) {
 		Long sessionId = getOrCreateAndRefreshSessionId(user.getId());
 
-		ChatMessage userMessage = ChatMessage.builder()
+		ChatMessages userMessage = ChatMessages.builder()
 			.sessionId(sessionId)
 			.userId(user.getId())
 			.content(request.getMessage())
-			.type(ChatMessage.MessageType.USER)
+			.type(ChatMessages.MessageType.USER)
 			.build();
 
-		ChatMessage savedUserMessage = chatMessageRepository.save(userMessage);
+		ChatMessages savedUserMessage = chatMessageRepository.save(userMessage);
 		chatRedisService.addMessageToHistory(user.getId(), sessionId, savedUserMessage);
 
 		try {
-			List<ChatMessage> history = getChatHistorySafely(user.getId(), sessionId);
+			List<ChatMessages> history = getChatHistorySafely(user.getId(), sessionId);
 			String response = geminiApiService.generateResponse(history);
 
-			ChatMessage assistantMessage = ChatMessage.builder()
+			ChatMessages assistantMessage = ChatMessages.builder()
 				.sessionId(sessionId)
 				.userId(user.getId())
 				.content(response)
-				.type(ChatMessage.MessageType.ASSISTANT)
+				.type(ChatMessages.MessageType.ASSISTANT)
 				.build();
 
-			ChatMessage savedAssistantMessage = chatMessageRepository.save(assistantMessage);
+			ChatMessages savedAssistantMessage = chatMessageRepository.save(assistantMessage);
 			chatRedisService.addMessageToHistory(user.getId(), sessionId, savedAssistantMessage);
 
 			return ChatMessageResponse.from(savedAssistantMessage);
@@ -58,20 +58,20 @@ public class ChatService {
 		} catch (Exception e) {
 			log.error("Gemini API 호출 실패: userId={}, sessionId={}", user.getId(), sessionId, e);
 
-			ChatMessage errorMessage = ChatMessage.builder()
+			ChatMessages errorMessage = ChatMessages.builder()
 				.sessionId(sessionId)
 				.userId(user.getId())
 				.content("죄송합니다. 일시적인 오류가 발생했습니다. 잠시 후 다시 시도해주세요.")
-				.type(ChatMessage.MessageType.ASSISTANT)
+				.type(ChatMessages.MessageType.ASSISTANT)
 				.build();
 
-			ChatMessage savedErrorMessage = chatMessageRepository.save(errorMessage);
+			ChatMessages savedErrorMessage = chatMessageRepository.save(errorMessage);
 			return ChatMessageResponse.from(savedErrorMessage);
 		}
 	}
 
 	public ChatHistoryResponse getChatHistory(User user, Long sessionId, Long cursor) {
-		List<ChatMessage> messages;
+		List<ChatMessages> messages;
 		boolean hasMore = false;
 
 		if (cursor == null) {
@@ -105,7 +105,7 @@ public class ChatService {
 		return chatRedisService.getOrCreateAndRefreshSessionId(userId);
 	}
 
-	private List<ChatMessage> getChatHistorySafely(Long userId, Long sessionId) {
+	private List<ChatMessages> getChatHistorySafely(Long userId, Long sessionId) {
 		try {
 			return chatRedisService.getChatHistory(userId, sessionId);
 		} catch (Exception e) {

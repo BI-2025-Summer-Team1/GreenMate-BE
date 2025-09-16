@@ -15,12 +15,11 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 @Entity
-@Table(name = "chat_messages")
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor
 @Builder
-public class ChatMessage extends BaseCreatedEntity {
+public class ChatMessages extends BaseCreatedEntity {
 
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)

@@ -19,7 +19,7 @@ import org.springframework.web.client.RestClientResponseException;
 
 import kr.bi.greenmate.dto.GeminiRequest;
 import kr.bi.greenmate.dto.GeminiResponse;
-import kr.bi.greenmate.entity.ChatMessage;
+import kr.bi.greenmate.entity.ChatMessages;
 import kr.bi.greenmate.exception.error.GeminiApiFailException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -45,7 +45,7 @@ public class GeminiApiService {
 		maxAttempts = 3,
 		backoff = @Backoff(delay = 1000, multiplier = 2.0, random = true)
 	)
-	public String generateResponse(List<ChatMessage> history) {
+	public String generateResponse(List<ChatMessages> history) {
 		try {
 			String systemPrompt = buildSystemPrompt();
 			String conversation = buildConversation(history);
@@ -110,20 +110,20 @@ public class GeminiApiService {
 		);
 	}
 
-	private String buildConversation(List<ChatMessage> history) {
+	private String buildConversation(List<ChatMessages> history) {
 		if (history == null || history.isEmpty())
 			return "";
-		List<ChatMessage> sorted = history.stream()
+		List<ChatMessages> sorted = history.stream()
 			.filter(Objects::nonNull)
-			.sorted(Comparator.comparing(ChatMessage::getCreatedAt))
+			.sorted(Comparator.comparing(ChatMessages::getCreatedAt))
 			.collect(Collectors.toList());
 
 		int fromIndex = Math.max(0, sorted.size() - MAX_CONTEXT_MESSAGES);
-		List<ChatMessage> recent = sorted.subList(fromIndex, sorted.size());
+		List<ChatMessages> recent = sorted.subList(fromIndex, sorted.size());
 
 		List<String> lines = new ArrayList<>();
-		for (ChatMessage m : recent) {
-			String prefix = m.getType() == ChatMessage.MessageType.USER ? "사용자: " : "어시스턴트: ";
+		for (ChatMessages m : recent) {
+			String prefix = m.getType() == ChatMessages.MessageType.USER ? "사용자: " : "어시스턴트: ";
 			String content = Optional.ofNullable(m.getContent()).orElse("")
 				.replace("\r", " ")
 				.replace("\n\n", "\n")

@@ -11,7 +11,7 @@ import org.redisson.api.RedissonClient;
 import org.redisson.client.codec.StringCodec;
 import org.springframework.stereotype.Service;
 
-import kr.bi.greenmate.entity.ChatMessage;
+import kr.bi.greenmate.entity.ChatMessages;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -103,9 +103,9 @@ public class ChatRedisService {
 		return getSessionIdSafely(bucket);
 	}
 
-	public void addMessageToHistory(Long userId, Long sessionId, ChatMessage message) {
+	public void addMessageToHistory(Long userId, Long sessionId, ChatMessages message) {
 		String key = HISTORY_KEY_PREFIX + userId + ":" + sessionId;
-		RList<ChatMessage> list = redissonClient.getList(key);
+		RList<ChatMessages> list = redissonClient.getList(key);
 		list.add(0, message);
 		list.expire(HISTORY_TTL);
 
@@ -114,9 +114,9 @@ public class ChatRedisService {
 		}
 	}
 
-	public List<ChatMessage> getChatHistory(Long userId, Long sessionId) {
+	public List<ChatMessages> getChatHistory(Long userId, Long sessionId) {
 		String key = HISTORY_KEY_PREFIX + userId + ":" + sessionId;
-		RList<ChatMessage> list = redissonClient.getList(key);
+		RList<ChatMessages> list = redissonClient.getList(key);
 		return list.readAll();
 	}
 

@@ -1,7 +1,7 @@
 package kr.bi.greenmate.dto;
 
 import io.swagger.v3.oas.annotations.media.Schema;
-import kr.bi.greenmate.entity.ChatMessage;
+import kr.bi.greenmate.entity.ChatMessages;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -19,9 +19,9 @@ public class ChatMessageResponse {
 	private String content;
 
 	@Schema(description = "메시지 타입", example = "USER", allowableValues = {"USER", "ASSISTANT"})
-	private ChatMessage.MessageType type;
+	private ChatMessages.MessageType type;
 
-	public static ChatMessageResponse from(ChatMessage message) {
+	public static ChatMessageResponse from(ChatMessages message) {
 		return ChatMessageResponse.builder()
 			.sessionId(message.getSessionId())
 			.content(message.getContent())
