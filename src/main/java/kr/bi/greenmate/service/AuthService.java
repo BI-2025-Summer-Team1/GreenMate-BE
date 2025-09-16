@@ -69,11 +69,8 @@ public class AuthService {
 
 	@Transactional(readOnly = true)
 	public LoginResponse login(LoginRequest request) {
-		User user = userRepository.findByEmail(request.getEmail()).orElseThrow(UserNotFoundException::new);
-
-		if (user.getDeletedAt() != null) {
-			throw new UserNotFoundException();
-		}
+		User user = userRepository.findByEmailAndDeletedAtIsNull(request.getEmail())
+			.orElseThrow(UserNotFoundException::new);
 
 		if (!passwordEncoder.matches(request.getPassword(), user.getPassword())) {
 			throw new UserNotFoundException();
@@ -122,7 +119,7 @@ public class AuthService {
 	}
 
 	public boolean isNicknameDuplicate(String nickname) {
-		return userRepository.existsByNickname(nickname);
+		return userRepository.existsByNicknameAndDeletedAtIsNull(nickname);
 	}
 
 	private void saveUserAgreements(User user, Set<Long> acceptedAgreementIds) {
@@ -181,9 +178,13 @@ public class AuthService {
 
 	@Transactional
 	public void deleteUser(User user) {
-		int affected = userRepository.markDeletedIfNotYet(user.getId());
-		if (affected == 0)
+		User toDelete = userRepository.findById(user.getId())
+			.orElseThrow(UserNotFoundException::new);
+		if (toDelete.getDeletedAt() != null) {
 			return;
-		communityPostCleanupService.deleteAllOfUser(user.getId());
+		}
+		toDelete.softDelete();
+		userRepository.save(toDelete);
+		communityPostCleanupService.deleteAllOfUser(toDelete.getId());
 	}
 }
