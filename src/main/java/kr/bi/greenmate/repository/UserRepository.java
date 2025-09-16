@@ -9,18 +9,8 @@ import org.springframework.data.jpa.repository.Query;
 import kr.bi.greenmate.entity.User;
 
 public interface UserRepository extends JpaRepository<User, Long> {
-	Optional<User> findByEmail(String email);
 
-	Optional<User> findByNickname(String nickname);
+	Optional<User> findByEmailAndDeletedAtIsNull(String email);
 
-	boolean existsByNickname(String nickname);
-
-	@Modifying(clearAutomatically = true, flushAutomatically = true)
-	@Query("""
-		  update User u
-		  set u.deletedAt = CURRENT_TIMESTAMP
-		  where u.id = :userId
-		    and u.deletedAt is null
-		""")
-	int markDeletedIfNotYet(Long userId);
+	boolean existsByNicknameAndDeletedAtIsNull(String nickname);
 }
