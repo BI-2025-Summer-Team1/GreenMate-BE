@@ -1,7 +1,6 @@
 package kr.bi.greenmate.service;
 
 import java.io.IOException;
-import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
@@ -10,14 +9,13 @@ import java.util.Optional;
 import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
 
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.HttpStatusCode;
 import org.springframework.retry.annotation.Backoff;
 import org.springframework.retry.annotation.Retryable;
 import org.springframework.stereotype.Service;
-import org.springframework.web.reactive.function.client.WebClient;
-import org.springframework.web.reactive.function.client.WebClientRequestException;
-import org.springframework.web.reactive.function.client.WebClientResponseException;
+import org.springframework.web.client.RestClient;
+import org.springframework.web.client.RestClientResponseException;
 
 import kr.bi.greenmate.dto.GeminiRequest;
 import kr.bi.greenmate.dto.GeminiResponse;
@@ -34,17 +32,16 @@ public class GeminiApiService {
 	@Value("${gemini.api.key}")
 	private String apiKey;
 
-	private final WebClient geminiWebClient;
+	private final @Qualifier("geminiRestClient") RestClient geminiRestClient;
 
 	private static final int MAX_CONTEXT_MESSAGES = 8;
 
 	@Retryable(
 		retryFor = {
 			IOException.class,
-			TimeoutException.class,
-			WebClientRequestException.class // DNS/연결/타임아웃 등 클라이언트 IO 오류
+			TimeoutException.class
 		},
-		exclude = {WebClientResponseException.class}, // 4xx/5xx는 onStatus에서 별도 변환
+		exclude = {RestClientResponseException.class},
 		maxAttempts = 3,
 		backoff = @Backoff(delay = 1000, multiplier = 2.0, random = true)
 	)
@@ -59,26 +56,20 @@ public class GeminiApiService {
 			GeminiRequest.GenerationConfig config = new GeminiRequest.GenerationConfig(1000, 0.7);
 			GeminiRequest req = new GeminiRequest(List.of(content), config);
 
-			GeminiResponse res = geminiWebClient.post()
+			GeminiResponse res = geminiRestClient.post()
 				.uri(uriBuilder -> uriBuilder
 					.path("/models/gemini-2.0-flash:generateContent")
 					.queryParam("key", apiKey)
 					.build())
-				.bodyValue(req)
+				.body(req)
 				.retrieve()
-				.onStatus(HttpStatusCode::is4xxClientError, r -> r.bodyToMono(String.class)
-					.map(msg -> new IllegalArgumentException("Gemini 4xx: " + msg)))
-				.onStatus(HttpStatusCode::is5xxServerError, r -> r.bodyToMono(String.class)
-					.map(msg -> new IllegalStateException("Gemini 5xx: " + msg)))
-				.bodyToMono(GeminiResponse.class)
-				.timeout(Duration.ofSeconds(12))
-				.block();
+				.body(GeminiResponse.class);
 
 			String answer = extractPrimaryText(res);
 			String sanitized = sanitizeAssistantText(answer);
 			log.debug("Gemini 응답 텍스트 길이: {}", sanitized != null ? sanitized.length() : 0);
 			return sanitized;
-		} catch (IllegalArgumentException | IllegalStateException e) {
+		} catch (RestClientResponseException e) {
 			log.error("Gemini API 응답 에러: {}", e.getMessage());
 			throw new GeminiApiFailException(e.getMessage());
 		} catch (Exception e) {
