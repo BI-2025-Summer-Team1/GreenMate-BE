@@ -38,6 +38,13 @@ public class ChatController {
 		return ResponseEntity.ok(response);
 	}
 
+	@PostMapping("/new-session")
+	@Operation(summary = "새로운 세션 생성", description = "새로운 챗봇 대화 세션을 생성합니다.")
+	public ResponseEntity<Long> createNewSession(@AuthenticationPrincipal User user) {
+		Long sessionId = chatService.createNewSession(user.getId());
+		return ResponseEntity.ok(sessionId);
+	}
+
 	@GetMapping("/current-session")
 	@Operation(summary = "현재 세션 조회", description = "사용자의 현재 활성 세션 ID를 조회합니다.")
 	public ResponseEntity<Long> getCurrentSessionId(@AuthenticationPrincipal User user) {

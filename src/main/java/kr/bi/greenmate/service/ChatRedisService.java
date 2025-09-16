@@ -72,6 +72,29 @@ public class ChatRedisService {
 		return newId;
 	}
 
+	public Long createNewSession(Long userId) {
+		final String sessionKey = SESSION_KEY_PREFIX + userId;
+		final RBucket<Object> bucket = redissonClient.getBucket(sessionKey);
+
+		Long old = getSessionIdSafely(bucket);
+		if (old != null) {
+			try {
+				redissonClient.getKeys().delete(HISTORY_KEY_PREFIX + userId + ":" + old);
+			} catch (Exception ignored) {
+			}
+		}
+
+		final Long newId = redissonClient.getScript(StringCodec.INSTANCE)
+			.eval(RScript.Mode.READ_WRITE,
+				"return redis.call('INCR', KEYS[1])",
+				RScript.ReturnType.INTEGER,
+				Arrays.asList(SESSION_COUNTER_KEY)
+			);
+
+		bucket.set(newId, SESSION_TTL);
+		return newId;
+	}
+
 	private Long getSessionIdSafely(RBucket<Object> bucket) {
 		try {
 			Object value = bucket.get();

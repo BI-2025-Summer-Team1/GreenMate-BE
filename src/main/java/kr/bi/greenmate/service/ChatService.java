@@ -118,4 +118,9 @@ public class ChatService {
 	public Long getCurrentSessionId(Long userId) {
 		return chatRedisService.getSessionId(userId);
 	}
+
+	@Transactional
+	public Long createNewSession(Long userId) {
+		return chatRedisService.createNewSession(userId);
+	}
 }
