@@ -1,0 +1,126 @@
+package kr.bi.greenmate.service;
+
+import java.util.List;
+
+import org.springframework.data.domain.PageRequest;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import kr.bi.greenmate.dto.ChatHistoryResponse;
+import kr.bi.greenmate.dto.ChatMessageRequest;
+import kr.bi.greenmate.dto.ChatMessageResponse;
+import kr.bi.greenmate.entity.ChatMessages;
+import kr.bi.greenmate.entity.User;
+import kr.bi.greenmate.repository.ChatMessageRepository;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+
+@Service
+@RequiredArgsConstructor
+@Slf4j
+@Transactional(readOnly = true)
+public class ChatService {
+
+	private final ChatMessageRepository chatMessageRepository;
+	private final ChatRedisService chatRedisService;
+	private final GeminiApiService geminiApiService;
+
+	@Transactional
+	public ChatMessageResponse sendMessage(User user, ChatMessageRequest request) {
+		Long sessionId = getOrCreateAndRefreshSessionId(user.getId());
+
+		ChatMessages userMessage = ChatMessages.builder()
+			.sessionId(sessionId)
+			.userId(user.getId())
+			.content(request.getMessage())
+			.type(ChatMessages.MessageType.USER)
+			.build();
+
+		ChatMessages savedUserMessage = chatMessageRepository.save(userMessage);
+		chatRedisService.addMessageToHistory(user.getId(), sessionId, savedUserMessage);
+
+		try {
+			List<ChatMessages> history = getChatHistorySafely(user.getId(), sessionId);
+			String response = geminiApiService.generateResponse(history);
+
+			ChatMessages assistantMessage = ChatMessages.builder()
+				.sessionId(sessionId)
+				.userId(user.getId())
+				.content(response)
+				.type(ChatMessages.MessageType.ASSISTANT)
+				.build();
+
+			ChatMessages savedAssistantMessage = chatMessageRepository.save(assistantMessage);
+			chatRedisService.addMessageToHistory(user.getId(), sessionId, savedAssistantMessage);
+
+			return ChatMessageResponse.from(savedAssistantMessage);
+
+		} catch (Exception e) {
+			log.error("Gemini API 호출 실패: userId={}, sessionId={}", user.getId(), sessionId, e);
+
+			ChatMessages errorMessage = ChatMessages.builder()
+				.sessionId(sessionId)
+				.userId(user.getId())
+				.content("죄송합니다. 일시적인 오류가 발생했습니다. 잠시 후 다시 시도해주세요.")
+				.type(ChatMessages.MessageType.ASSISTANT)
+				.build();
+
+			ChatMessages savedErrorMessage = chatMessageRepository.save(errorMessage);
+			return ChatMessageResponse.from(savedErrorMessage);
+		}
+	}
+
+	public ChatHistoryResponse getChatHistory(User user, Long sessionId, Long cursor) {
+		List<ChatMessages> messages;
+		boolean hasMore = false;
+
+		if (cursor == null) {
+			messages = chatMessageRepository.findByUserIdAndSessionIdOrderByCreatedAtDesc(
+				user.getId(), sessionId, PageRequest.of(0, 10)
+			);
+		} else {
+			messages = chatMessageRepository.findByUserIdAndSessionIdAndIdLessThanOrderByCreatedAtDesc(
+				user.getId(), sessionId, cursor, PageRequest.of(0, 10)
+			);
+		}
+
+		if (messages.size() == 10) {
+			hasMore = true;
+		}
+
+		String nextCursor = hasMore ? messages.get(messages.size() - 1).getId().toString() : null;
+
+		List<ChatMessageResponse> responseMessages = messages.stream()
+			.map(ChatMessageResponse::from)
+			.toList();
+
+		return ChatHistoryResponse.builder()
+			.messages(responseMessages)
+			.hasMore(hasMore)
+			.nextCursor(nextCursor)
+			.build();
+	}
+
+	private Long getOrCreateAndRefreshSessionId(Long userId) {
+		return chatRedisService.getOrCreateAndRefreshSessionId(userId);
+	}
+
+	private List<ChatMessages> getChatHistorySafely(Long userId, Long sessionId) {
+		try {
+			return chatRedisService.getChatHistory(userId, sessionId);
+		} catch (Exception e) {
+			log.warn("Redis 직렬화 문제로 채팅 히스토리 조회 실패. 빈 히스토리를 반환합니다. userId={}, sessionId={}", userId, sessionId, e);
+
+			return List.of();
+		}
+	}
+
+	public Long getCurrentSessionId(Long userId) {
+		return chatRedisService.getSessionId(userId);
+	}
+
+	@Transactional
+	public Long createNewSession(Long userId) {
+		return chatRedisService.createNewSession(userId);
+	}
+}

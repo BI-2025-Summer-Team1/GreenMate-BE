@@ -183,8 +183,9 @@ public class AuthService {
 	@Transactional
 	public void deleteUser(User user) {
 		int affected = userRepository.markDeletedIfNotYet(user.getId());
-		if (affected == 0)
+		if (affected == 0) {
 			return;
+		}
 		communityPostCleanupService.deleteAllOfUser(user.getId());
 		recruitmentPostCleanupService.deleteAllOfUser(user.getId());
 	}
