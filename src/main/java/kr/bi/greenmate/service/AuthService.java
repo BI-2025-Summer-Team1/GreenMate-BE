@@ -49,6 +49,7 @@ public class AuthService {
 	private final AgreementRepository agreementRepository;
 	private final UserAgreementRepository userAgreementRepository;
 	private final CommunityPostCleanupService communityPostCleanupService;
+	private final RecruitmentPostCleanupService recruitmentPostCleanupService;
 
 	@Transactional
 	public SignUpResponse signUp(SignUpRequest request, MultipartFile profileImage) {
@@ -69,8 +70,11 @@ public class AuthService {
 
 	@Transactional(readOnly = true)
 	public LoginResponse login(LoginRequest request) {
-		User user = userRepository.findByEmailAndDeletedAtIsNull(request.getEmail())
-			.orElseThrow(UserNotFoundException::new);
+		User user = userRepository.findByEmail(request.getEmail()).orElseThrow(UserNotFoundException::new);
+
+		if (user.getDeletedAt() != null) {
+			throw new UserNotFoundException();
+		}
 
 		if (!passwordEncoder.matches(request.getPassword(), user.getPassword())) {
 			throw new UserNotFoundException();
@@ -119,7 +123,7 @@ public class AuthService {
 	}
 
 	public boolean isNicknameDuplicate(String nickname) {
-		return userRepository.existsByNicknameAndDeletedAtIsNull(nickname);
+		return userRepository.existsByNickname(nickname);
 	}
 
 	private void saveUserAgreements(User user, Set<Long> acceptedAgreementIds) {
@@ -178,13 +182,11 @@ public class AuthService {
 
 	@Transactional
 	public void deleteUser(User user) {
-		User toDelete = userRepository.findById(user.getId())
-			.orElseThrow(UserNotFoundException::new);
-		if (toDelete.getDeletedAt() != null) {
+		int affected = userRepository.markDeletedIfNotYet(user.getId());
+		if (affected == 0) {
 			return;
 		}
-		toDelete.softDelete();
-		userRepository.save(toDelete);
-		communityPostCleanupService.deleteAllOfUser(toDelete.getId());
+		communityPostCleanupService.deleteAllOfUser(user.getId());
+		recruitmentPostCleanupService.deleteAllOfUser(user.getId());
 	}
 }

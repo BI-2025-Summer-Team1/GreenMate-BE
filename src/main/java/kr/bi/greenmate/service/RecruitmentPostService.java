@@ -101,22 +101,22 @@ public class RecruitmentPostService {
 	}
 
 	@Transactional
-	public void deleteRecruitmentPost(Long postId, Long userId) {
-		RecruitmentPost post = recruitmentPostRepository.findByIdWithUser(postId)
-			.orElseThrow(() -> new RecruitmentPostNotFoundException(postId));
+  public void deleteRecruitmentPost(Long postId, Long userId) {
+    RecruitmentPost post = recruitmentPostRepository.findByIdWithUser(postId)
+      .orElseThrow(() -> new RecruitmentPostNotFoundException(postId));
 
-		if (!post.getUser().getId().equals(userId)) {
-			throw new AccessDeniedException();
-		}
+    if (!post.getUser().getId().equals(userId)) {
+      throw new AccessDeniedException();
+    }
 
-		List<RecruitmentPostImage> imagesToDelete = recruitmentPostImageRepository.findByRecruitmentPostId(postId);
+    List<RecruitmentPostImage> imagesToDelete = recruitmentPostImageRepository.findByRecruitmentPostId(postId);
 
     recruitmentPostLikeRepository.deleteByRecruitmentPostId(postId);
     recruitmentPostCommentRepository.deleteByRecruitmentPostId(postId);
     recruitmentPostRepository.delete(post);
 
     imageDeleteService.deleteImages(imagesToDelete);
-	}
+  }
 
 	@Transactional(readOnly = true)
 	public Page<RecruitmentPostListResponse> getPostList(Pageable pageable) {

@@ -1,5 +1,6 @@
 package kr.bi.greenmate.repository;
 
+import java.util.List;
 import java.util.Optional;
 
 import org.springframework.data.domain.Pageable;
@@ -45,6 +46,9 @@ public interface CommunityPostRepository extends JpaRepository<CommunityPost, Lo
 
 	@Lock(LockModeType.PESSIMISTIC_WRITE)
 	Optional<CommunityPost> findWithLockById(Long postId);
+
+	@Query("SELECT p.id FROM CommunityPost p WHERE p.user.id = :userId")
+	List<Long> findIdsByUserId(@Param("userId") Long userId);
 
 	@EntityGraph(attributePaths = {"user"})
 	Slice<CommunityPost> findByUserIdOrderByIdDesc(Long userId, Pageable pageable);

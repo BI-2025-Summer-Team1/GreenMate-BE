@@ -1,6 +1,5 @@
 package kr.bi.greenmate.service;
 
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
@@ -10,9 +9,6 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import org.springframework.context.ApplicationEventPublisher;
-import org.springframework.dao.CannotSerializeTransactionException;
-import org.springframework.dao.DataIntegrityViolationException;
-import org.springframework.dao.DeadlockLoserDataAccessException;
 import org.springframework.dao.PessimisticLockingFailureException;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -21,7 +17,6 @@ import org.springframework.orm.ObjectOptimisticLockingFailureException;
 import org.springframework.retry.annotation.Backoff;
 import org.springframework.retry.annotation.Retryable;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -334,13 +329,12 @@ public class CommunityPostService {
 		return new KeysetSliceResponse<>(content, hasNext, newLastId);
 	}
 
-	@Transactional(isolation = Isolation.REPEATABLE_READ)
+	@Transactional
 	@Retryable(
 		retryFor = {
 			PessimisticLockException.class,
 			LockTimeoutException.class,
-			PessimisticLockingFailureException.class,
-			DeadlockLoserDataAccessException.class
+			PessimisticLockingFailureException.class
 		},
 		maxAttempts = 3,
 		backoff = @Backoff(delay = 50)
@@ -360,7 +354,8 @@ public class CommunityPostService {
 			commentImageKeys.stream()
 		).collect(Collectors.toList());
 
-		communityPostCommentRepository.deleteByParentId(postId);
+		communityPostCommentRepository.deleteByParent_IdAndCommunityPostCommentIsNotNull(postId);
+		communityPostCommentRepository.deleteByParent_IdAndCommunityPostCommentIsNull(postId);
 		communityPostLikeRepository.deleteByCommunityPostId(postId);
 		communityPostImageRepository.deleteByCommunityPostId(postId);
 		communityPostRepository.delete(post);
@@ -374,7 +369,9 @@ public class CommunityPostService {
 	@Retryable(
 		retryFor = {
 			PessimisticLockException.class,
-			LockTimeoutException.class
+			LockTimeoutException.class,
+			OptimisticLockException.class,
+			ObjectOptimisticLockingFailureException.class
 		},
 		maxAttempts = 3,
 		backoff = @Backoff(delay = 50)
@@ -388,14 +385,13 @@ public class CommunityPostService {
 			throw new AccessDeniedException();
 		}
 
+		if (comment.isDeleted()) {
+			return;
+		}
+
 		String imageKeyToDelete = comment.getImageUrl();
 		comment.getParent().decrementCommentCount();
-
-		try {
-			communityPostCommentRepository.delete(comment);
-		} catch (DataIntegrityViolationException e) {
-			comment.markAsDeleted();
-		}
+		comment.markAsDeleted();
 
 		if (imageKeyToDelete != null) {
 			publisher.publishEvent(new ImagesToDeleteEvent(Collections.singletonList(imageKeyToDelete)));
